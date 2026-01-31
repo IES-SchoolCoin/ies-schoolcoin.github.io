@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Un punto visible</title>
+  <title>SCHOOLCOIN - Botones interactivos</title>
 
   <style>
     :root{--bg:#f7d54a;--top:#000;--btn:#8b5e3c;--text:#222;}
@@ -22,7 +22,18 @@
     .info-box{margin-top:12px;background:rgba(0,0,0,0.06);padding:10px;border-radius:8px;font-size:13px;}
     .controls{display:flex;gap:8px;margin-top:10px;justify-content:center;}
     .control-btn{background:#fff;border:1px solid #ccc;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;}
-    @media (max-width:400px){ .botones{grid-template-columns:1fr;} canvas{height:260px !important;} }
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;}
+    .modal{background:#fff;color:#111;border-radius:12px;padding:16px;max-width:420px;width:92%;box-sizing:border-box;}
+    .modal h3{margin:0 0 8px 0;font-size:18px;}
+    .modal label{display:block;margin-top:8px;font-size:13px;}
+    .modal input, .modal textarea, .modal select{width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd;box-sizing:border-box;}
+    .modal .row{display:flex;gap:8px;margin-top:12px;}
+    .modal .btn{flex:1;padding:10px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
+    .btn-primary{background:#0b8a3e;color:#fff;}
+    .btn-ghost{background:#f3f3f3;color:#333;border:1px solid #ddd;}
+    .small-muted{font-size:12px;color:#666;margin-top:8px;}
+    @media (max-width:400px){canvas{height:260px !important;}}
   </style>
 </head>
 <body>
@@ -79,7 +90,7 @@
       return Number(clamp(prev + meanReversion + noise, MIN, MAX).toFixed(4));
     }
 
-    // GENERAR SERIE INICIAL (timestamps deterministas)
+    // GENERAR SERIE INICIAL
     function generateInitialSeries(){
       const labels = [];
       const data = [];
@@ -114,7 +125,7 @@
       trendTextEl.textContent = arrow + ' ' + pct;
     }
 
-    // CHART: pointRadius scriptable para mostrar solo punto activo
+    // CHART
     const ctx = document.getElementById('grafica').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
@@ -125,7 +136,6 @@
           data: values,
           borderColor: '#0b8a3e',
           backgroundColor: 'rgba(11,138,62,0.12)',
-          // scriptable: solo mostrar punto si es el activo actual
           pointRadius: (ctx) => ctx.active ? 6 : 0,
           pointHoverRadius: 6,
           pointHitRadius: 12,
@@ -142,7 +152,6 @@
           legend: { display: false },
           tooltip: {
             enabled: true,
-            external: null,
             callbacks: {
               label: function(c){
                 const v = Number(c.parsed.y).toFixed(4);
@@ -170,7 +179,7 @@
       }
     });
 
-    // Limpia selección activa y tooltip
+    // Selección única
     function clearActiveSelection(){
       try{
         chart.setActiveElements([]);
@@ -179,7 +188,6 @@
       }catch(e){}
     }
 
-    // Resaltar un único punto (limpia antes)
     function highlightPoint(index){
       if(index == null) return;
       clearActiveSelection();
@@ -194,26 +202,20 @@
       infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
     }
 
-    // Hover: mostrar solo el punto más cercano mientras el cursor esté sobre el canvas
+    // Interacciones canvas
     const canvasEl = document.getElementById('grafica');
     canvasEl.addEventListener('mousemove', (evt) => {
       const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
-      if(pts.length){
-        highlightPoint(pts[0].index);
-      } else {
-        // si no hay intersección, buscar el más cercano sin intersect
+      if(pts.length) highlightPoint(pts[0].index);
+      else {
         const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
         if(pts2.length) highlightPoint(pts2[0].index);
       }
     });
-
-    // Limpiar al salir del canvas
     canvasEl.addEventListener('mouseleave', () => {
       clearActiveSelection();
       infoBox.textContent = 'Toca o haz clic en un punto para ver su fecha, hora y valor.';
     });
-
-    // Click y touch: seleccionar punto y mantenerlo visible
     canvasEl.addEventListener('click', (evt) => {
       const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
       if(pts.length) highlightPoint(pts[0].index);
@@ -222,7 +224,6 @@
         if(pts2.length) highlightPoint(pts2[0].index);
       }
     });
-
     canvasEl.addEventListener('touchend', (e) => {
       if(e.changedTouches && e.changedTouches.length){
         const t = e.changedTouches[0];
@@ -236,15 +237,11 @@
       }
     }, {passive:true});
 
-    // Mostrar valor inicial
-    updateMainDisplay(values[values.length-1], new Date(labels[labels.length-1]));
-
-    // ACTUALIZACIONES deterministas y seguras
+    // Actualizaciones deterministas
     let paused = false;
     let updateTimer = null;
 
     function pushNewPoint(nextDate, newVal){
-      // limpiar selección antes de cambiar datos
       clearActiveSelection();
       chart.data.labels.push(nextDate);
       chart.data.datasets[0].data.push(newVal);
@@ -252,7 +249,6 @@
         chart.data.labels.shift();
         chart.data.datasets[0].data.shift();
       }
-      // actualizar sin animación y limpiar justo después
       chart.update('none');
       setTimeout(() => clearActiveSelection(), 20);
       labels.push(nextDate);
@@ -275,8 +271,137 @@
     }
 
     scheduleNextUpdate();
+    updateMainDisplay(values[values.length-1], new Date(labels[labels.length-1]));
 
-    // Controles
+    // BOTONES: helpers para modales
+    function openModal(htmlContent){
+      // crear backdrop
+      const bd = document.createElement('div');
+      bd.className = 'modal-backdrop';
+      bd.innerHTML = `<div class="modal">${htmlContent}</div>`;
+      document.body.appendChild(bd);
+      // cerrar al click fuera
+      bd.addEventListener('click', (e) => {
+        if(e.target === bd) bd.remove();
+      });
+      return bd;
+    }
+
+    function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
+
+    // Enviar: formulario simple
+    document.getElementById('btnEnviar').addEventListener('click', () => {
+      const html = `
+        <h3>Enviar SCHOOLCOIN</h3>
+        <label>Destinatario</label>
+        <input id="m_dest" placeholder="Dirección o usuario">
+        <label>Cantidad</label>
+        <input id="m_amt" type="number" step="0.0001" placeholder="0.01">
+        <div class="small-muted">Esto simula un envío; no requiere servidor.</div>
+        <div class="row">
+          <button class="btn btn-ghost" id="m_cancel">Cancelar</button>
+          <button class="btn btn-primary" id="m_send">Enviar</button>
+        </div>
+      `;
+      const bd = openModal(html);
+      bd.querySelector('#m_cancel').addEventListener('click', () => closeModal(bd));
+      bd.querySelector('#m_send').addEventListener('click', () => {
+        const dest = bd.querySelector('#m_dest').value || 'desconocido';
+        const amt = parseFloat(bd.querySelector('#m_amt').value) || 0;
+        // simulación: no cambia precio por defecto, solo muestra confirmación
+        bd.querySelector('.modal').innerHTML = `<h3>Enviado</h3><p>Enviado ${amt.toFixed(4)} SCHOOLCOIN a ${dest}.</p><div class="row"><button class="btn btn-primary" id="m_ok">Aceptar</button></div>`;
+        bd.querySelector('#m_ok').addEventListener('click', () => closeModal(bd));
+      });
+    });
+
+    // Ingresos: añade punto con pequeño aumento proporcional
+    document.getElementById('btnIngresos').addEventListener('click', () => {
+      const html = `
+        <h3>Registrar ingreso</h3>
+        <label>Concepto</label>
+        <input id="i_concept" placeholder="Ej: venta">
+        <label>Cantidad</label>
+        <input id="i_amt" type="number" step="0.01" placeholder="10.00">
+        <div class="small-muted">Al confirmar se añadirá un punto con un pequeño aumento.</div>
+        <div class="row">
+          <button class="btn btn-ghost" id="i_cancel">Cancelar</button>
+          <button class="btn btn-primary" id="i_ok">Confirmar</button>
+        </div>
+      `;
+      const bd = openModal(html);
+      bd.querySelector('#i_cancel').addEventListener('click', () => closeModal(bd));
+      bd.querySelector('#i_ok').addEventListener('click', () => {
+        const amt = parseFloat(bd.querySelector('#i_amt').value) || 0;
+        const prev = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length-1]);
+        // efecto proporcional: cada unidad añade 0.00005 al precio (ajustable)
+        const delta = clamp(amt * 0.00005, 0, 0.005);
+        const nv = clamp(prev + delta + (Math.random()-0.5)*0.0005, MIN, MAX);
+        const lastLabel = chart.data.labels[chart.data.labels.length-1];
+        const nextTime = new Date(((lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime()) + UPDATE_INTERVAL_MS);
+        pushNewPoint(nextTime, Number(nv.toFixed(4)));
+        bd.querySelector('.modal').innerHTML = `<h3>Ingreso registrado</h3><p>+${amt.toFixed(2)} — precio ajustado.</p><div class="row"><button class="btn btn-primary" id="i_done">Aceptar</button></div>`;
+        bd.querySelector('#i_done').addEventListener('click', () => closeModal(bd));
+      });
+    });
+
+    // Gastos: añade punto con pequeño descenso proporcional
+    document.getElementById('btnGastos').addEventListener('click', () => {
+      const html = `
+        <h3>Registrar gasto</h3>
+        <label>Concepto</label>
+        <input id="g_concept" placeholder="Ej: compra">
+        <label>Cantidad</label>
+        <input id="g_amt" type="number" step="0.01" placeholder="5.00">
+        <div class="small-muted">Al confirmar se añadirá un punto con un pequeño descenso.</div>
+        <div class="row">
+          <button class="btn btn-ghost" id="g_cancel">Cancelar</button>
+          <button class="btn btn-primary" id="g_ok">Confirmar</button>
+        </div>
+      `;
+      const bd = openModal(html);
+      bd.querySelector('#g_cancel').addEventListener('click', () => closeModal(bd));
+      bd.querySelector('#g_ok').addEventListener('click', () => {
+        const amt = parseFloat(bd.querySelector('#g_amt').value) || 0;
+        const prev = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length-1]);
+        const delta = clamp(amt * 0.00005, 0, 0.005);
+        const nv = clamp(prev - delta + (Math.random()-0.5)*0.0005, MIN, MAX);
+        const lastLabel = chart.data.labels[chart.data.labels.length-1];
+        const nextTime = new Date(((lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime()) + UPDATE_INTERVAL_MS);
+        pushNewPoint(nextTime, Number(nv.toFixed(4)));
+        bd.querySelector('.modal').innerHTML = `<h3>Gasto registrado</h3><p>-${amt.toFixed(2)} — precio ajustado.</p><div class="row"><button class="btn btn-primary" id="g_done">Aceptar</button></div>`;
+        bd.querySelector('#g_done').addEventListener('click', () => closeModal(bd));
+      });
+    });
+
+    // Mi cuenta: muestra saldo y últimos movimientos simulados
+    document.getElementById('btnCuenta').addEventListener('click', () => {
+      // generar movimientos recientes a partir de los últimos puntos
+      const n = 6;
+      const recent = [];
+      for(let i=0;i<n;i++){
+        const idx = Math.max(0, chart.data.labels.length - 1 - i);
+        recent.push({
+          date: chart.data.labels[idx],
+          value: chart.data.datasets[0].data[idx]
+        });
+      }
+      let movHtml = '<ul style="padding-left:16px;margin:8px 0">';
+      recent.forEach(m => {
+        movHtml += `<li>${formatDate(new Date(m.date))} — ${Number(m.value).toFixed(4)} €</li>`;
+      });
+      movHtml += '</ul>';
+      const html = `
+        <h3>Mi cuenta</h3>
+        <p><strong>Saldo simulado:</strong> 123.45 SCHOOLCOIN</p>
+        <p><strong>Últimos valores:</strong></p>
+        ${movHtml}
+        <div class="row"><button class="btn btn-primary" id="acc_close">Cerrar</button></div>
+      `;
+      const bd = openModal(html);
+      bd.querySelector('#acc_close').addEventListener('click', () => closeModal(bd));
+    });
+
+    // Pause / AddSample ya funcional
     document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
