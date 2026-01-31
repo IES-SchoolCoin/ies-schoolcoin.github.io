@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Corregido actualizaciones</title>
+  <title>SCHOOLCOIN - Un punto visible</title>
 
   <style>
     :root{--bg:#f7d54a;--top:#000;--btn:#8b5e3c;--text:#222;}
@@ -63,7 +63,7 @@
   <script>
     // CONFIG
     const UPDATE_INTERVAL_MS = 5000;
-    const PRESET_POINTS = 600; // reduce si el rendimiento baja
+    const PRESET_POINTS = 600;
     const BASE = 0.175;
     const MIN = 0.15;
     const MAX = 0.20;
@@ -125,6 +125,7 @@
           data: values,
           borderColor: '#0b8a3e',
           backgroundColor: 'rgba(11,138,62,0.12)',
+          // scriptable: solo mostrar punto si es el activo actual
           pointRadius: (ctx) => ctx.active ? 6 : 0,
           pointHoverRadius: 6,
           pointHitRadius: 12,
@@ -135,7 +136,7 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 0 }, // sin animaciones para evitar estados intermedios
+        animation: { duration: 0 },
         interaction: { mode: 'nearest', intersect: false },
         plugins: {
           legend: { display: false },
@@ -169,7 +170,7 @@
       }
     });
 
-    // Limpia selección activa y tooltip de forma segura
+    // Limpia selección activa y tooltip
     function clearActiveSelection(){
       try{
         chart.setActiveElements([]);
@@ -178,7 +179,7 @@
       }catch(e){}
     }
 
-    // Resaltar punto seleccionado
+    // Resaltar un único punto (limpia antes)
     function highlightPoint(index){
       if(index == null) return;
       clearActiveSelection();
@@ -193,11 +194,26 @@
       infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
     }
 
-    // Evitar puntos "pegados" al salir del canvas
+    // Hover: mostrar solo el punto más cercano mientras el cursor esté sobre el canvas
     const canvasEl = document.getElementById('grafica');
-    canvasEl.addEventListener('mouseleave', () => clearActiveSelection());
+    canvasEl.addEventListener('mousemove', (evt) => {
+      const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+      if(pts.length){
+        highlightPoint(pts[0].index);
+      } else {
+        // si no hay intersección, buscar el más cercano sin intersect
+        const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
+        if(pts2.length) highlightPoint(pts2[0].index);
+      }
+    });
 
-    // Click y touch handlers
+    // Limpiar al salir del canvas
+    canvasEl.addEventListener('mouseleave', () => {
+      clearActiveSelection();
+      infoBox.textContent = 'Toca o haz clic en un punto para ver su fecha, hora y valor.';
+    });
+
+    // Click y touch: seleccionar punto y mantenerlo visible
     canvasEl.addEventListener('click', (evt) => {
       const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
       if(pts.length) highlightPoint(pts[0].index);
@@ -228,22 +244,17 @@
     let updateTimer = null;
 
     function pushNewPoint(nextDate, newVal){
-      // limpiar selección antes de tocar datos
+      // limpiar selección antes de cambiar datos
       clearActiveSelection();
-      // insertar
       chart.data.labels.push(nextDate);
       chart.data.datasets[0].data.push(newVal);
       if(chart.data.labels.length > PRESET_POINTS){
         chart.data.labels.shift();
         chart.data.datasets[0].data.shift();
       }
-      // actualizar sin animación
+      // actualizar sin animación y limpiar justo después
       chart.update('none');
-      // pequeña espera y limpieza final para evitar estados intermedios
-      setTimeout(() => {
-        clearActiveSelection();
-      }, 20);
-      // mantener arrays locales
+      setTimeout(() => clearActiveSelection(), 20);
       labels.push(nextDate);
       values.push(newVal);
       if(labels.length > PRESET_POINTS){ labels.shift(); values.shift(); }
