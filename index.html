@@ -57,7 +57,7 @@
     .modal-body::-webkit-scrollbar{width:8px;}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
     .field label{font-weight:700;font-size:13px;color:var(--text);}
-    .field input[type="text"], .field input[type="number"], .field input[type="password"], .field select, .field input[type="color"], .field input[type="email"], .field textarea{
+    .field input[type="text"], .field input[type="number"], .field input[type="password"], .field select, .field input[type="color"], .field input[type="email"], .field textarea, .field input[type="date"]{
       padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);font-size:14px;background:#fff;box-sizing:border-box;
     }
     .row-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;}
@@ -73,6 +73,12 @@
     .login-card{width:100%;max-width:520px;background:var(--card-bg);padding:18px;border-radius:14px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.06);}
     .login-card h2{margin:0 0 8px 0;font-size:20px;color:var(--text);}
     .login-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;}
+
+    /* ---------------- Multi-step form styles ---------------- */
+    .steps { display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap; }
+    .step-dot { width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#eee;color:#333;font-weight:700;border:2px solid rgba(0,0,0,0.04); }
+    .step-dot.active { background:var(--chart-color); color:#fff; border-color:var(--chart-color); }
+    .step-label { font-size:13px;color:var(--muted); }
 
     /* ---------------- Loading overlay for account creation ---------------- */
     .full-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;flex-direction:column;color:#fff;}
@@ -134,7 +140,7 @@
     </div>
   </div>
 
-  <!-- Login overlay with Create account option -->
+  <!-- Login overlay with multi-step Create account option -->
   <div id="loginOverlay" class="login-backdrop" role="dialog" aria-modal="true">
     <div class="login-card" role="document">
       <h2>Iniciar sesión</h2>
@@ -151,27 +157,65 @@
         </div>
       </div>
 
-      <!-- Create account form (hidden by default) -->
+      <!-- Multi-step Create account form (hidden by default) -->
       <div id="createForm" style="display:none;margin-top:12px;">
         <h3 style="margin:0 0 8px 0;color:var(--text);">Crear cuenta</h3>
-        <div class="field"><label>Nombre</label><input id="c_name" type="text" placeholder="Nombre"></div>
-        <div class="field"><label>Apellidos</label><input id="c_surname" type="text" placeholder="Apellidos"></div>
-        <div class="field"><label>Correo electrónico</label><input id="c_email" type="email" placeholder="tu@ejemplo.com"></div>
-        <div class="field"><label>Contraseña</label><input id="c_pass" type="password" placeholder="Contraseña"></div>
-        <div class="field"><label>Confirmar contraseña</label><input id="c_pass2" type="password" placeholder="Repite la contraseña"></div>
-        <div class="field"><label>Fecha de nacimiento</label><input id="c_dob" type="date"></div>
-        <div class="field"><label>Curso / Clase</label><input id="c_class" type="text" placeholder="Ej: 4º ESO A"></div>
-        <div class="field"><label>ID de estudiante</label><input id="c_studentid" type="text" placeholder="ID escolar"></div>
-        <div class="field"><label>Teléfono</label><input id="c_phone" type="text" placeholder="Teléfono"></div>
-        <div class="field"><label>Contacto de padre/madre/tutor</label><input id="c_parent" type="text" placeholder="Nombre y teléfono"></div>
-        <div class="field"><label>Dirección</label><input id="c_address" type="text" placeholder="Dirección"></div>
-        <div class="field"><label>Observaciones / Alergias</label><textarea id="c_notes" rows="2" placeholder="Alergias, necesidades..."></textarea></div>
-        <div class="field"><label>Acepto las normas y condiciones</label><select id="c_terms"><option value="">Selecciona...</option><option value="yes">Sí, acepto</option></select></div>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
-          <button id="cancelCreate" class="btn-ghost">Cancelar</button>
-          <button id="submitCreate" class="btn-primary">Crear cuenta</button>
+
+        <!-- Steps indicator -->
+        <div class="steps" id="stepsIndicator" aria-hidden="false">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="step-dot active" data-step="1">1</div>
+            <div class="step-label">Datos básicos</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="step-dot" data-step="2">2</div>
+            <div class="step-label">Detalles</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="step-dot" data-step="3">3</div>
+            <div class="step-label">Contacto y condiciones</div>
+          </div>
         </div>
-        <div id="createError" class="error" style="display:none;color:var(--danger);margin-top:8px;"></div>
+
+        <!-- Step 1 -->
+        <div class="step" data-step="1">
+          <div class="field"><label>Nombre</label><input id="c_name" type="text" placeholder="Nombre"></div>
+          <div class="field"><label>Apellidos</label><input id="c_surname" type="text" placeholder="Apellidos"></div>
+          <div class="field"><label>Correo electrónico</label><input id="c_email" type="email" placeholder="tu@ejemplo.com"></div>
+          <div class="field"><label>Contraseña</label><input id="c_pass" type="password" placeholder="Contraseña"></div>
+          <div class="field"><label>Confirmar contraseña</label><input id="c_pass2" type="password" placeholder="Repite la contraseña"></div>
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+            <button id="cancelCreate" class="btn-ghost">Cancelar</button>
+            <button id="nextTo2" class="btn-primary">Siguiente</button>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="step" data-step="2" style="display:none;">
+          <div class="field"><label>Fecha de nacimiento</label><input id="c_dob" type="date"></div>
+          <div class="field"><label>Curso / Clase</label><input id="c_class" type="text" placeholder="Ej: 4º ESO A"></div>
+          <div class="field"><label>ID de estudiante</label><input id="c_studentid" type="text" placeholder="ID escolar"></div>
+          <div class="field"><label>Teléfono</label><input id="c_phone" type="text" placeholder="Teléfono"></div>
+          <div style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;">
+            <button id="backTo1" class="btn-ghost">Atrás</button>
+            <button id="nextTo3" class="btn-primary">Siguiente</button>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="step" data-step="3" style="display:none;">
+          <div class="field"><label>Contacto de padre/madre/tutor</label><input id="c_parent" type="text" placeholder="Nombre y teléfono"></div>
+          <div class="field"><label>Dirección</label><input id="c_address" type="text" placeholder="Dirección"></div>
+          <div class="field"><label>Observaciones / Alergias</label><textarea id="c_notes" rows="2" placeholder="Alergias, necesidades..."></textarea></div>
+          <div class="field"><label>Acepto las normas y condiciones</label>
+            <select id="c_terms"><option value="">Selecciona...</option><option value="yes">Sí, acepto</option></select>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;">
+            <button id="backTo2" class="btn-ghost">Atrás</button>
+            <button id="submitCreate" class="btn-primary">Crear cuenta</button>
+          </div>
+          <div id="createError" class="error" style="display:none;color:var(--danger);margin-top:8px;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -189,7 +233,7 @@
 
   <script>
     /**************************************************************************
-     * Basic auth UI + create account flow with loader
+     * Auth UI + multi-step create account flow with loader
      **************************************************************************/
     const loginOverlay = document.getElementById('loginOverlay');
     const appRoot = document.getElementById('appRoot');
@@ -203,6 +247,23 @@
     const fullLoader = document.getElementById('fullLoader');
     const createError = document.getElementById('createError');
 
+    // Step controls
+    const steps = Array.from(document.querySelectorAll('.step'));
+    const stepDots = Array.from(document.querySelectorAll('.step-dot'));
+    let currentStep = 1;
+
+    function showStep(n){
+      currentStep = n;
+      steps.forEach(s => s.style.display = s.dataset.step == n ? 'block' : 'none');
+      stepDots.forEach(d => {
+        if (Number(d.dataset.step) === n) d.classList.add('active'); else d.classList.remove('active');
+      });
+      // scroll to top of modal for better UX
+      const modalBody = document.querySelector('.modal-body');
+      if(modalBody) modalBody.scrollTop = 0;
+    }
+
+    // Basic session helpers
     function isLoggedIn(){ try { return sessionStorage.getItem('schoolcoin_user') !== null; } catch(e){ return false; } }
     function showAppAfterLogin(){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); }
     function saveSession(user){ try { sessionStorage.setItem('schoolcoin_user', JSON.stringify(user)); } catch(e){} }
@@ -223,13 +284,40 @@
       loginForm.style.display = 'none';
       createForm.style.display = 'block';
       createError.style.display = 'none';
+      showStep(1);
     });
+
     cancelCreate.addEventListener('click', () => {
       createForm.style.display = 'none';
       loginForm.style.display = 'block';
     });
 
-    submitCreate.addEventListener('click', () => {
+    // Navigation buttons
+    document.getElementById('nextTo2').addEventListener('click', () => {
+      // Validate step 1 fields minimally
+      const name = document.getElementById('c_name').value.trim();
+      const surname = document.getElementById('c_surname').value.trim();
+      const email = document.getElementById('c_email').value.trim();
+      const pass = document.getElementById('c_pass').value;
+      const pass2 = document.getElementById('c_pass2').value;
+      if(!name || !surname || !email || !pass || !pass2 || pass !== pass2){
+        createError.style.display = 'block';
+        createError.textContent = 'Rellena los campos obligatorios y asegúrate de que las contraseñas coinciden.';
+        return;
+      }
+      createError.style.display = 'none';
+      showStep(2);
+    });
+
+    document.getElementById('backTo1').addEventListener('click', () => { showStep(1); });
+    document.getElementById('nextTo3').addEventListener('click', () => {
+      // Minimal validation for step 2 (optional fields can be empty)
+      showStep(3);
+    });
+    document.getElementById('backTo2').addEventListener('click', () => { showStep(2); });
+
+    // Final submit
+    document.getElementById('submitCreate').addEventListener('click', () => {
       createError.style.display = 'none';
       const data = {
         name: document.getElementById('c_name').value || '',
@@ -246,20 +334,18 @@
         notes: document.getElementById('c_notes').value || '',
         terms: document.getElementById('c_terms').value || ''
       };
-      // Basic validation
+      // Final validation: required fields and terms
       if(!data.name || !data.surname || !data.email || !data.pass || !data.pass2 || data.pass !== data.pass2 || data.terms !== 'yes'){
         createError.style.display = 'block';
         createError.textContent = 'Rellena todos los campos obligatorios, confirma la contraseña y acepta las condiciones.';
         return;
       }
+
       // Show full loader for 10s then welcome
       fullLoader.style.display = 'flex';
-      // Simulate account creation delay (10s)
       setTimeout(() => {
         fullLoader.style.display = 'none';
-        // Save user session and close login overlay
         saveSession({ name: data.name.trim(), surname: data.surname.trim(), email: data.email.trim(), createdAt: new Date().toISOString() });
-        // Show a small welcome modal
         const welcomeHtml = `
           <div class="modal-header"><h3>¡Cuenta creada!</h3></div>
           <div class="modal-body" style="text-align:center;">
@@ -602,7 +688,6 @@
       const p = preset.bgPrimary;
       const s = preset.bgSecondary;
       document.documentElement.style.setProperty('--app-bg', p);
-      // full-page gradient background
       document.documentElement.style.setProperty('--chart-color', preset.chart);
       document.body.style.background = `linear-gradient(180deg, ${p} 0%, ${s} 100%)`;
       const colors = pickTextColorForBackground(p, s);
@@ -613,7 +698,6 @@
         chartInstance.data.datasets[0].backgroundColor = hexToRgba(preset.chart, 0.10);
         chartInstance.update('none');
       }
-      // update some UI text colors
       document.querySelectorAll('.header, .small-note, .muted, .field label').forEach(el => {
         el.style.color = colors.text === '#ffffff' ? colors.text : 'var(--text)';
       });
