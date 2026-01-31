@@ -3,35 +3,50 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Gráfica suavizada</title>
+  <title>SCHOOLCOIN - Mi cuenta mejorada</title>
 
   <style>
-    :root{--bg:#f7d54a;--top:#000;--btn:#8b5e3c;--text:#222;--green:#0b8a3e;--red:#c62828;}
-    html,body{height:100%;margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text);}
+    :root{
+      --app-bg: #f7d54a;
+      --accent: #0b8a3e;
+      --muted: #666;
+      --card-bg: #fff;
+      --glass: rgba(255,255,255,0.9);
+      --danger: #c62828;
+      --radius: 12px;
+      --shadow: 0 6px 18px rgba(0,0,0,0.08);
+      --text: #222;
+    }
+    html,body{height:100%;margin:0;font-family:Inter,Arial,sans-serif;background:var(--app-bg);color:var(--text);}
     .contenedor{width:100%;max-width:420px;margin:0 auto;padding:16px;box-sizing:border-box;}
-    .top-bar{background:var(--top);color:#fff;padding:10px;font-weight:700;text-align:center;border-radius:8px;}
+    .top-bar{background:#000;color:#fff;padding:10px;font-weight:700;text-align:center;border-radius:8px;}
     .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;}
-    .coin-logo{width:96px;height:96px;margin:14px auto;}
-    .coin-logo img{width:100%;height:100%;object-fit:contain;display:block;}
-    .valor-actual{font-size:30px;font-weight:800;margin-top:8px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;}
-    .valor-num{font-weight:800;}
-    .meta-line{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:#333;}
-    .chart-wrap{width:100%;margin-top:14px;background:transparent;border-radius:12px;padding:6px;}
-    canvas{width:100% !important;height:320px !important;display:block;}
-    .botones{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
-    .boton{background:var(--btn);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;}
+    .chart-wrap{margin-top:14px;border-radius:12px;padding:6px;}
+    canvas{width:100% !important;height:300px !important;display:block;border-radius:8px;}
+    .botones{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+    .boton{background:var(--accent);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;box-shadow:var(--shadow);border:0;}
     .info-box{margin-top:12px;background:rgba(0,0,0,0.06);padding:10px;border-radius:8px;font-size:13px;}
-    .controls{display:flex;gap:8px;margin-top:10px;justify-content:center;}
-    .control-btn{background:#fff;border:1px solid #ccc;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;}
-    .modal{background:#fff;color:#111;border-radius:12px;padding:16px;max-width:420px;width:92%;box-sizing:border-box;max-height:80vh;overflow:auto;}
+    /* Modal y lista con tema de la app */
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+    .modal{background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95));color:var(--text);border-radius:16px;padding:14px;max-width:720px;width:100%;box-sizing:border-box;max-height:86vh;overflow:auto;box-shadow:var(--shadow);}
     .modal h3{margin:0 0 8px 0;font-size:18px;}
-    .modal input, .modal select, .modal textarea{width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd;box-sizing:border-box;}
-    .modal .row{display:flex;gap:8px;margin-top:12px;}
-    .modal .btn{flex:1;padding:10px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
-    .btn-primary{background:var(--green);color:#fff;}
-    .btn-ghost{background:#f3f3f3;color:#333;border:1px solid #ddd;}
-    @media (max-width:400px){canvas{height:260px !important;} .botones{grid-template-columns:1fr;}}
+    .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+    .filter-btn{padding:8px 10px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);background:transparent;cursor:pointer;font-weight:700;color:var(--text);}
+    .filter-active{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .tx-list{display:flex;flex-direction:column;gap:10px;padding:0;margin:0;}
+    .tx-card{background:var(--card-bg);border-radius:12px;padding:10px;display:flex;justify-content:space-between;align-items:center;box-shadow:var(--shadow);cursor:pointer;border:1px solid rgba(0,0,0,0.04);}
+    .tx-left{display:flex;flex-direction:column;gap:6px;min-width:0;}
+    .tx-id{font-weight:800;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;}
+    .tx-meta{font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;}
+    .tx-amount{font-weight:900;color:var(--accent);min-width:90px;text-align:right;}
+    .tx-type{font-size:11px;padding:4px 8px;border-radius:999px;background:rgba(11,138,62,0.08);color:var(--accent);font-weight:800;}
+    .tx-type.gasto{background:rgba(198,40,40,0.08);color:var(--danger);}
+    .tx-detail{margin-top:10px;background:linear-gradient(180deg,#fff,#fafafa);padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);font-size:13px;}
+    .row{display:flex;gap:8px;align-items:center;}
+    .btn-small{padding:8px 10px;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;}
+    .muted{color:var(--muted);font-size:13px;}
+    .empty{padding:18px;text-align:center;color:var(--muted);background:rgba(255,255,255,0.6);border-radius:12px;}
+    @media (max-width:420px){ .tx-id{max-width:120px;} canvas{height:240px !important;} }
   </style>
 </head>
 <body>
@@ -39,420 +54,186 @@
     <div class="top-bar">SCHOOLCOIN</div>
     <div class="header">IES-SchoolCoin</div>
 
-    <div class="coin-logo"><img src="LOGO.png" alt="Logo SCHOOLCOIN"></div>
-
-    <!-- FLECHA ELIMINADA: solo mostramos el número -->
-    <div class="valor-actual" id="valorDisplay">
-      <span id="valorNum" class="valor-num">0.00 €</span>
-    </div>
-
-    <div class="meta-line">
-      <div id="trendText">—</div>
-      <div id="timestamp">—</div>
-    </div>
-
+    <!-- Gráfica simplificada (placeholder) -->
     <div class="chart-wrap"><canvas id="grafica"></canvas></div>
 
-    <div class="botones">
+    <div class="botones" style="margin-top:12px;">
       <div class="boton" id="btnEnviar">Enviar</div>
       <div class="boton" id="btnIngresos">Ingresos</div>
       <div class="boton" id="btnCambiar">Cambiar</div>
       <div class="boton" id="btnCuenta">Mi cuenta</div>
     </div>
 
-    <div class="controls">
-      <button class="control-btn" id="pauseBtn">Pausar actualizaciones</button>
-      <button class="control-btn" id="addSample">Añadir valor ahora</button>
-    </div>
-
-    <div class="info-box" id="infoBox">Toca o haz clic en un punto para ver su fecha, hora y valor.</div>
+    <div class="info-box">Toca una transacción para ver más detalles. Usa filtros para encontrar lo que buscas.</div>
   </div>
 
-  <!-- Chart.js + adaptador de fechas -->
+  <!-- Chart.js (mantener si ya lo usas) -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/dist/date-fns.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    // CONFIG
-    const UPDATE_INTERVAL_MS = 5000;
-    const PRESET_POINTS = 600;
-    const BASE = 0.175;
-    const MIN = 0.15;
-    const MAX = 0.20;
-    const SMOOTH_ALPHA = 0.18; // menor = más suavizado (0.1-0.25 recomendado)
+    // Datos de ejemplo y utilidades (integra con tu lógica real)
+    const TRANSACTIONS = []; // empieza vacío; se llenará al enviar/ingresar/cambiar
+    function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+    function formatDate(d){ return new Date(d).toLocaleString('es-ES', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}); }
 
-    // UTIL
-    function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
-    function formatMoney(v){return Number(v).toFixed(2)+' €';}
-    function formatDate(d){return d.toLocaleString('es-ES',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
-
-    // nextValue con ruido reducido (menos picos)
-    function nextValue(prev){
-      const meanReversion = (BASE - prev) * 0.10; // ligera mayor fuerza de retorno
-      const noise = (Math.random() - 0.5) * 0.0035; // ruido reducido (antes ~0.006)
-      return Number(clamp(prev + meanReversion + noise, MIN, MAX).toFixed(4));
-    }
-
-    // GENERAR SERIE INICIAL (menos ruido)
-    function generateInitialSeries(){
-      const labels = [];
-      const data = [];
-      const nowAligned = Math.floor(Date.now() / UPDATE_INTERVAL_MS) * UPDATE_INTERVAL_MS;
-      const start = nowAligned - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
-      let val = BASE + (Math.random() - 0.5) * 0.008; // inicio con menos desviación
-      for(let i=0;i<PRESET_POINTS;i++){
-        labels.push(new Date(start + i * UPDATE_INTERVAL_MS));
-        val = nextValue(val);
-        data.push(val);
-      }
-      return {labels,data};
-    }
-
-    const master = generateInitialSeries();
-    const masterLabels = master.labels.slice();
-    const masterValues = master.data.slice();
-
-    // Derivar serie y aplicar suavizado inicial (moving average exponencial)
-    function deriveAndSmooth(jitterScale = 0.0006){
-      const labels = masterLabels.slice();
-      const raw = masterValues.map(v => v + (Math.random()-0.5)*jitterScale);
-      // aplicar EMA para suavizar picos
-      const smoothed = [];
-      let s = raw[0];
-      smoothed.push(Number(s.toFixed(4)));
-      for(let i=1;i<raw.length;i++){
-        s = s * (1 - SMOOTH_ALPHA) + raw[i] * SMOOTH_ALPHA;
-        smoothed.push(Number(s.toFixed(4)));
-      }
-      return {labels, data: smoothed};
-    }
-
-    let series = deriveAndSmooth(0.0006);
-
-    // UI refs
-    const valorNumEl = document.getElementById('valorNum');
-    const timestampEl = document.getElementById('timestamp');
-    const trendTextEl = document.getElementById('trendText');
-    const infoBox = document.getElementById('infoBox');
-
-    function updateMainDisplay(value,date){
-      // ya no mostramos flecha; solo color del número según tendencia
-      const prev = series.data.length > 1 ? series.data[series.data.length - 2] : value;
-      const diff = value - prev;
-      if(diff > 0){
-        valorNumEl.style.color = 'var(--green)';
-      } else if(diff < 0){
-        valorNumEl.style.color = 'var(--red)';
-      } else {
-        valorNumEl.style.color = 'var(--text)';
-      }
-      valorNumEl.textContent = formatMoney(value);
-      timestampEl.textContent = formatDate(date);
-      const pct = prev ? ((diff / prev) * 100).toFixed(2) + '%' : '';
-      trendTextEl.textContent = (diff > 0 ? '▲ ' : (diff < 0 ? '▼ ' : '— ')) + pct;
-    }
-
-    // CHART: línea fina, sin etiquetas X (números debajo)
-    const ctx = document.getElementById('grafica').getContext('2d');
-    const chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: series.labels,
-        datasets: [{
-          label: 'SCHOOLCOIN',
-          data: series.data,
-          borderColor: '#0b8a3e',
-          borderWidth: 1,
-          backgroundColor: 'rgba(11,138,62,0.12)',
-          pointRadius: (ctx) => ctx.active ? 6 : 0,
-          pointHoverRadius: 6,
-          pointHitRadius: 12,
-          tension: 0.18, // menos tensión para líneas más suaves
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 0 },
-        interaction: { mode: 'nearest', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            enabled: true,
-            callbacks: {
-              label: function(c){
-                const v = Number(c.parsed.y).toFixed(4);
-                const date = c.label instanceof Date ? formatDate(c.label) : c.label;
-                return ` ${v} € — ${date}`;
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            type: 'time',
-            time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } },
-            grid: { display: false },
-            ticks: { display: false } // **oculta todos los números debajo de la gráfica**
-          },
-          y: {
-            beginAtZero: false,
-            suggestedMin: MIN - 0.01,
-            suggestedMax: MAX + 0.01,
-            grid: { display: false },
-            ticks: { callback: v => Number(v).toFixed(2) + ' €', color: '#333' }
-          }
-        }
-      }
-    });
-
-    // selección única y handlers
-    function clearActiveSelection(){
-      try{ chart.setActiveElements([]); chart.tooltip.setActiveElements([], {x:0,y:0}); chart.update('none'); }catch(e){}
-    }
-
-    function highlightPoint(index){
-      if(index == null) return;
-      clearActiveSelection();
-      const active = [{datasetIndex:0, index}];
-      chart.setActiveElements(active);
-      const x = chart.scales.x.getPixelForValue(chart.data.labels[index]);
-      const y = chart.scales.y.getPixelForValue(chart.data.datasets[0].data[index]);
-      chart.tooltip.setActiveElements(active, {x,y});
-      chart.update('none');
-      const val = chart.data.datasets[0].data[index];
-      const lab = chart.data.labels[index];
-      infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
-    }
-
-    const canvasEl = document.getElementById('grafica');
-    canvasEl.addEventListener('mousemove', (evt) => {
-      const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
-      if(pts.length) highlightPoint(pts[0].index);
-      else {
-        const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
-        if(pts2.length) highlightPoint(pts2[0].index);
-      }
-    });
-    canvasEl.addEventListener('mouseleave', () => { clearActiveSelection(); infoBox.textContent = 'Toca o haz clic en un punto para ver su fecha, hora y valor.'; });
-    canvasEl.addEventListener('click', (evt) => {
-      const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
-      if(pts.length) highlightPoint(pts[0].index);
-      else {
-        const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
-        if(pts2.length) highlightPoint(pts2[0].index);
-      }
-    });
-    canvasEl.addEventListener('touchend', (e) => {
-      if(e.changedTouches && e.changedTouches.length){
-        const t = e.changedTouches[0];
-        const simulated = {clientX: t.clientX, clientY: t.clientY};
-        const pts = chart.getElementsAtEventForMode(simulated, 'nearest', {intersect: true}, true);
-        if(pts.length) highlightPoint(pts[0].index);
-        else {
-          const pts2 = chart.getElementsAtEventForMode(simulated, 'nearest', {intersect: false}, true);
-          if(pts2.length) highlightPoint(pts2[0].index);
-        }
-      }
-    }, {passive:true});
-
-    // mostrar valor inicial
-    updateMainDisplay(series.data[series.data.length-1], new Date(series.labels[series.labels.length-1]));
-
-    // ACTUALIZACIONES deterministas con suavizado al insertar
-    let paused = false;
-    let updateTimer = null;
-
-    function pushNewMasterPoint(nextDate, newMasterVal){
-      clearActiveSelection();
-      masterLabels.push(nextDate);
-      masterValues.push(newMasterVal);
-      if(masterLabels.length > PRESET_POINTS){ masterLabels.shift(); masterValues.shift(); }
-
-      // derivar raw y aplicar EMA incremental para suavizar y evitar picos
-      const raw = newMasterVal + (Math.random()-0.5)*0.0006;
-      // obtener último smoothed value
-      const lastSmoothed = chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1];
-      const smoothed = lastSmoothed * (1 - SMOOTH_ALPHA) + raw * SMOOTH_ALPHA;
-
-      chart.data.labels.push(nextDate);
-      chart.data.datasets[0].data.push(Number(clamp(smoothed, MIN, MAX).toFixed(4)));
-      if(chart.data.labels.length > PRESET_POINTS){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
-      chart.update('none');
-
-      setTimeout(() => clearActiveSelection(), 20);
-
-      series.labels = chart.data.labels.slice();
-      series.data = chart.data.datasets[0].data.slice();
-
-      updateMainDisplay(series.data[series.data.length-1], nextDate);
-    }
-
-    function scheduleNextUpdate(){
-      if(updateTimer) clearInterval(updateTimer);
-      updateTimer = setInterval(() => {
-        if(paused) return;
-        const lastLabel = masterLabels[masterLabels.length - 1];
-        const lastTime = (lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime();
-        const nextTime = new Date(lastTime + UPDATE_INTERVAL_MS);
-        const prev = masterValues[masterValues.length - 1];
-        const nv = nextValue(prev);
-        pushNewMasterPoint(nextTime, nv);
-      }, UPDATE_INTERVAL_MS);
-    }
-
-    scheduleNextUpdate();
-
-    // modal helper (igual que antes)
-    function openModal(htmlContent){
+    // Modal builder estilizado
+    function openModal(contentHtml){
       const bd = document.createElement('div');
       bd.className = 'modal-backdrop';
-      bd.innerHTML = `<div class="modal">${htmlContent}</div>`;
+      bd.innerHTML = `<div class="modal">${contentHtml}</div>`;
       document.body.appendChild(bd);
       bd.addEventListener('click', (e) => { if(e.target === bd) bd.remove(); });
       return bd;
     }
     function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
-    // TRANSACTIONS vacías y botones básicos (mantengo funcionalidad previa)
-    const TRANSACTIONS = [];
-    function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
-
-    document.getElementById('btnEnviar').addEventListener('click', () => {
-      const html = `<h3>Enviar SCHOOLCOIN</h3><label>Destinatario</label><input id="m_dest" placeholder="Dirección o usuario"><label>Cantidad (SC)</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01"><div class="row"><button class="btn btn-ghost" id="m_cancel">Cancelar</button><button class="btn btn-primary" id="m_send">Enviar</button></div>`;
-      const bd = openModal(html);
-      bd.querySelector('#m_cancel').addEventListener('click', () => closeModal(bd));
-      bd.querySelector('#m_send').addEventListener('click', () => {
-        const dest = bd.querySelector('#m_dest').value || 'desconocido';
-        const amt = parseFloat(bd.querySelector('#m_amt').value) || 0;
-        const lastIndex = masterLabels.length - 1;
-        const tx = { txid: randomHex(12), type: 'envio', from: 'you', to: dest, amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex };
-        TRANSACTIONS.push(tx);
-        const prev = masterValues[masterValues.length - 1];
-        const impact = clamp(amt * 0.00002, 0, 0.003);
-        const nv = clamp(prev + impact * (Math.random() > 0.5 ? 1 : -1), MIN, MAX);
-        const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
-        pushNewMasterPoint(nextTime, Number(nv.toFixed(4)));
-        bd.querySelector('.modal').innerHTML = `<h3>Enviado</h3><p>Enviado ${amt.toFixed(4)} SC a ${dest}.</p><div class="row"><button class="btn btn-primary" id="m_ok">Aceptar</button></div>`;
-        bd.querySelector('#m_ok').addEventListener('click', () => closeModal(bd));
-      });
-    });
-
-    document.getElementById('btnIngresos').addEventListener('click', () => {
-      const html = `<h3>Registrar ingreso</h3><label>Origen</label><input id="i_from" placeholder="Usuario o fuente"><label>Cantidad (SC)</label><input id="i_amt" type="number" step="0.01" placeholder="10.00"><div class="row"><button class="btn btn-ghost" id="i_cancel">Cancelar</button><button class="btn btn-primary" id="i_ok">Confirmar</button></div>`;
-      const bd = openModal(html);
-      bd.querySelector('#i_cancel').addEventListener('click', () => closeModal(bd));
-      bd.querySelector('#i_ok').addEventListener('click', () => {
-        const from = bd.querySelector('#i_from').value || 'external';
-        const amt = parseFloat(bd.querySelector('#i_amt').value) || 0;
-        const lastIndex = masterLabels.length - 1;
-        const tx = { txid: randomHex(12), type: 'ingreso', from, to: 'you', amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex };
-        TRANSACTIONS.push(tx);
-        const prev = masterValues[masterValues.length - 1];
-        const nv = clamp(prev + clamp(amt * 0.00002, 0, 0.003), MIN, MAX);
-        const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
-        pushNewMasterPoint(nextTime, Number(nv.toFixed(4)));
-        bd.querySelector('.modal').innerHTML = `<h3>Ingreso registrado</h3><p>+${amt.toFixed(2)} SC — transacción añadida.</p><div class="row"><button class="btn btn-primary" id="i_done">Aceptar</button></div>`;
-        bd.querySelector('#i_done').addEventListener('click', () => closeModal(bd));
-      });
-    });
-
-    document.getElementById('btnCambiar').addEventListener('click', () => {
-      const currentPrice = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
-      const html = `<h3>Cambiar SchoolCoins a €</h3><label>Cantidad (SC)</label><input id="c_amt" type="number" step="0.0001" placeholder="10.00"><div style="margin-top:8px;font-size:13px;color:#555;">Precio actual: <strong>${currentPrice.toFixed(4)} €</strong> por SC</div><div style="margin-top:8px;font-size:13px;color:#555;">Equivalencia: <span id="c_equiv">0.00 €</span></div><div class="row"><button class="btn btn-ghost" id="c_cancel">Cancelar</button><button class="btn btn-primary" id="c_ok">Cambiar</button></div>`;
-      const bd = openModal(html);
-      const input = bd.querySelector('#c_amt');
-      const equiv = bd.querySelector('#c_equiv');
-      input.addEventListener('input', () => { const v = parseFloat(input.value) || 0; equiv.textContent = (v * currentPrice).toFixed(4) + ' €'; });
-      bd.querySelector('#c_cancel').addEventListener('click', () => closeModal(bd));
-      bd.querySelector('#c_ok').addEventListener('click', () => {
-        const amt = parseFloat(input.value) || 0;
-        if(amt <= 0){ equiv.textContent = 'Introduce una cantidad válida'; return; }
-        const lastIndex = masterLabels.length - 1;
-        const tx = { txid: randomHex(12), type: 'cambio', from: 'you', to: 'exchange', amount: Number(amt.toFixed(4)), euro: Number((amt * currentPrice).toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex };
-        TRANSACTIONS.push(tx);
-        const prev = masterValues[masterValues.length - 1];
-        const nv = clamp(prev + (Math.random()-0.5) * 0.0005, MIN, MAX);
-        const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
-        pushNewMasterPoint(nextTime, Number(nv.toFixed(4)));
-        bd.querySelector('.modal').innerHTML = `<h3>Cambio realizado</h3><p>${amt.toFixed(4)} SC → ${(amt*currentPrice).toFixed(4)} €</p><div class="row"><button class="btn btn-primary" id="c_done">Aceptar</button></div>`;
-        bd.querySelector('#c_done').addEventListener('click', () => closeModal(bd));
-      });
-    });
-
-    // MI CUENTA: muestra transacciones filtrables (igual que antes)
+    // Render simplificado de Mi cuenta
     document.getElementById('btnCuenta').addEventListener('click', () => {
-      function renderList(filterType = 'all', page = 0){
-        const PAGE_SIZE = 12;
-        let filtered = TRANSACTIONS.slice();
-        if(filterType !== 'all') filtered = filtered.filter(t => t.type === filterType);
-        const total = filtered.length;
-        const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-        const start = page * PAGE_SIZE;
-        const slice = filtered.slice().reverse().slice(start, start + PAGE_SIZE);
-        let listHtml = '<ul class="tx-list">';
-        slice.forEach(tx => {
-          const meta = `${new Date(tx.timestamp).toLocaleString('es-ES')} · ${tx.from} → ${tx.to}`;
+      renderAccountModal('all', 0);
+    });
+
+    function renderAccountModal(filter='all', page=0){
+      const PAGE_SIZE = 10;
+      let filtered = TRANSACTIONS.slice();
+      if(filter !== 'all') filtered = filtered.filter(t => t.type === filter);
+      const total = filtered.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      const start = page * PAGE_SIZE;
+      const pageItems = filtered.slice().reverse().slice(start, start + PAGE_SIZE);
+
+      const filtersHtml = `
+        <div class="filters">
+          <button class="filter-btn ${filter==='all'?'filter-active':''}" data-filter="all">Todos</button>
+          <button class="filter-btn ${filter==='ingreso'?'filter-active':''}" data-filter="ingreso">Ingresos</button>
+          <button class="filter-btn ${filter==='gasto'?'filter-active':''}" data-filter="gasto">Gastos</button>
+          <button class="filter-btn ${filter==='envio'?'filter-active':''}" data-filter="envio">Envíos</button>
+          <button class="filter-btn ${filter==='cambio'?'filter-active':''}" data-filter="cambio">Cambios</button>
+        </div>`;
+
+      let listHtml = '';
+      if(pageItems.length === 0){
+        listHtml = `<div class="empty">No hay transacciones que coincidan.</div>`;
+      } else {
+        listHtml = `<div class="tx-list">`;
+        pageItems.forEach(tx => {
+          const shortId = tx.txid.slice(0,10) + (tx.txid.length>10 ? '…' : '');
+          const typeClass = tx.type === 'gasto' ? 'gasto' : '';
           const amountLabel = tx.type === 'cambio' ? `${Number(tx.amount).toFixed(4)} SC → ${Number(tx.euro).toFixed(4)} €` : `${Number(tx.amount).toFixed(4)} SC`;
-          listHtml += `<li class="tx-item" data-index="${tx.index}" data-txid="${tx.txid}"><div class="tx-left"><div><strong>${tx.txid}</strong></div><div class="tx-meta">${meta} · <em>${tx.type}</em></div></div><div class="tx-amount">${amountLabel}</div></li>`;
+          listHtml += `
+            <div class="tx-card" data-txid="${tx.txid}">
+              <div class="tx-left">
+                <div class="tx-id">${shortId}</div>
+                <div class="tx-meta"><span class="muted">${formatDate(tx.timestamp)}</span> · <span class="tx-type ${typeClass}">${tx.type}</span></div>
+              </div>
+              <div class="tx-amount">${amountLabel}</div>
+            </div>`;
         });
-        listHtml += '</ul>';
-        const filtersHtml = `<div class="filters"><button class="filter-btn ${filterType==='all'?'filter-active':''}" data-filter="all">Todos</button><button class="filter-btn ${filterType==='ingreso'?'filter-active':''}" data-filter="ingreso">Ingresos</button><button class="filter-btn ${filterType==='gasto'?'filter-active':''}" data-filter="gasto">Gastos</button><button class="filter-btn ${filterType==='envio'?'filter-active':''}" data-filter="envio">Envíos</button><button class="filter-btn ${filterType==='cambio'?'filter-active':''}" data-filter="cambio">Cambios</button></div>`;
-        const pager = `<div style="display:flex;gap:8px;justify-content:center;margin-top:12px;"><button class="btn-ghost" id="prevPage" ${page===0?'disabled':''}>Anterior</button><div style="align-self:center">Página ${page+1} / ${totalPages}</div><button class="btn-ghost" id="nextPage" ${page+1>=totalPages?'disabled':''}>Siguiente</button></div>`;
-        return {html: `<h3>Mi cuenta — Transacciones</h3>${filtersHtml}${listHtml}${pager}<div class="row" style="margin-top:12px;"><button class="btn btn-primary" id="closeTx">Cerrar</button></div>`, totalPages};
+        listHtml += `</div>`;
       }
-      let currentFilter = 'all';
-      let currentPage = 0;
-      const {html} = renderList(currentFilter, currentPage);
-      const bd = openModal(html);
-      function attachHandlers(){
-        bd.querySelectorAll('.filter-btn').forEach(btn => {
-          btn.addEventListener('click', () => {
-            currentFilter = btn.getAttribute('data-filter');
-            currentPage = 0;
-            const r = renderList(currentFilter, currentPage);
-            bd.querySelector('.modal').innerHTML = r.html;
-            attachHandlers();
+
+      const pagerHtml = `
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
+          <button class="btn-small" id="prevPage" ${page===0?'disabled':''}>Anterior</button>
+          <div style="align-self:center;color:var(--muted)">Página ${page+1} / ${totalPages}</div>
+          <button class="btn-small" id="nextPage" ${page+1>=totalPages?'disabled':''}>Siguiente</button>
+        </div>`;
+
+      const modalHtml = `
+        <h3>Mi cuenta</h3>
+        ${filtersHtml}
+        ${listHtml}
+        ${pagerHtml}
+        <div style="display:flex;justify-content:flex-end;margin-top:12px;"><button class="btn-small" id="closeAccount">Cerrar</button></div>
+      `;
+
+      const bd = openModal(modalHtml);
+
+      // Handlers: filters
+      bd.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const f = btn.getAttribute('data-filter');
+          bd.remove();
+          renderAccountModal(f, 0);
+        });
+      });
+
+      // Pager
+      const prev = bd.querySelector('#prevPage');
+      const next = bd.querySelector('#nextPage');
+      if(prev) prev.addEventListener('click', () => { bd.remove(); renderAccountModal(filter, Math.max(0, page-1)); });
+      if(next) next.addEventListener('click', () => { bd.remove(); renderAccountModal(filter, page+1); });
+
+      // Close
+      bd.querySelector('#closeAccount').addEventListener('click', () => closeModal(bd));
+
+      // Click en tarjeta: abrir detalle dentro del modal
+      bd.querySelectorAll('.tx-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const txid = card.getAttribute('data-txid');
+          const tx = TRANSACTIONS.find(t => t.txid === txid);
+          if(!tx) return;
+          // detalle bonito
+          const detailHtml = `
+            <h3>Transacción</h3>
+            <div class="tx-detail">
+              <div style="font-weight:900;margin-bottom:8px;">${tx.txid}</div>
+              <div class="muted">Tipo</div><div style="margin-bottom:8px;font-weight:700;">${tx.type}</div>
+              <div class="muted">De</div><div style="margin-bottom:8px;">${tx.from}</div>
+              <div class="muted">A</div><div style="margin-bottom:8px;">${tx.to}</div>
+              <div class="muted">Cantidad</div><div style="margin-bottom:8px;font-weight:900;">${Number(tx.amount).toFixed(4)} SC ${tx.type==='cambio'?`→ ${Number(tx.euro).toFixed(4)} €`:''}</div>
+              <div class="muted">Fecha</div><div style="margin-bottom:12px;">${new Date(tx.timestamp).toLocaleString('es-ES')}</div>
+              <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button class="btn-small" id="backList">Volver</button>
+                <button class="btn-small" id="focusGraph">Ver en gráfica</button>
+              </div>
+            </div>
+          `;
+          bd.querySelector('.modal').innerHTML = detailHtml;
+          bd.querySelector('#backList').addEventListener('click', () => { bd.remove(); renderAccountModal(filter, page); });
+          bd.querySelector('#focusGraph').addEventListener('click', () => {
+            // centrar en gráfica: resaltar punto si existe index
+            if(typeof tx.index !== 'undefined' && window.highlightPoint) {
+              window.highlightPoint(tx.index);
+            }
           });
         });
-        const prev = bd.querySelector('#prevPage');
-        const next = bd.querySelector('#nextPage');
-        if(prev) prev.addEventListener('click', () => { if(currentPage>0){ currentPage--; const r = renderList(currentFilter, currentPage); bd.querySelector('.modal').innerHTML = r.html; attachHandlers(); } });
-        if(next) next.addEventListener('click', () => { currentPage++; const r = renderList(currentFilter, currentPage); bd.querySelector('.modal').innerHTML = r.html; attachHandlers(); });
-        const closeBtn = bd.querySelector('#closeTx'); if(closeBtn) closeBtn.addEventListener('click', () => closeModal(bd));
-        bd.querySelectorAll('.tx-item').forEach(li => {
-          li.addEventListener('click', () => {
-            const txid = li.getAttribute('data-txid');
-            const tx = TRANSACTIONS.find(t => t.txid === txid);
-            if(!tx) return;
-            bd.querySelector('.modal').innerHTML = `<h3>Transacción ${tx.txid}</h3><p><strong>Tipo:</strong> ${tx.type}</p><p><strong>De:</strong> ${tx.from}</p><p><strong>A:</strong> ${tx.to}</p><p><strong>Cantidad:</strong> ${Number(tx.amount).toFixed(4)} SC ${tx.type==='cambio'?`→ ${Number(tx.euro).toFixed(4)} €`:''}</p><p><strong>Fecha:</strong> ${new Date(tx.timestamp).toLocaleString('es-ES')}</p><div class="row"><button class="btn btn-ghost" id="tx_back">Volver</button><button class="btn btn-primary" id="tx_focus">Ver en gráfica</button></div>`;
-            bd.querySelector('#tx_back').addEventListener('click', () => { const r = renderList(currentFilter, currentPage); bd.querySelector('.modal').innerHTML = r.html; attachHandlers(); });
-            bd.querySelector('#tx_focus').addEventListener('click', () => { highlightPoint(tx.index); });
-          });
+      });
+    }
+
+    // Ejemplo: función global para resaltar punto en la gráfica (implementa en tu app)
+    // Aquí definimos un stub para evitar errores si no existe la gráfica real.
+    window.highlightPoint = function(index){
+      // Si tienes Chart.js, implementa aquí la lógica para centrar y resaltar.
+      console.log('Pedir resaltar punto', index);
+      // Ejemplo: si usas chart variable:
+      if(window.chartInstance && typeof window.chartInstance.setActiveElements === 'function'){
+        const chart = window.chartInstance;
+        chart.setActiveElements([{datasetIndex:0, index}]);
+        chart.tooltip.setActiveElements([{datasetIndex:0, index}], {x:0,y:0});
+        chart.update('none');
+      }
+    };
+
+    // Para pruebas: añade algunas transacciones de ejemplo (puedes quitar esto)
+    (function seedExample(){
+      if(TRANSACTIONS.length) return;
+      const now = Date.now();
+      for(let i=0;i<8;i++){
+        TRANSACTIONS.push({
+          txid: randomHex(16),
+          type: ['ingreso','envio','cambio','gasto'][i%4],
+          from: i%2? 'user05' : 'external',
+          to: i%2? 'you' : 'user12',
+          amount: Number((1 + Math.random()*20).toFixed(4)),
+          euro: i%4===2 ? Number((Math.random()*5).toFixed(4)) : undefined,
+          timestamp: new Date(now - i*60000).toISOString(),
+          index: Math.max(0, 590 + i) // índice aproximado para centrar en gráfica
         });
       }
-      attachHandlers();
-    });
+    })();
 
-    // Pause / add sample
-    document.getElementById('pauseBtn').addEventListener('click', () => {
-      paused = !paused;
-      document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
-    });
-
-    document.getElementById('addSample').addEventListener('click', () => {
-      const lastLabel = masterLabels[masterLabels.length - 1];
-      const lastTime = (lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime();
-      const nextTime = new Date(lastTime + UPDATE_INTERVAL_MS);
-      const prev = masterValues[masterValues.length - 1];
-      const nv = nextValue(prev);
-      pushNewMasterPoint(nextTime, nv);
-    });
-
-    // Forzar render inicial
-    window.addEventListener('load', () => setTimeout(()=>chart.resize(),100));
+    // Si quieres, integra aquí la creación real de la gráfica y asigna window.chartInstance
+    // para que highlightPoint funcione correctamente.
   </script>
 </body>
 </html>
