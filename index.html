@@ -31,7 +31,8 @@
     .meta-line{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; font-size:13px; color:#333;}
 
     .chart-wrap{width:100%; margin-top:14px; background:transparent; border-radius:12px; padding:6px 6px 2px 6px;}
-    canvas{width:100% !important; height:220px !important; display:block;}
+    /* Aseguramos altura fija para que la gráfica siempre se vea */
+    canvas{width:100% !important; height:260px !important; display:block;}
 
     .botones{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;}
     .boton{background:var(--btn); color:#fff; padding:12px; border-radius:10px; font-weight:700; text-align:center; cursor:pointer; user-select:none;}
@@ -42,7 +43,7 @@
 
     @media (max-width:400px){
       .botones{grid-template-columns:1fr;}
-      canvas{height:200px !important;}
+      canvas{height:220px !important;}
     }
   </style>
 </head>
@@ -82,13 +83,15 @@
     </div>
   </div>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Chart.js + adaptador de fechas (date-fns) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/dist/date-fns.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
     // ---------- CONFIGURACIÓN ----------
     const UPDATE_INTERVAL_MS = 5000; // 5 segundos
-    const PRESET_POINTS = 120; // cuantos puntos preestablecidos (120 * 5s = 600s = 10min historial)
+    const PRESET_POINTS = 120; // cuantos puntos preestablecidos (120 * 5s = 10min historial)
     const BASE = 0.175; // valor base en euros (17.5 cents)
     const MIN = 0.15;
     const MAX = 0.20;
@@ -102,8 +105,8 @@
 
     // Genera un valor nuevo siguiendo un patrón de "random walk" alrededor de BASE
     function nextValue(prev){
-      const meanReversion = (BASE - prev) * 0.08; // mayor fuerza de retorno
-      const noise = (Math.random() - 0.5) * 0.006; // ruido más pequeño para actualizaciones rápidas
+      const meanReversion = (BASE - prev) * 0.08;
+      const noise = (Math.random() - 0.5) * 0.006;
       let v = prev + meanReversion + noise;
       v = clamp(v, MIN, MAX);
       return Number(v.toFixed(4));
@@ -157,7 +160,7 @@
           label: 'SCHOOLCOIN',
           data: values,
           borderColor: '#0b8a3e',
-          backgroundColor: 'rgba(11,138,62,0.08)',
+          backgroundColor: 'rgba(11,138,62,0.12)',
           pointRadius: 4,
           pointHoverRadius: 6,
           tension: 0.25,
@@ -263,6 +266,10 @@
       pushNewPoint(new Date(), nv);
     });
 
+    // Forzar render inicial (en algunos navegadores el canvas necesita un pequeño retraso)
+    window.addEventListener('load', () => {
+      setTimeout(() => chart.resize(), 100);
+    });
   </script>
 </body>
 </html>
