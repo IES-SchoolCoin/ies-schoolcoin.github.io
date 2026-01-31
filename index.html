@@ -17,31 +17,42 @@
     }
 
     html,body{
-      height:100%;
       min-height:100vh;
       margin:0;
       padding:0;
       box-sizing:border-box;
       background-repeat:no-repeat;
+      background-size:cover;
+      background-position:center;
       background-attachment:fixed;
       transition:background 300ms ease, color 200ms ease;
       color:var(--text);
       font-family:var(--font-family);
       -webkit-font-smoothing:antialiased;
     }
+    html {
+      height:100%;
+      min-height:100vh;
+    }
+    html {
+      height:100%;
+    }
+    body {
+      min-height:100vh;
+    }
 
-    .contenedor{width:100%;max-width:980px;margin:0 auto;padding:18px;box-sizing:border-box;min-height:calc(100vh - 48px);}
+    .contenedor{width:100%;max-width:980px;margin:0 auto;padding:18px;box-sizing:border-box;min-height:100vh;position:relative;z-index:1;}
     .top-bar{background:#000;color:#fff;padding:12px;font-weight:800;text-align:center;border-radius:10px;position:relative;}
     .top-left-actions{position:absolute;left:12px;top:8px;display:flex;gap:8px;align-items:center;}
     .top-right-actions{position:absolute;right:12px;top:8px;display:flex;gap:8px;align-items:center;}
-    .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;color:var(--text);}
-    .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
+    .header{margin-top:10px;font-size:22px;font-weight:800;text-align:center;color:var(--text);}
+    .row{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin-top:8px;}
     .col{flex:1;min-width:300px;}
-    .chart-wrap{margin-top:14px;border-radius:12px;padding:6px;background:transparent;}
-    canvas{width:100% !important;height:360px !important;display:block;border-radius:8px;background:transparent;}
-    @media (max-width:900px){ canvas{height:320px !important;} }
+    .chart-wrap{margin-top:8px;border-radius:12px;padding:4px;background:transparent;}
+    canvas{width:100% !important;height:260px !important;display:block;border-radius:8px;background:transparent;}
+    @media (max-width:900px){ canvas{height:200px !important;} }
 
-    .botones{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
+    .botones{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px;}
     .boton{background:var(--chart-color);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;box-shadow:var(--shadow);border:0;}
     .control-btn{background:#fff;border:1px solid rgba(0,0,0,0.08);padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700;}
     .icon-btn{background:transparent;border:0;color:#fff;cursor:pointer;padding:6px;border-radius:8px;font-weight:700;}
@@ -88,23 +99,8 @@
     .info-section{margin-bottom:12px;padding-bottom:8px;border-bottom:1px dashed rgba(0,0,0,0.04);}
 
     @media (max-width:900px){ .contenedor{max-width:420px;} .botones{grid-template-columns:1fr 1fr;} .login-card{max-width:92vw;} .modal{max-width:92vw;} }
-    
-    .error-message {
-      color: var(--danger);
-      font-size: 13px;
-      margin-top: 4px;
-      display: none;
-    }
-    
-    .step {
-      animation: fadeIn 0.3s ease-in;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
   </style>
+<base target="_blank">
 </head>
 <body>
   <div class="contenedor" id="appRoot" aria-hidden="true">
@@ -125,13 +121,13 @@
     <div class="header">IES-SchoolCoin</div>
 
     <div class="row" style="align-items:center;">
-      <div style="flex:0 0 160px; text-align:center;">
-        <div style="width:84px;height:84px;margin:8px auto;background:var(--chart-color);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:24px;">SC</div>
+      <div style="flex:1; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+        <div style="width:84px;height:84px;margin:8px auto;"><img src="LOGO.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;"></div>
         <div id="valorDisplay" style="font-weight:900;font-size:28px;margin-top:6px;text-align:center;">0.000 €</div>
       </div>
 
       <div class="col">
-        <div style="font-weight:700;margin-bottom:6px;color:var(--text);">Gráfica</div>
+        
         <div class="chart-wrap"><canvas id="grafica"></canvas></div>
       </div>
     </div>
@@ -159,7 +155,7 @@
         <div class="field"><label>Nombre</label><input id="loginName" type="text" placeholder="Nombre"></div>
         <div class="field"><label>Apellidos</label><input id="loginSurname" type="text" placeholder="Apellidos"></div>
         <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Contraseña"></div>
-        <div id="loginError" class="error-message">Rellena todos los campos para continuar.</div>
+        <div id="loginError" class="error" style="display:none;color:var(--danger);">Rellena todos los campos para continuar.</div>
         <div class="login-actions">
           <button id="showCreateBtn" class="btn-ghost">Crear cuenta</button>
           <button id="loginBtn" class="btn-primary">Entrar</button>
@@ -174,26 +170,25 @@
         <div class="steps" id="stepsIndicator" aria-hidden="false">
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="step-dot active" data-step="1">1</div>
-            <div class="step-label">Datos básicos</div>
+            <div class="step-label">-- Nombre</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="step-dot" data-step="2">2</div>
-            <div class="step-label">Detalles</div>
+            <div class="step-label">-- Detalles</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="step-dot" data-step="3">3</div>
-            <div class="step-label">Contacto</div>
+            <div class="step-label">-- Contacto</div>
           </div>
         </div>
 
         <!-- Step 1 -->
         <div class="step" data-step="1">
-          <div class="field"><label>Nombre *</label><input id="c_name" type="text" placeholder="Nombre"></div>
-          <div class="field"><label>Apellidos *</label><input id="c_surname" type="text" placeholder="Apellidos"></div>
-          <div class="field"><label>Correo electrónico *</label><input id="c_email" type="email" placeholder="tu@ejemplo.com"></div>
-          <div class="field"><label>Contraseña *</label><input id="c_pass" type="password" placeholder="Contraseña"></div>
-          <div class="field"><label>Confirmar contraseña *</label><input id="c_pass2" type="password" placeholder="Repite la contraseña"></div>
-          <div id="step1Error" class="error-message">Rellena todos los campos obligatorios y asegúrate de que las contraseñas coinciden.</div>
+          <div class="field"><label>Nombre</label><input id="c_name" type="text" placeholder="Nombre"></div>
+          <div class="field"><label>Apellidos</label><input id="c_surname" type="text" placeholder="Apellidos"></div>
+          <div class="field"><label>Correo electrónico</label><input id="c_email" type="email" placeholder="tu@ejemplo.com"></div>
+          <div class="field"><label>Contraseña</label><input id="c_pass" type="password" placeholder="Contraseña"></div>
+          <div class="field"><label>Confirmar contraseña</label><input id="c_pass2" type="password" placeholder="Repite la contraseña"></div>
           <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
             <button id="cancelCreate" class="btn-ghost">Cancelar</button>
             <button id="nextTo2" class="btn-primary">Siguiente</button>
@@ -221,7 +216,7 @@
             <button id="backTo2" class="btn-ghost">Atrás</button>
             <button id="submitCreate" class="btn-primary">Crear cuenta</button>
           </div>
-          <div id="createError" class="error-message" style="margin-top:8px;"></div>
+          <div id="createError" class="error" style="display:none;color:var(--danger);margin-top:8px;"></div>
         </div>
       </div>
     </div>
@@ -251,7 +246,6 @@
     const submitCreate = document.getElementById('submitCreate');
     const fullLoader = document.getElementById('fullLoader');
     const createError = document.getElementById('createError');
-    const step1Error = document.getElementById('step1Error');
 
     const steps = Array.from(document.querySelectorAll('.step'));
     const stepDots = Array.from(document.querySelectorAll('.step-dot'));
@@ -263,105 +257,50 @@
       stepDots.forEach(d => {
         if (Number(d.dataset.step) === n) d.classList.add('active'); else d.classList.remove('active');
       });
+      const modalBody = document.querySelector('.modal-body');
+      if(modalBody) modalBody.scrollTop = 0;
     }
 
-    function isLoggedIn(){ 
-      try { 
-        return sessionStorage.getItem('schoolcoin_user') !== null; 
-      } catch(e){ 
-        return false; 
-      } 
-    }
-    
-    function showAppAfterLogin(){ 
-      loginOverlay.style.display = 'none'; 
-      appRoot.setAttribute('aria-hidden','false'); 
-    }
-    
-    function saveSession(user){ 
-      try { 
-        sessionStorage.setItem('schoolcoin_user', JSON.stringify(user)); 
-      } catch(e){
-        console.warn('No se pudo guardar sesión:', e);
-      } 
-    }
+    function isLoggedIn(){ try { return sessionStorage.getItem('schoolcoin_user') !== null; } catch(e){ return false; } }
+    function showAppAfterLogin(){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); }
+    function saveSession(user){ try { sessionStorage.setItem('schoolcoin_user', JSON.stringify(user)); } catch(e){} }
 
-    // Check login status on load
-    if(isLoggedIn()){ 
-      showAppAfterLogin(); 
-    } else { 
-      loginOverlay.style.display = 'flex'; 
-      appRoot.setAttribute('aria-hidden','true'); 
-    }
+    if(isLoggedIn()){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); } else { loginOverlay.style.display = 'flex'; appRoot.setAttribute('aria-hidden','true'); }
 
-    // Login handler
     loginBtn.addEventListener('click', () => {
       const name = document.getElementById('loginName').value || '';
       const surname = document.getElementById('loginSurname').value || '';
       const pass = document.getElementById('loginPass').value || '';
-      
-      if(!name.trim() || !surname.trim() || !pass.trim()){ 
-        loginError.style.display = 'block'; 
-        return; 
-      }
-      
+      if(!name.trim() || !surname.trim() || !pass.trim()){ loginError.style.display = 'block'; return; }
       loginError.style.display = 'none';
-      saveSession({ 
-        name: name.trim(), 
-        surname: surname.trim(), 
-        loggedAt: new Date().toISOString() 
-      });
+      saveSession({ name: name.trim(), surname: surname.trim(), loggedAt: new Date().toISOString() });
       showAppAfterLogin();
     });
 
-    // Show create account form
     showCreateBtn.addEventListener('click', () => {
       loginForm.style.display = 'none';
       createForm.style.display = 'block';
       createError.style.display = 'none';
-      step1Error.style.display = 'none';
       showStep(1);
     });
 
-    // Cancel create account
     cancelCreate.addEventListener('click', () => {
       createForm.style.display = 'none';
       loginForm.style.display = 'block';
-      // Reset form
-      document.getElementById('c_name').value = '';
-      document.getElementById('c_surname').value = '';
-      document.getElementById('c_email').value = '';
-      document.getElementById('c_pass').value = '';
-      document.getElementById('c_pass2').value = '';
     });
 
-    // Step 1 validation and next
     document.getElementById('nextTo2').addEventListener('click', () => {
       const name = document.getElementById('c_name').value.trim();
       const surname = document.getElementById('c_surname').value.trim();
       const email = document.getElementById('c_email').value.trim();
       const pass = document.getElementById('c_pass').value;
       const pass2 = document.getElementById('c_pass2').value;
-      
-      if(!name || !surname || !email || !pass || !pass2){
-        step1Error.textContent = 'Por favor, rellena todos los campos obligatorios.';
-        step1Error.style.display = 'block';
+      if(!name || !surname || !email || !pass || !pass2 || pass !== pass2){
+        createError.style.display = 'block';
+        createError.textContent = 'Rellena los campos obligatorios y asegúrate de que las contraseñas coinciden.';
         return;
       }
-      
-      if(pass !== pass2){
-        step1Error.textContent = 'Las contraseñas no coinciden.';
-        step1Error.style.display = 'block';
-        return;
-      }
-      
-      if(pass.length < 4){
-        step1Error.textContent = 'La contraseña debe tener al menos 4 caracteres.';
-        step1Error.style.display = 'block';
-        return;
-      }
-      
-      step1Error.style.display = 'none';
+      createError.style.display = 'none';
       showStep(2);
     });
 
@@ -369,11 +308,8 @@
     document.getElementById('nextTo3').addEventListener('click', () => { showStep(3); });
     document.getElementById('backTo2').addEventListener('click', () => { showStep(2); });
 
-    // Submit create account
     document.getElementById('submitCreate').addEventListener('click', () => {
       createError.style.display = 'none';
-      
-      // Validate step 1 data again
       const data = {
         name: document.getElementById('c_name').value || '',
         surname: document.getElementById('c_surname').value || '',
@@ -389,65 +325,39 @@
         notes: document.getElementById('c_notes').value || ''
       };
 
-      if(!data.name.trim() || !data.surname.trim() || !data.email.trim() || !data.pass || !data.pass2 || data.pass !== data.pass2){
-        createError.textContent = 'Error en los datos. Vuelve al paso 1 para verificar.';
+      if(!data.name || !data.surname || !data.email || !data.pass || !data.pass2 || data.pass !== data.pass2){
         createError.style.display = 'block';
+        createError.textContent = 'Rellena todos los campos obligatorios y confirma la contraseña.';
         return;
       }
 
-      // Show loader for 2 seconds (reduced from 10 for better UX)
+      // Show loader for 10s
       fullLoader.style.display = 'flex';
-      
       setTimeout(() => {
         fullLoader.style.display = 'none';
-        
-        saveSession({ 
-          name: data.name.trim(), 
-          surname: data.surname.trim(), 
-          email: data.email.trim(), 
-          createdAt: new Date().toISOString() 
-        });
+        saveSession({ name: data.name.trim(), surname: data.surname.trim(), email: data.email.trim(), createdAt: new Date().toISOString() });
 
-        // Close forms and show app
+        // Close the create form and the entire login overlay; do NOT reopen the login form
         createForm.style.display = 'none';
         loginForm.style.display = 'none';
         loginOverlay.style.display = 'none';
         appRoot.setAttribute('aria-hidden','false');
 
-        // Show welcome modal
         const welcomeHtml = `
           <div class="modal-header"><h3>¡Cuenta creada!</h3></div>
           <div class="modal-body" style="text-align:center;">
-            <div style="font-weight:900;font-size:20px;margin-bottom:8px;">¡Bienvenido, ${data.name}!</div>
+            <div style="font-weight:900;font-size:20px;margin-bottom:8px;">¡Disfruta la app!</div>
             <div class="muted" style="margin-bottom:12px;">Tu cuenta ha sido creada correctamente. Ya puedes empezar a usar SchoolCoin.</div>
             <div class="row-actions"><button class="btn-primary" id="welcomeOk">Comenzar</button></div>
           </div>`;
         const bd = openModal(welcomeHtml);
         bd.querySelector('#welcomeOk').addEventListener('click', () => closeModal(bd));
-      }, 2000); // Reduced to 2 seconds for better user experience
+      }, 10000);
     });
 
     /* ---------------- Account code (IES + 8 dígitos) ---------------- */
-    function generateSpanishStyleAccountCode() { 
-      const prefix = 'IES'; 
-      let digits = ''; 
-      for (let i = 0; i < 8; i++) digits += Math.floor(Math.random() * 10); 
-      return prefix + digits; 
-    }
-    
-    function getOrCreateAccountCode() { 
-      const key = 'schoolcoin_account_code'; 
-      try { 
-        const stored = localStorage.getItem(key); 
-        if (stored && /^IES\d{8}$/.test(stored)) return stored; 
-        const code = generateSpanishStyleAccountCode(); 
-        localStorage.setItem(key, code); 
-        return code; 
-      } catch (e) { 
-        return generateSpanishStyleAccountCode(); 
-      } 
-    }
-    
+    function generateSpanishStyleAccountCode() { const prefix = 'IES'; let digits = ''; for (let i = 0; i < 8; i++) digits += Math.floor(Math.random() * 10); return prefix + digits; }
+    function getOrCreateAccountCode() { const key = 'schoolcoin_account_code'; try { const stored = localStorage.getItem(key); if (stored && /^IES\d{8}$/.test(stored)) return stored; const code = generateSpanishStyleAccountCode(); localStorage.setItem(key, code); return code; } catch (e) { return generateSpanishStyleAccountCode(); } }
     const accountCode = getOrCreateAccountCode();
 
     /* ---------------- Modal helpers ---------------- */
@@ -456,15 +366,10 @@
       bd.className = 'modal-backdrop';
       bd.innerHTML = `<div class="modal">${contentHtml}</div>`;
       document.body.appendChild(bd);
-      bd.addEventListener('click', (e) => { 
-        if(e.target === bd) bd.remove(); 
-      });
+      bd.addEventListener('click', (e) => { if(e.target === bd) bd.remove(); });
       return bd;
     }
-    
-    function closeModal(bd){ 
-      if(bd && bd.remove) bd.remove(); 
-    }
+    function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
     /* ---------------- Market simulation & chart ---------------- */
     const UPDATE_INTERVAL_MS = 5000;
@@ -472,25 +377,13 @@
     const MIN = 0.05, MAX = 0.50, BASE = 0.175, MAX_STEP_PER_TICK = 0.0009;
 
     function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-    
-    function formatDynamicDecimals(num){ 
-      if (!isFinite(num)) return String(num); 
-      const s = num.toFixed(8).replace(/0+$/,'').replace(/\.$/,''); 
-      const parts = s.split('.'); 
-      if(parts.length === 1) return parts[0]; 
-      const frac = parts[1]; 
-      if(frac.length <= 3) return parts[0] + '.' + frac.padEnd(3,'0'); 
-      return parts[0] + '.' + frac; 
-    }
+    function formatDynamicDecimals(num){ if (!isFinite(num)) return String(num); const s = num.toFixed(8).replace(/0+$/,'').replace(/\.$/,''); const parts = s.split('.'); if(parts.length === 1) return parts[0]; const frac = parts[1]; if(frac.length <= 3) return parts[0] + '.' + frac.padEnd(3,'0'); return parts[0] + '.' + frac; }
 
     function nextValue(prev){
       const meanReversion = (BASE - prev) * 0.10;
       const baseNoise = (Math.random() - 0.5) * 0.0022;
       let candidate = prev + meanReversion + baseNoise;
-      if(Math.random() < 0.04){ 
-        const jumpPct = (Math.random() * 2 - 1) * 0.02; 
-        candidate = candidate * (1 + jumpPct); 
-      }
+      if(Math.random() < 0.04){ const jumpPct = (Math.random() * 2 - 1) * 0.02; candidate = candidate * (1 + jumpPct); }
       const delta = candidate - prev;
       const limitedDelta = clamp(delta, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
       const next = clamp(prev + limitedDelta, MIN, MAX);
@@ -498,16 +391,11 @@
     }
 
     function generateInitialSeries(){
-      const labels = []; 
-      const data = [];
+      const labels = []; const data = [];
       const nowAligned = Math.floor(Date.now() / UPDATE_INTERVAL_MS) * UPDATE_INTERVAL_MS;
       const start = nowAligned - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
       let val = BASE + (Math.random() - 0.5) * 0.04;
-      for(let i=0;i<PRESET_POINTS;i++){ 
-        labels.push(new Date(start + i * UPDATE_INTERVAL_MS)); 
-        val = nextValue(val); 
-        data.push(Number(val.toFixed(6))); 
-      }
+      for(let i=0;i<PRESET_POINTS;i++){ labels.push(new Date(start + i * UPDATE_INTERVAL_MS)); val = nextValue(val); data.push(Number(val.toFixed(6))); }
       return {labels, data};
     }
 
@@ -526,10 +414,7 @@
           data: masterValues.slice(),
           borderColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e',
           borderWidth: 1,
-          backgroundColor: (function(){ 
-            const c = getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e'; 
-            return `rgba(${parseInt(c.slice(1,3),16)},${parseInt(c.slice(3,5),16)},${parseInt(c.slice(5,7),16)},0.10)`; 
-          })(),
+          backgroundColor: (function(){ const c = getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e'; return `rgba(${parseInt(c.slice(1,3),16)},${parseInt(c.slice(3,5),16)},${parseInt(c.slice(5,7),16)},0.10)`; })(),
           pointRadius: (ctx) => ctx.active ? 6 : 0,
           pointHoverRadius: 6,
           pointHitRadius: 12,
@@ -556,17 +441,8 @@
           }
         },
         scales: {
-          x: { 
-            type: 'time', 
-            time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } }, 
-            grid: { display: false }, 
-            ticks: { display: false } 
-          },
-          y: { 
-            beginAtZero: false, 
-            grid: { display: true, color: 'rgba(0,0,0,0.04)' }, 
-            ticks: { color: '#333', callback: v => Number(Number(v).toFixed(2)) + ' €' } 
-          }
+          x: { type: 'time', time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } }, grid: { display: false }, ticks: { display: false } },
+          y: { beginAtZero: false, grid: { display: true, color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#333', callback: v => Number(Number(v).toFixed(2)) + ' €' } }
         }
       }
     });
@@ -591,14 +467,7 @@
       adjustYAxisToPrice(value);
     }
 
-    function clearActiveSelection(){ 
-      try{ 
-        chart.setActiveElements([]); 
-        chart.tooltip.setActiveElements([], {x:0,y:0}); 
-        chart.update('none'); 
-      }catch(e){} 
-    }
-    
+    function clearActiveSelection(){ try{ chart.setActiveElements([]); chart.tooltip.setActiveElements([], {x:0,y:0}); chart.update('none'); }catch(e){} }
     function highlightPoint(index){
       if(index == null) return;
       clearActiveSelection();
@@ -620,10 +489,7 @@
       clearActiveSelection();
       masterLabels.push(nextDate);
       masterValues.push(newMasterVal);
-      if(masterLabels.length > PRESET_POINTS){ 
-        masterLabels.shift(); 
-        masterValues.shift(); 
-      }
+      if(masterLabels.length > PRESET_POINTS){ masterLabels.shift(); masterValues.shift(); }
 
       const lastSmoothed = chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1];
       const raw = newMasterVal + (Math.random() - 0.5) * 0.0008;
@@ -636,10 +502,7 @@
 
       chart.data.labels.push(nextDate);
       chart.data.datasets[0].data.push(Number(smoothed.toFixed(6)));
-      if(chart.data.labels.length > PRESET_POINTS){ 
-        chart.data.labels.shift(); 
-        chart.data.datasets[0].data.shift(); 
-      }
+      if(chart.data.labels.length > PRESET_POINTS){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
       chart.update('none');
 
       setTimeout(() => clearActiveSelection(), 20);
@@ -661,13 +524,8 @@
     scheduleNextUpdate();
     updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
 
-    /* ---------------- Transactions ---------------- */
-    function randomHex(len=8){ 
-      const chars='0123456789abcdef'; 
-      let s=''; 
-      for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; 
-      return s; 
-    }
+    /* ---------------- Transactions (botones funcionales) ---------------- */
+    function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
     document.getElementById('btnEnviar').addEventListener('click', () => {
       const html = `
@@ -684,31 +542,13 @@
         const dest = bd.querySelector('#m_dest').value || 'desconocido';
         const amt = parseFloat(bd.querySelector('#m_amt').value) || 0;
         const lastIndex = masterLabels.length - 1;
-        TRANSACTIONS.push({ 
-          txid: randomHex(16), 
-          ref: accountCode, 
-          type:'envio', 
-          from:'you', 
-          to:dest, 
-          amount: Number(amt.toFixed(4)), 
-          timestamp: new Date(masterLabels[lastIndex]).toISOString(), 
-          index: lastIndex 
-        });
+        TRANSACTIONS.push({ txid: randomHex(16), ref: accountCode, type:'envio', from:'you', to:dest, amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex });
         const prev = masterValues[masterValues.length - 1];
         const impact = clamp(amt * 0.00002, 0, 0.003);
         const nv = clamp(prev + impact * (Math.random() > 0.5 ? 1 : -1), MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
         pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
-        bd.querySelector('.modal').innerHTML = `
-          <div class="modal-header"><h3>Enviado</h3></div>
-          <div class="modal-body">
-            <div style="font-weight:800;margin-bottom:6px;">Enviado ${amt.toFixed(4)} SC</div>
-            <div class="muted">a ${dest}</div>
-            <div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div>
-            <div class="row-actions" style="margin-top:12px;">
-              <button class="btn-primary" id="m_ok">Aceptar</button>
-            </div>
-          </div>`;
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Enviado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">Enviado ${amt.toFixed(4)} SC</div><div class="muted">a ${dest}</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="m_ok">Aceptar</button></div></div>`;
         bd.querySelector('#m_ok').addEventListener('click', () => closeModal(bd));
       });
     });
@@ -720,7 +560,7 @@
           <div class="field"><label>Origen</label><input id="i_from" type="text" placeholder="Usuario o fuente"></div>
           <div class="field"><label>Cantidad (SC)</label><input id="i_amt" type="number" step="0.01" placeholder="10.00"></div>
           <div class="field"><label>Código de verificación del centro</label><input id="i_code" type="password" placeholder="Introduce el código (oculto)"></div>
-          <div id="i_error" class="error-message">Código incorrecto</div>
+          <div id="i_error" class="error" style="display:none;color:var(--danger);">Código incorrecto</div>
           <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
           <div class="row-actions"><button class="btn-ghost" id="i_cancel">Cancelar</button><button class="btn-primary" id="i_ok">Confirmar</button></div>
         </div>`;
@@ -732,39 +572,15 @@
         const amt = parseFloat(bd.querySelector('#i_amt').value) || 0;
         const code = bd.querySelector('#i_code').value || '';
         const errEl = bd.querySelector('#i_error');
-        
-        if(code !== CODE){ 
-          errEl.style.display = 'block'; 
-          return; 
-        }
-        
+        if(code !== CODE){ errEl.style.display = 'block'; return; }
         errEl.style.display = 'none';
         const lastIndex = masterLabels.length - 1;
-        TRANSACTIONS.push({ 
-          txid: randomHex(16), 
-          ref: accountCode, 
-          type:'ingreso', 
-          from, 
-          to:'you', 
-          amount: Number(amt.toFixed(4)), 
-          timestamp: new Date(masterLabels[lastIndex]).toISOString(), 
-          index: lastIndex 
-        });
+        TRANSACTIONS.push({ txid: randomHex(16), ref: accountCode, type:'ingreso', from, to:'you', amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex });
         const prev = masterValues[masterValues.length - 1];
         const nv = clamp(prev + clamp(amt * 0.00002, 0, 0.003), MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
         pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
-        
-        bd.querySelector('.modal').innerHTML = `
-          <div class="modal-header"><h3>Ingreso registrado</h3></div>
-          <div class="modal-body">
-            <div style="font-weight:800;margin-bottom:6px;">+${amt.toFixed(4)} SC</div>
-            <div class="muted">Origen: ${from}</div>
-            <div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div>
-            <div class="row-actions" style="margin-top:12px;">
-              <button class="btn-primary" id="i_done">Aceptar</button>
-            </div>
-          </div>`;
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Ingreso registrado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">+${amt.toFixed(4)} SC</div><div class="muted">Origen: ${from}</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="i_done">Aceptar</button></div></div>`;
         bd.querySelector('#i_done').addEventListener('click', () => closeModal(bd));
       });
     });
@@ -775,7 +591,7 @@
         <div class="modal-header"><h3>Cambiar SchoolCoins a €</h3></div>
         <div class="modal-body">
           <div class="field"><label>Cantidad (SC)</label><input id="c_amt" type="number" step="0.0001" placeholder="10.00"></div>
-          <div class="field"><label>Precio por SC</label><div style="padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,0.06);font-weight:800;">${formatDynamicDecimals(currentPrice)} €</div><div class="small-note">Equivalencia se calculará al confirmar.</div></div>
+          <div class="field"><label>Precio por SC</label><div style="padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,0.06);font-weight:800;">${formatDynamicDecimals(currentPrice)} €</div><div class="small-note">Equivalencia se calculará al confirmar y se guardará en la transacción.</div></div>
           <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
           <div class="row-actions"><button class="btn-ghost" id="c_cancel">Cancelar</button><button class="btn-primary" id="c_ok">Cambiar</button></div>
         </div>`;
@@ -788,33 +604,12 @@
         const lastIndex = masterLabels.length - 1;
         const priceNow = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
         const euros = Number((amt * priceNow).toFixed(6));
-        TRANSACTIONS.push({ 
-          txid: randomHex(16), 
-          ref: accountCode, 
-          type:'cambio', 
-          from:'you', 
-          to:'exchange', 
-          amount: Number(amt.toFixed(4)), 
-          euro: euros, 
-          price_at: priceNow, 
-          timestamp: new Date(masterLabels[lastIndex]).toISOString(), 
-          index: lastIndex 
-        });
+        TRANSACTIONS.push({ txid: randomHex(16), ref: accountCode, type:'cambio', from:'you', to:'exchange', amount: Number(amt.toFixed(4)), euro: euros, price_at: priceNow, timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex });
         const prev = masterValues[masterValues.length - 1];
         const nv = clamp(prev + (Math.random()-0.5) * 0.0008, MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
         pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
-        
-        bd.querySelector('.modal').innerHTML = `
-          <div class="modal-header"><h3>Cambio realizado</h3></div>
-          <div class="modal-body">
-            <div style="font-weight:800;margin-bottom:6px;">${amt.toFixed(4)} SC → ${euros.toFixed(6)} €</div>
-            <div class="muted">Precio usado: ${formatDynamicDecimals(priceNow)} €</div>
-            <div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div>
-            <div class="row-actions" style="margin-top:12px;">
-              <button class="btn-primary" id="c_done">Aceptar</button>
-            </div>
-          </div>`;
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Cambio realizado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">${amt.toFixed(4)} SC → ${euros.toFixed(6)} €</div><div class="muted">Precio usado: ${formatDynamicDecimals(priceNow)} €</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="c_done">Aceptar</button></div></div>`;
         bd.querySelector('#c_done').addEventListener('click', () => closeModal(bd));
       });
     });
@@ -837,7 +632,7 @@
       bd.querySelector('#closeAccount').addEventListener('click', () => closeModal(bd));
     });
 
-    /* ---------------- Appearance presets ---------------- */
+    /* ---------------- Appearance presets & full-page background ---------------- */
     const PRESETS = [
       { id: 'sunny', name: 'Sunny Warm', bgPrimary: '#FFF7D6', bgSecondary: '#F7D54A', chart: '#0b8a3e' },
       { id: 'ocean', name: 'Ocean Breeze', bgPrimary: '#E6F7FF', bgSecondary: '#6EC1E4', chart: '#0a6fa0' },
@@ -853,18 +648,15 @@
       const num = parseInt(full, 16);
       return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
     }
-    
     function luminanceFromHex(hex) {
       const { r, g, b } = hexToRgb(hex);
       const srgb = [r,g,b].map(v => v/255).map(c => c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4));
       return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
     }
-    
     function pickTextColorForBackground(primaryHex, secondaryHex) {
       const lum = (luminanceFromHex(primaryHex) + luminanceFromHex(secondaryHex)) / 2;
       return lum < 0.45 ? { text: '#ffffff', muted: 'rgba(255,255,255,0.8)' } : { text: '#0b0b0b', muted: '#444444' };
     }
-    
     function hexToRgba(hex, alpha) {
       const h = hex.replace('#','');
       const full = h.length === 3 ? h.split('').map(c=>c+c).join('') : h;
@@ -881,6 +673,10 @@
       document.documentElement.style.setProperty('--app-bg', p);
       document.documentElement.style.setProperty('--chart-color', preset.chart);
       document.body.style.background = `linear-gradient(180deg, ${p} 0%, ${s} 100%)`;
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundAttachment = 'fixed';
+      document.body.style.backgroundRepeat = 'no-repeat';
       const colors = pickTextColorForBackground(p, s);
       document.documentElement.style.setProperty('--text', colors.text);
       document.documentElement.style.setProperty('--muted', colors.muted);
@@ -889,25 +685,14 @@
         chartInstance.data.datasets[0].backgroundColor = hexToRgba(preset.chart, 0.10);
         chartInstance.update('none');
       }
+      document.querySelectorAll('.header, .small-note, .muted, .field label').forEach(el => {
+        el.style.color = colors.text === '#ffffff' ? colors.text : 'var(--text)';
+      });
     }
 
     const PRESET_KEY = 'schoolcoin_preset_choice';
-    function savePresetChoice(id) { 
-      try { 
-        localStorage.setItem(PRESET_KEY, id); 
-      } catch(e){
-        console.warn('No se pudo guardar preferencia:', e);
-      } 
-    }
-    
-    function loadPresetChoice() { 
-      try { 
-        const id = localStorage.getItem(PRESET_KEY); 
-        return PRESETS.find(p => p.id === id) || PRESETS[0]; 
-      } catch(e) { 
-        return PRESETS[0]; 
-      } 
-    }
+    function savePresetChoice(id) { try { localStorage.setItem(PRESET_KEY, id); } catch(e){} }
+    function loadPresetChoice() { try { const id = localStorage.getItem(PRESET_KEY); return PRESETS.find(p => p.id === id) || PRESETS[0]; } catch(e) { return PRESETS[0]; } }
 
     function openPresetModal() {
       const current = loadPresetChoice();
@@ -934,15 +719,9 @@
       });
 
       bd._selected = current;
-      bd.querySelector('#presetCancel').addEventListener('click', () => {
-        applyPreset(current); // Revert
-        closeModal(bd);
-      });
+      bd.querySelector('#presetCancel').addEventListener('click', () => closeModal(bd));
       bd.querySelector('#presetSave').addEventListener('click', () => {
-        if (bd._selected) { 
-          savePresetChoice(bd._selected.id); 
-          applyPreset(bd._selected); 
-        }
+        if (bd._selected) { savePresetChoice(bd._selected.id); applyPreset(bd._selected); }
         closeModal(bd);
       });
     }
@@ -950,13 +729,9 @@
     const settingsBtn = document.getElementById('settingsBtn');
     if (settingsBtn) settingsBtn.addEventListener('click', openPresetModal);
 
-    // Load saved preset
-    (function(){ 
-      const p = loadPresetChoice(); 
-      applyPreset(p); 
-    })();
+    (function(){ const p = loadPresetChoice(); applyPreset(p); })();
 
-    /* ---------------- Info modal ---------------- */
+    /* ---------------- Info modal (question mark) ---------------- */
     const infoBtn = document.getElementById('infoBtn');
     infoBtn.addEventListener('click', () => {
       const content = `
@@ -989,6 +764,7 @@
             }
           </style>
 
+          <!-- 1 -->
           <div class="accordion-item">
             <div class="accordion-title">¿Qué es SchoolCoin? <span>+</span></div>
             <div class="accordion-content">
@@ -996,6 +772,7 @@
             </div>
           </div>
 
+          <!-- 2 -->
           <div class="accordion-item">
             <div class="accordion-title">¿Para qué sirve? <span>+</span></div>
             <div class="accordion-content">
@@ -1003,26 +780,74 @@
             </div>
           </div>
 
+          <!-- 3 -->
           <div class="accordion-item">
             <div class="accordion-title">¿Por qué es segura? <span>+</span></div>
             <div class="accordion-content">
-              SchoolCoin funciona con un sistema interno del centro educativo. 
-              No depende de mercados externos, no puede perder valor por especulación 
-              y todas las transacciones quedan registradas. 
+              SchoolCoin funciona con un sistema interno del centro educativo.  
+              No depende de mercados externos, no puede perder valor por especulación  
+              y todas las transacciones quedan registradas.  
               Además, cada usuario tiene un código único IESXXXXXXXX.
             </div>
           </div>
 
+          <!-- 4 -->
+          <div class="accordion-item">
+            <div class="accordion-title">¿Por qué comprarla o usarla? <span>+</span></div>
+            <div class="accordion-content">
+              Porque te da acceso a ventajas exclusivas:  
+              • Descuentos  
+              • Sorteos  
+              • Material escolar  
+              • Actividades especiales  
+              • Puntos extra  
+              Y te familiariza con el uso de monedas digitales de forma segura.
+            </div>
+          </div>
+
+          <!-- 5 -->
           <div class="accordion-item">
             <div class="accordion-title">Valor de SchoolCoin <span>+</span></div>
             <div class="accordion-content">
-              1 SC = 0,10 €<br>
-              10 SC = 1 €<br>
-              50 SC = 5 €<br>
-              100 SC = 10 €<br>
-              Valor fijo, claro y fácil de entender.
+              <strong>Valor de entrada: 0,10 € (10 céntimos)</strong> por cada SchoolCoin.<br><br>
+              SchoolCoin es una criptomoneda, por lo que su valor varía en tiempo real según la oferta y la demanda del mercado escolar.<br><br>
+              • El precio fluctua constantemente (consulta la gráfica principal)<br>
+              • Puedes cambiar tus SC a euros cuando el valor sea favorable<br>
+              • El valor depende de la actividad y transacciones dentro del instituto<br>
+              • Al igual que otras criptomonedas, su cotización cambia cada instante
             </div>
           </div>
+
+          <!-- 6 -->
+          <div class="accordion-item">
+            <div class="accordion-title">¿En qué se puede usar? <span>+</span></div>
+            <div class="accordion-content">
+              • Descuentos en cafetería  
+              • Material escolar  
+              • Sorteos semanales  
+              • Actividades especiales  
+              • Puntos extra en asignaturas  
+            </div>
+          </div>
+          <!-- 7 -->
+          <div class="accordion-item">
+            <div class="accordion-title">¿Dónde encontrarnos? <span>+</span></div>
+            <div class="accordion-content">
+              <strong>IES Joaquín Rodrigo</strong><br><br>
+              <strong>Dirección:</strong><br>
+              Calle Casalarreina, 28<br>
+              28032 Madrid (Vicálvaro)<br><br>
+
+              <strong>Contacto:</strong><br>
+              • Teléfono: 91 776 22 62<br>
+              • Fax: 91 776 23 93<br>
+              • Email: ies.joaquinrodrigo.madrid@educa.madrid.org<br><br>
+
+              <strong>Web:</strong><br>
+              <a href="https://site.educa.madrid.org/ies.joaquinrodrigo.madrid/" target="_blank" style="color:var(--chart-color);">site.educa.madrid.org/ies.joaquinrodrigo.madrid</a>
+            </div>
+          </div>
+
 
           <div style="display:flex;justify-content:flex-end;margin-top:12px;">
             <button class="btn-primary" id="closeInfo">Cerrar</button>
@@ -1031,20 +856,20 @@
       `;
       const bd = openModal(content);
       
-      // Accordion logic
+      // Add accordion functionality after modal is created
       bd.querySelectorAll('.accordion-title').forEach(t => {
         t.addEventListener('click', () => {
-          const content = t.nextElementSibling;
-          const isOpen = content.style.display === 'block';
-
+          const accordionContent = t.nextElementSibling;
+          const isOpen = accordionContent.style.display === 'block';
+          
           // Close all
           bd.querySelectorAll('.accordion-content').forEach(c => c.style.display = 'none');
           bd.querySelectorAll('.accordion-title span').forEach(s => s.textContent = '+');
-
+          
           // Open clicked if was closed
           if(!isOpen){
-            content.style.display = 'block';
-            t.querySelector('span').textContent = '−';
+            accordionContent.style.display = 'block';
+            t.querySelector('span').textContent = '-';
           }
         });
       });
@@ -1057,7 +882,6 @@
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
     });
-    
     document.getElementById('addSample').addEventListener('click', () => {
       const lastLabel = masterLabels[masterLabels.length - 1];
       const lastTime = (lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime();
