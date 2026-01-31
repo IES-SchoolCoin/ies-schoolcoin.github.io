@@ -3,30 +3,27 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Transacciones en Mi cuenta</title>
+  <title>SCHOOLCOIN - Gráfica aleatoria y Mi cuenta vacía</title>
 
   <style>
     :root{--bg:#f7d54a;--top:#000;--btn:#8b5e3c;--text:#222;}
     html,body{height:100%;margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text);}
-    .contenedor{width:100%;max-width:920px;margin:0 auto;padding:16px;box-sizing:border-box;}
+    .contenedor{width:100%;max-width:420px;margin:0 auto;padding:16px;box-sizing:border-box;}
     .top-bar{background:var(--top);color:#fff;padding:10px;font-weight:700;text-align:center;border-radius:8px;}
     .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;}
-    .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
-    .col{flex:1;min-width:300px;}
-    .coin-logo{width:72px;height:72px;margin:8px auto;}
+    .coin-logo{width:96px;height:96px;margin:14px auto;}
     .coin-logo img{width:100%;height:100%;object-fit:contain;display:block;}
-    .valor-actual{font-size:26px;font-weight:800;margin-top:8px;text-align:center;}
+    .valor-actual{font-size:30px;font-weight:800;margin-top:8px;text-align:center;}
     .meta-line{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:#333;}
     .chart-wrap{width:100%;margin-top:14px;background:transparent;border-radius:12px;padding:6px;}
-    canvas{width:100% !important;height:300px !important;display:block;}
-    .botones{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px;}
+    canvas{width:100% !important;height:320px !important;display:block;}
+    .botones{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
     .boton{background:var(--btn);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;}
+    .info-box{margin-top:12px;background:rgba(0,0,0,0.06);padding:10px;border-radius:8px;font-size:13px;}
     .controls{display:flex;gap:8px;margin-top:10px;justify-content:center;}
     .control-btn{background:#fff;border:1px solid #ccc;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;}
-    .info-box{margin-top:12px;background:rgba(0,0,0,0.06);padding:10px;border-radius:8px;font-size:13px;}
-    /* modal */
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;}
-    .modal{background:#fff;color:#111;border-radius:12px;padding:16px;max-width:720px;width:94%;box-sizing:border-box;max-height:80vh;overflow:auto;}
+    .modal{background:#fff;color:#111;border-radius:12px;padding:16px;max-width:420px;width:92%;box-sizing:border-box;max-height:80vh;overflow:auto;}
     .modal h3{margin:0 0 8px 0;font-size:18px;}
     .modal input, .modal select, .modal textarea{width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd;box-sizing:border-box;}
     .modal .row{display:flex;gap:8px;margin-top:12px;}
@@ -39,7 +36,7 @@
     .tx-meta{font-size:12px;color:#666;}
     .tx-amount{font-weight:800;color:#0b8a3e;}
     .pager{display:flex;gap:8px;justify-content:center;margin-top:12px;}
-    @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:260px !important;} .botones{grid-template-columns:1fr 1fr;} }
+    @media (max-width:400px){canvas{height:260px !important;} .botones{grid-template-columns:1fr;}}
   </style>
 </head>
 <body>
@@ -47,29 +44,17 @@
     <div class="top-bar">SCHOOLCOIN</div>
     <div class="header">IES-SchoolCoin</div>
 
-    <div class="row" style="align-items:center;">
-      <div style="flex:0 0 120px; text-align:center;">
-        <div class="coin-logo"><img src="LOGO.png" alt="Logo"></div>
-        <div class="valor-actual" id="valorActual">0.00 €</div>
-      </div>
+    <div class="coin-logo"><img src="LOGO.png" alt="Logo SCHOOLCOIN"></div>
 
-      <div class="col">
-        <div style="font-weight:700;margin-bottom:6px;">Gráfica principal</div>
-        <div class="chart-wrap"><canvas id="graficaMain"></canvas></div>
-      </div>
-
-      <div class="col">
-        <div style="font-weight:700;margin-bottom:6px;">Gráfica comparada</div>
-        <div class="chart-wrap"><canvas id="graficaCompare"></canvas></div>
-      </div>
-    </div>
-
-    <div class="meta-line" style="margin-top:8px;">
+    <div class="valor-actual" id="valorActual">0.00 €</div>
+    <div class="meta-line">
       <div id="trendText">—</div>
       <div id="timestamp">—</div>
     </div>
 
-    <div class="botones" style="margin-top:14px;">
+    <div class="chart-wrap"><canvas id="grafica"></canvas></div>
+
+    <div class="botones">
       <div class="boton" id="btnEnviar">Enviar</div>
       <div class="boton" id="btnIngresos">Ingresos</div>
       <div class="boton" id="btnGastos">Gastos</div>
@@ -81,7 +66,7 @@
       <button class="control-btn" id="addSample">Añadir valor ahora</button>
     </div>
 
-    <div class="info-box" id="infoBox">Toca o haz clic en un punto para ver su fecha, hora y valor. Las dos gráficas están sincronizadas.</div>
+    <div class="info-box" id="infoBox">Toca o haz clic en un punto para ver su fecha, hora y valor.</div>
   </div>
 
   <!-- Chart.js + adaptador de fechas -->
@@ -102,34 +87,54 @@
     function formatMoney(v){return Number(v).toFixed(2)+' €';}
     function formatDate(d){return d.toLocaleString('es-ES',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 
-    function nextValue(prev){
+    function nextValue(prev, rng){
       const meanReversion = (BASE - prev) * 0.08;
-      const noise = (Math.random() - 0.5) * 0.006;
+      const noise = (rng() - 0.5) * 0.006;
       return Number(clamp(prev + meanReversion + noise, MIN, MAX).toFixed(4));
     }
 
-    // GENERAR SERIE BASE (determinista timestamps)
+    // Generador aleatorio con semilla (para variar la gráfica cada recarga)
+    function seededRng(seed) {
+      let s = seed >>> 0;
+      return function() {
+        s = (s + 0x6D2B79F5) | 0;
+        let t = Math.imul(s ^ s >>> 15, 1 | s);
+        t = (t + Math.imul(t ^ t >>> 7, 61 | t)) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    // GENERAR SERIE INICIAL: cada recarga usa una semilla aleatoria distinta
     function generateInitialSeries(){
       const labels = [];
       const data = [];
       const nowAligned = Math.floor(Date.now() / UPDATE_INTERVAL_MS) * UPDATE_INTERVAL_MS;
       const start = nowAligned - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
-      let val = BASE + (Math.random() - 0.5) * 0.01;
+      // semilla aleatoria por recarga (Date.now + random)
+      const seed = Math.floor(Math.random() * 1e9) ^ (Date.now() & 0xffffffff);
+      const rng = seededRng(seed);
+      // valor inicial aleatorio cercano a BASE para variar la gráfica cada recarga
+      let val = BASE + (rng() - 0.5) * 0.02;
       for(let i=0;i<PRESET_POINTS;i++){
         labels.push(new Date(start + i * UPDATE_INTERVAL_MS));
-        val = nextValue(val);
+        val = nextValue(val, rng);
         data.push(val);
       }
       return {labels,data};
     }
 
-    // Datos maestros
+    // Datos maestros (cambia cada recarga)
     const master = generateInitialSeries();
     const masterLabels = master.labels.slice();
     const masterValues = master.data.slice();
 
-    // Generar transacciones a partir del master (una por punto, con variación)
-    // Cada transacción: {txid, from, to, amount, timestamp}
+    // TRANSACTIONS: empieza vacío; solo se añaden cuando se envía/recibe SC
+    const TRANSACTIONS = [];
+
+    // cuentas simuladas (para origen/destino)
+    const ACCOUNTS = [];
+    for(let i=1;i<=20;i++) ACCOUNTS.push('user' + String(i).padStart(2,'0'));
+
     function randomHex(len=8){
       const chars = '0123456789abcdef';
       let s = '';
@@ -137,40 +142,8 @@
       return s;
     }
 
-    // Generar lista de cuentas simuladas
-    const ACCOUNTS = [];
-    for(let i=1;i<=20;i++) ACCOUNTS.push('user' + String(i).padStart(2,'0'));
-
-    function generateTransactionsFromMaster(){
-      const txs = [];
-      for(let i=0;i<masterLabels.length;i++){
-        // probabilidad de que haya 0..2 transacciones por punto
-        const count = Math.random() < 0.6 ? 1 : (Math.random() < 0.2 ? 2 : 0);
-        for(let k=0;k<count;k++){
-          const from = ACCOUNTS[(i + k) % ACCOUNTS.length];
-          const to = ACCOUNTS[(i + k + 3) % ACCOUNTS.length];
-          // amount relativo al precio y algo aleatorio
-          const baseAmount = 1 + Math.abs(masterValues[i] - BASE) * 100; // escala
-          const amount = Number((baseAmount * (0.5 + Math.random()*2)).toFixed(4));
-          txs.push({
-            txid: randomHex(12),
-            from,
-            to,
-            amount,
-            timestamp: new Date(masterLabels[i]).toISOString(), // ISO for consistency
-            index: i // índice en la serie para enlazar con la gráfica
-          });
-        }
-      }
-      // ordenar por timestamp (ya lo están, pero por si acaso)
-      txs.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-      return txs;
-    }
-
-    const TRANSACTIONS = generateTransactionsFromMaster();
-
-    // Crear dos series derivadas: main y compare (muy parecidas)
-    function deriveSeriesFromMaster(jitterScale = 0.0006){
+    // Derivar serie para la gráfica (muy parecida al master)
+    function deriveSeriesFromMaster(jitterScale = 0.0008){
       const labels = masterLabels.slice();
       const data = masterValues.map(v => {
         const jitter = (Math.random() - 0.5) * jitterScale;
@@ -179,8 +152,7 @@
       return {labels, data};
     }
 
-    let mainSeries = deriveSeriesFromMaster(0.0006);
-    let compareSeries = deriveSeriesFromMaster(0.0010);
+    let series = deriveSeriesFromMaster(0.0008);
 
     // UI refs
     const valorActualEl = document.getElementById('valorActual');
@@ -191,171 +163,149 @@
     function updateMainDisplay(value,date){
       valorActualEl.textContent = formatMoney(value);
       timestampEl.textContent = formatDate(date);
-      const prev = mainSeries.data.length > 1 ? mainSeries.data[mainSeries.data.length - 2] : value;
+      const prev = series.data.length > 1 ? series.data[series.data.length - 2] : value;
       const diff = value - prev;
       const arrow = diff > 0 ? '▲' : (diff < 0 ? '▼' : '—');
       const pct = prev ? ((diff / prev) * 100).toFixed(2) + '%' : '';
       trendTextEl.textContent = arrow + ' ' + pct;
     }
 
-    // Crear charts
-    const ctxMain = document.getElementById('graficaMain').getContext('2d');
-    const ctxCompare = document.getElementById('graficaCompare').getContext('2d');
-
-    function createChart(ctx, labels, data, color){
-      return new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'SCHOOLCOIN',
-            data: data,
-            borderColor: color,
-            backgroundColor: color === '#0b8a3e' ? 'rgba(11,138,62,0.12)' : 'rgba(8,120,200,0.08)',
-            pointRadius: (ctx) => ctx.active ? 6 : 0,
-            pointHoverRadius: 6,
-            pointHitRadius: 12,
-            tension: 0.25,
-            fill: true
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: { duration: 0 },
-          interaction: { mode: 'nearest', intersect: false },
-          plugins: {
-            legend: { display: false },
-            tooltip: {
-              enabled: true,
-              callbacks: {
-                label: function(c){
-                  const v = Number(c.parsed.y).toFixed(4);
-                  const date = c.label instanceof Date ? formatDate(c.label) : c.label;
-                  return ` ${v} € — ${date}`;
-                }
+    // CHART
+    const ctx = document.getElementById('grafica').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: series.labels,
+        datasets: [{
+          label: 'SCHOOLCOIN',
+          data: series.data,
+          borderColor: '#0b8a3e',
+          backgroundColor: 'rgba(11,138,62,0.12)',
+          pointRadius: (ctx) => ctx.active ? 6 : 0,
+          pointHoverRadius: 6,
+          pointHitRadius: 12,
+          tension: 0.25,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        interaction: { mode: 'nearest', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              label: function(c){
+                const v = Number(c.parsed.y).toFixed(4);
+                const date = c.label instanceof Date ? formatDate(c.label) : c.label;
+                return ` ${v} € — ${date}`;
               }
             }
+          }
+        },
+        scales: {
+          x: {
+            type: 'time',
+            time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } },
+            grid: { display: false },
+            ticks: { color: '#333', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
           },
-          scales: {
-            x: {
-              type: 'time',
-              time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } },
-              grid: { display: false },
-              ticks: { color: '#333', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
-            },
-            y: {
-              beginAtZero: false,
-              suggestedMin: MIN - 0.01,
-              suggestedMax: MAX + 0.01,
-              grid: { display: false },
-              ticks: { callback: v => Number(v).toFixed(2) + ' €', color: '#333' }
-            }
+          y: {
+            beginAtZero: false,
+            suggestedMin: MIN - 0.01,
+            suggestedMax: MAX + 0.01,
+            grid: { display: false },
+            ticks: { callback: v => Number(v).toFixed(2) + ' €', color: '#333' }
           }
         }
-      });
+      }
+    });
+
+    // Selección única
+    function clearActiveSelection(){
+      try{
+        chart.setActiveElements([]);
+        chart.tooltip.setActiveElements([], {x:0,y:0});
+        chart.update('none');
+      }catch(e){}
     }
 
-    const chartMain = createChart(ctxMain, mainSeries.labels, mainSeries.data, '#0b8a3e');
-    const chartCompare = createChart(ctxCompare, compareSeries.labels, compareSeries.data, '#0878c8');
-
-    // Selección sincronizada
-    function clearAllActive(){
-      try{ chartMain.setActiveElements([]); chartMain.tooltip.setActiveElements([], {x:0,y:0}); chartMain.update('none'); }catch(e){}
-      try{ chartCompare.setActiveElements([]); chartCompare.tooltip.setActiveElements([], {x:0,y:0}); chartCompare.update('none'); }catch(e){}
-    }
-
-    function highlightBoth(index){
+    function highlightPoint(index){
       if(index == null) return;
-      clearAllActive();
-      const activeMain = [{datasetIndex:0, index}];
-      chartMain.setActiveElements(activeMain);
-      const xMain = chartMain.scales.x.getPixelForValue(chartMain.data.labels[index]);
-      const yMain = chartMain.scales.y.getPixelForValue(chartMain.data.datasets[0].data[index]);
-      chartMain.tooltip.setActiveElements(activeMain, {x:xMain,y:yMain});
-      chartMain.update('none');
-
-      const activeComp = [{datasetIndex:0, index}];
-      chartCompare.setActiveElements(activeComp);
-      const xComp = chartCompare.scales.x.getPixelForValue(chartCompare.data.labels[index]);
-      const yComp = chartCompare.scales.y.getPixelForValue(chartCompare.data.datasets[0].data[index]);
-      chartCompare.tooltip.setActiveElements(activeComp, {x:xComp,y:yComp});
-      chartCompare.update('none');
-
-      const val = chartMain.data.datasets[0].data[index];
-      const lab = chartMain.data.labels[index];
+      clearActiveSelection();
+      const active = [{datasetIndex:0, index}];
+      chart.setActiveElements(active);
+      const x = chart.scales.x.getPixelForValue(chart.data.labels[index]);
+      const y = chart.scales.y.getPixelForValue(chart.data.datasets[0].data[index]);
+      chart.tooltip.setActiveElements(active, {x,y});
+      chart.update('none');
+      const val = chart.data.datasets[0].data[index];
+      const lab = chart.data.labels[index];
       infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
     }
 
-    // Interacciones
-    const canvasMain = document.getElementById('graficaMain');
-    const canvasCompare = document.getElementById('graficaCompare');
-
-    function handleSelectionFromChart(chartRef, evtOrSim){
-      const pts = chartRef.getElementsAtEventForMode(evtOrSim, 'nearest', {intersect: true}, true);
-      if(pts.length) highlightBoth(pts[0].index);
+    // Interacciones canvas
+    const canvasEl = document.getElementById('grafica');
+    canvasEl.addEventListener('mousemove', (evt) => {
+      const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+      if(pts.length) highlightPoint(pts[0].index);
       else {
-        const pts2 = chartRef.getElementsAtEventForMode(evtOrSim, 'nearest', {intersect: false}, true);
-        if(pts2.length) highlightBoth(pts2[0].index);
+        const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
+        if(pts2.length) highlightPoint(pts2[0].index);
       }
-    }
+    });
+    canvasEl.addEventListener('mouseleave', () => {
+      clearActiveSelection();
+      infoBox.textContent = 'Toca o haz clic en un punto para ver su fecha, hora y valor.';
+    });
+    canvasEl.addEventListener('click', (evt) => {
+      const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+      if(pts.length) highlightPoint(pts[0].index);
+      else {
+        const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
+        if(pts2.length) highlightPoint(pts2[0].index);
+      }
+    });
+    canvasEl.addEventListener('touchend', (e) => {
+      if(e.changedTouches && e.changedTouches.length){
+        const t = e.changedTouches[0];
+        const simulated = {clientX: t.clientX, clientY: t.clientY};
+        const pts = chart.getElementsAtEventForMode(simulated, 'nearest', {intersect: true}, true);
+        if(pts.length) highlightPoint(pts[0].index);
+        else {
+          const pts2 = chart.getElementsAtEventForMode(simulated, 'nearest', {intersect: false}, true);
+          if(pts2.length) highlightPoint(pts2[0].index);
+        }
+      }
+    }, {passive:true});
 
-    canvasMain.addEventListener('mousemove', (e) => handleSelectionFromChart(chartMain, e));
-    canvasCompare.addEventListener('mousemove', (e) => handleSelectionFromChart(chartCompare, e));
-    canvasMain.addEventListener('click', (e) => handleSelectionFromChart(chartMain, e));
-    canvasCompare.addEventListener('click', (e) => handleSelectionFromChart(chartCompare, e));
-    canvasMain.addEventListener('touchend', (e) => { if(e.changedTouches && e.changedTouches.length){ const t = e.changedTouches[0]; handleSelectionFromChart(chartMain, {clientX: t.clientX, clientY: t.clientY}); } }, {passive:true});
-    canvasCompare.addEventListener('touchend', (e) => { if(e.changedTouches && e.changedTouches.length){ const t = e.changedTouches[0]; handleSelectionFromChart(chartCompare, {clientX: t.clientX, clientY: t.clientY}); } }, {passive:true});
-    canvasMain.addEventListener('mouseleave', () => { clearAllActive(); infoBox.textContent = 'Toca o haz clic en un punto para ver su fecha, hora y valor.'; });
-    canvasCompare.addEventListener('mouseleave', () => { clearAllActive(); infoBox.textContent = 'Toca o haz clic en un punto para ver su fecha, hora y valor.'; });
+    // Mostrar valor inicial
+    updateMainDisplay(series.data[series.data.length-1], new Date(series.labels[series.labels.length-1]));
 
-    // Actualizaciones deterministas: añadir punto maestro y derivar
+    // ACTUALIZACIONES deterministas: añadir punto maestro y derivar
     let paused = false;
     let updateTimer = null;
 
     function pushNewMasterPoint(nextDate, newMasterVal){
-      clearAllActive();
+      clearActiveSelection();
       masterLabels.push(nextDate);
       masterValues.push(newMasterVal);
       if(masterLabels.length > PRESET_POINTS){ masterLabels.shift(); masterValues.shift(); }
 
-      // generar transacciones nuevas para este punto (0..2)
-      const count = Math.random() < 0.6 ? 1 : (Math.random() < 0.2 ? 2 : 0);
-      for(let k=0;k<count;k++){
-        const from = ACCOUNTS[(masterLabels.length + k) % ACCOUNTS.length];
-        const to = ACCOUNTS[(masterLabels.length + k + 3) % ACCOUNTS.length];
-        const baseAmount = 1 + Math.abs(newMasterVal - BASE) * 100;
-        const amount = Number((baseAmount * (0.5 + Math.random()*2)).toFixed(4));
-        TRANSACTIONS.push({
-          txid: randomHex(12),
-          from, to, amount,
-          timestamp: new Date(nextDate).toISOString(),
-          index: masterLabels.length - 1
-        });
-      }
+      // derivar nuevo valor para la gráfica (jitter pequeño)
+      const mainVal = Number(clamp(newMasterVal + (Math.random()-0.5)*0.0008, MIN, MAX).toFixed(4));
+      chart.data.labels.push(nextDate);
+      chart.data.datasets[0].data.push(mainVal);
+      if(chart.data.labels.length > PRESET_POINTS){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+      chart.update('none');
 
-      // derivar y añadir a charts
-      const jitterMain = (Math.random() - 0.5) * 0.0006;
-      const jitterComp = (Math.random() - 0.5) * 0.0010;
-      const mainVal = Number(clamp(newMasterVal + jitterMain, MIN, MAX).toFixed(4));
-      const compVal = Number(clamp(newMasterVal + jitterComp, MIN, MAX).toFixed(4));
+      setTimeout(() => clearActiveSelection(), 20);
 
-      chartMain.data.labels.push(nextDate);
-      chartMain.data.datasets[0].data.push(mainVal);
-      if(chartMain.data.labels.length > PRESET_POINTS){ chartMain.data.labels.shift(); chartMain.data.datasets[0].data.shift(); }
-      chartMain.update('none');
-
-      chartCompare.data.labels.push(nextDate);
-      chartCompare.data.datasets[0].data.push(compVal);
-      if(chartCompare.data.labels.length > PRESET_POINTS){ chartCompare.data.labels.shift(); chartCompare.data.datasets[0].data.shift(); }
-      chartCompare.update('none');
-
-      setTimeout(() => clearAllActive(), 20);
-
-      mainSeries.labels = chartMain.data.labels.slice();
-      mainSeries.data = chartMain.data.datasets[0].data.slice();
-      compareSeries.labels = chartCompare.data.labels.slice();
-      compareSeries.data = chartCompare.data.datasets[0].data.slice();
+      series.labels = chart.data.labels.slice();
+      series.data = chart.data.datasets[0].data.slice();
 
       updateMainDisplay(mainVal, nextDate);
     }
@@ -368,13 +318,12 @@
         const lastTime = (lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime();
         const nextTime = new Date(lastTime + UPDATE_INTERVAL_MS);
         const prev = masterValues[masterValues.length - 1];
-        const nv = nextValue(prev);
+        const nv = nextValue(prev, Math.random);
         pushNewMasterPoint(nextTime, nv);
       }, UPDATE_INTERVAL_MS);
     }
 
     scheduleNextUpdate();
-    updateMainDisplay(mainSeries.data[mainSeries.data.length - 1], new Date(mainSeries.labels[mainSeries.labels.length - 1]));
 
     // MODAL helper
     function openModal(htmlContent){
@@ -387,60 +336,105 @@
     }
     function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
-    // BOTONES: Enviar / Ingresos / Gastos (igual que antes)
+    // BOTONES: Enviar / Ingresos / Gastos
     document.getElementById('btnEnviar').addEventListener('click', () => {
-      const html = `<h3>Enviar SCHOOLCOIN</h3><label>Destinatario</label><input id="m_dest" placeholder="Dirección o usuario"><label>Cantidad</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01"><div class="row"><button class="btn btn-ghost" id="m_cancel">Cancelar</button><button class="btn btn-primary" id="m_send">Enviar</button></div>`;
+      const html = `<h3>Enviar SCHOOLCOIN</h3>
+        <label>Destinatario</label><input id="m_dest" placeholder="Dirección o usuario">
+        <label>Cantidad</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01">
+        <div class="row"><button class="btn btn-ghost" id="m_cancel">Cancelar</button><button class="btn btn-primary" id="m_send">Enviar</button></div>`;
       const bd = openModal(html);
       bd.querySelector('#m_cancel').addEventListener('click', () => closeModal(bd));
       bd.querySelector('#m_send').addEventListener('click', () => {
         const dest = bd.querySelector('#m_dest').value || 'desconocido';
         const amt = parseFloat(bd.querySelector('#m_amt').value) || 0;
-        bd.querySelector('.modal').innerHTML = `<h3>Enviado</h3><p>Enviado ${amt.toFixed(4)} SCHOOLCOIN a ${dest}.</p><div class="row"><button class="btn btn-primary" id="m_ok">Aceptar</button></div>`;
+        // crear transacción: from = you, to = dest
+        const lastIndex = masterLabels.length - 1;
+        const tx = {
+          txid: randomHex(12),
+          from: 'you',
+          to: dest,
+          amount: Number(amt.toFixed(4)),
+          timestamp: new Date(masterLabels[lastIndex]).toISOString(),
+          index: lastIndex
+        };
+        TRANSACTIONS.push(tx);
+        // opcional: reflejar actividad en precio (pequeño impacto)
+        const prev = masterValues[masterValues.length - 1];
+        const impact = clamp(amt * 0.00002, 0, 0.003);
+        const nv = clamp(prev + impact * (Math.random() > 0.5 ? 1 : -1), MIN, MAX);
+        const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
+        pushNewMasterPoint(nextTime, Number(nv.toFixed(4)));
+        bd.querySelector('.modal').innerHTML = `<h3>Enviado</h3><p>Enviado ${amt.toFixed(4)} SC a ${dest}.</p><div class="row"><button class="btn btn-primary" id="m_ok">Aceptar</button></div>`;
         bd.querySelector('#m_ok').addEventListener('click', () => closeModal(bd));
       });
     });
 
     document.getElementById('btnIngresos').addEventListener('click', () => {
-      const html = `<h3>Registrar ingreso</h3><label>Cantidad</label><input id="i_amt" type="number" step="0.01" placeholder="10.00"><div class="row"><button class="btn btn-ghost" id="i_cancel">Cancelar</button><button class="btn btn-primary" id="i_ok">Confirmar</button></div>`;
+      const html = `<h3>Registrar ingreso</h3><label>Origen</label><input id="i_from" placeholder="Usuario o fuente"><label>Cantidad</label><input id="i_amt" type="number" step="0.01" placeholder="10.00"><div class="row"><button class="btn btn-ghost" id="i_cancel">Cancelar</button><button class="btn btn-primary" id="i_ok">Confirmar</button></div>`;
       const bd = openModal(html);
       bd.querySelector('#i_cancel').addEventListener('click', () => closeModal(bd));
       bd.querySelector('#i_ok').addEventListener('click', () => {
+        const from = bd.querySelector('#i_from').value || 'external';
         const amt = parseFloat(bd.querySelector('#i_amt').value) || 0;
-        const lastMaster = masterValues[masterValues.length - 1];
-        const delta = clamp(amt * 0.00005, 0, 0.005);
-        const nv = clamp(lastMaster + delta + (Math.random()-0.5)*0.0005, MIN, MAX);
-        const lastLabel = masterLabels[masterLabels.length - 1];
-        const nextTime = new Date(((lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime()) + UPDATE_INTERVAL_MS);
+        const lastIndex = masterLabels.length - 1;
+        const tx = {
+          txid: randomHex(12),
+          from,
+          to: 'you',
+          amount: Number(amt.toFixed(4)),
+          timestamp: new Date(masterLabels[lastIndex]).toISOString(),
+          index: lastIndex
+        };
+        TRANSACTIONS.push(tx);
+        // impacto pequeño al alza
+        const prev = masterValues[masterValues.length - 1];
+        const nv = clamp(prev + clamp(amt * 0.00002, 0, 0.003), MIN, MAX);
+        const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
         pushNewMasterPoint(nextTime, Number(nv.toFixed(4)));
-        bd.querySelector('.modal').innerHTML = `<h3>Ingreso registrado</h3><p>+${amt.toFixed(2)} — precio ajustado.</p><div class="row"><button class="btn btn-primary" id="i_done">Aceptar</button></div>`;
+        bd.querySelector('.modal').innerHTML = `<h3>Ingreso registrado</h3><p>+${amt.toFixed(2)} — transacción añadida.</p><div class="row"><button class="btn btn-primary" id="i_done">Aceptar</button></div>`;
         bd.querySelector('#i_done').addEventListener('click', () => closeModal(bd));
       });
     });
 
     document.getElementById('btnGastos').addEventListener('click', () => {
-      const html = `<h3>Registrar gasto</h3><label>Cantidad</label><input id="g_amt" type="number" step="0.01" placeholder="5.00"><div class="row"><button class="btn btn-ghost" id="g_cancel">Cancelar</button><button class="btn btn-primary" id="g_ok">Confirmar</button></div>`;
+      const html = `<h3>Registrar gasto</h3><label>Destino</label><input id="g_to" placeholder="Usuario o destino"><label>Cantidad</label><input id="g_amt" type="number" step="0.01" placeholder="5.00"><div class="row"><button class="btn btn-ghost" id="g_cancel">Cancelar</button><button class="btn btn-primary" id="g_ok">Confirmar</button></div>`;
       const bd = openModal(html);
       bd.querySelector('#g_cancel').addEventListener('click', () => closeModal(bd));
       bd.querySelector('#g_ok').addEventListener('click', () => {
+        const to = bd.querySelector('#g_to').value || 'external';
         const amt = parseFloat(bd.querySelector('#g_amt').value) || 0;
-        const lastMaster = masterValues[masterValues.length - 1];
-        const delta = clamp(amt * 0.00005, 0, 0.005);
-        const nv = clamp(lastMaster - delta + (Math.random()-0.5)*0.0005, MIN, MAX);
-        const lastLabel = masterLabels[masterLabels.length - 1];
-        const nextTime = new Date(((lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime()) + UPDATE_INTERVAL_MS);
+        const lastIndex = masterLabels.length - 1;
+        const tx = {
+          txid: randomHex(12),
+          from: 'you',
+          to,
+          amount: Number(amt.toFixed(4)),
+          timestamp: new Date(masterLabels[lastIndex]).toISOString(),
+          index: lastIndex
+        };
+        TRANSACTIONS.push(tx);
+        // impacto pequeño a la baja
+        const prev = masterValues[masterValues.length - 1];
+        const nv = clamp(prev - clamp(amt * 0.00002, 0, 0.003), MIN, MAX);
+        const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
         pushNewMasterPoint(nextTime, Number(nv.toFixed(4)));
-        bd.querySelector('.modal').innerHTML = `<h3>Gasto registrado</h3><p>-${amt.toFixed(2)} — precio ajustado.</p><div class="row"><button class="btn btn-primary" id="g_done">Aceptar</button></div>`;
+        bd.querySelector('.modal').innerHTML = `<h3>Gasto registrado</h3><p>-${amt.toFixed(2)} — transacción añadida.</p><div class="row"><button class="btn btn-primary" id="g_done">Aceptar</button></div>`;
         bd.querySelector('#g_done').addEventListener('click', () => closeModal(bd));
       });
     });
 
-    // MI CUENTA: mostrar transacciones (paginadas)
+    // MI CUENTA: mostrar transacciones solo si existen
     document.getElementById('btnCuenta').addEventListener('click', () => {
+      if(TRANSACTIONS.length === 0){
+        const bd = openModal(`<h3>Mi cuenta</h3><p>No hay transacciones todavía.</p><div class="row"><button class="btn btn-primary" id="closeEmpty">Cerrar</button></div>`);
+        bd.querySelector('#closeEmpty').addEventListener('click', () => closeModal(bd));
+        return;
+      }
       const PAGE_SIZE = 12;
       let page = 0;
       function renderPage(p){
         const start = p * PAGE_SIZE;
-        const slice = TRANSACTIONS.slice().reverse().slice(start, start + PAGE_SIZE); // mostrar recientes primero
+        const slice = TRANSACTIONS.slice().reverse().slice(start, start + PAGE_SIZE);
         let listHtml = '<ul class="tx-list">';
         slice.forEach(tx => {
           listHtml += `<li class="tx-item" data-index="${tx.index}" data-txid="${tx.txid}">
@@ -452,54 +446,33 @@
           </li>`;
         });
         listHtml += '</ul>';
-        // pager
         const totalPages = Math.ceil(TRANSACTIONS.length / PAGE_SIZE);
         const pager = `<div class="pager">
           <button class="btn-ghost" id="prevPage" ${page===0?'disabled':''}>Anterior</button>
           <div style="align-self:center">Página ${page+1} / ${totalPages}</div>
           <button class="btn-ghost" id="nextPage" ${page+1>=totalPages?'disabled':''}>Siguiente</button>
         </div>`;
-
-        const html = `<h3>Mi cuenta — Transacciones</h3>
-          <p><strong>Total transacciones:</strong> ${TRANSACTIONS.length}</p>
-          ${listHtml}
-          ${pager}
-          <div class="row" style="margin-top:12px;"><button class="btn btn-primary" id="closeTx">Cerrar</button></div>`;
-
-        return html;
+        return `<h3>Mi cuenta — Transacciones</h3><p><strong>Total transacciones:</strong> ${TRANSACTIONS.length}</p>${listHtml}${pager}<div class="row" style="margin-top:12px;"><button class="btn btn-primary" id="closeTx">Cerrar</button></div>`;
       }
-
       const bd = openModal(renderPage(page));
-
-      // delegación de eventos dentro del modal
       bd.addEventListener('click', (e) => {
-        // cerrar
         if(e.target && e.target.id === 'closeTx') { bd.remove(); return; }
-        // pager
-        if(e.target && e.target.id === 'prevPage' && page>0){
-          page--; bd.querySelector('.modal').innerHTML = renderPage(page); return;
-        }
-        if(e.target && e.target.id === 'nextPage' && (page+1)*PAGE_SIZE < TRANSACTIONS.length){
-          page++; bd.querySelector('.modal').innerHTML = renderPage(page); return;
-        }
-        // click en transacción: mostrar detalle y centrar gráficas en ese índice
+        if(e.target && e.target.id === 'prevPage' && page>0){ page--; bd.querySelector('.modal').innerHTML = renderPage(page); return; }
+        if(e.target && e.target.id === 'nextPage' && (page+1)*PAGE_SIZE < TRANSACTIONS.length){ page++; bd.querySelector('.modal').innerHTML = renderPage(page); return; }
         const li = e.target.closest('.tx-item');
         if(li){
           const txid = li.getAttribute('data-txid');
           const tx = TRANSACTIONS.find(t => t.txid === txid);
           if(tx){
-            // mostrar detalle
             bd.querySelector('.modal').innerHTML = `<h3>Transacción ${tx.txid}</h3>
               <p><strong>De:</strong> ${tx.from}</p>
               <p><strong>A:</strong> ${tx.to}</p>
               <p><strong>Cantidad:</strong> ${Number(tx.amount).toFixed(4)} SC</p>
               <p><strong>Fecha:</strong> ${new Date(tx.timestamp).toLocaleString('es-ES')}</p>
               <div class="row"><button class="btn btn-ghost" id="tx_back">Volver</button><button class="btn btn-primary" id="tx_focus">Ver en gráfica</button></div>`;
-            // volver o centrar
             bd.querySelector('#tx_back').addEventListener('click', () => { bd.querySelector('.modal').innerHTML = renderPage(page); });
             bd.querySelector('#tx_focus').addEventListener('click', () => {
-              // centrar ambas gráficas en el índice tx.index
-              highlightBoth(tx.index);
+              highlightPoint(tx.index);
             });
           }
         }
@@ -517,12 +490,12 @@
       const lastTime = (lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime();
       const nextTime = new Date(lastTime + UPDATE_INTERVAL_MS);
       const prev = masterValues[masterValues.length - 1];
-      const nv = nextValue(prev);
+      const nv = nextValue(prev, Math.random);
       pushNewMasterPoint(nextTime, nv);
     });
 
     // Forzar render inicial
-    window.addEventListener('load', () => { setTimeout(()=>{ chartMain.resize(); chartCompare.resize(); }, 100); });
+    window.addEventListener('load', () => setTimeout(()=>chart.resize(),100));
   </script>
 </body>
 </html>
