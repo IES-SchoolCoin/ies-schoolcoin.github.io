@@ -3,17 +3,21 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Gráfica aleatoria y Mi cuenta vacía</title>
+  <title>SCHOOLCOIN - Gráfica y precio con flecha</title>
 
   <style>
-    :root{--bg:#f7d54a;--top:#000;--btn:#8b5e3c;--text:#222;}
+    :root{--bg:#f7d54a;--top:#000;--btn:#8b5e3c;--text:#222;--green:#0b8a3e;--red:#c62828;}
     html,body{height:100%;margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text);}
     .contenedor{width:100%;max-width:420px;margin:0 auto;padding:16px;box-sizing:border-box;}
     .top-bar{background:var(--top);color:#fff;padding:10px;font-weight:700;text-align:center;border-radius:8px;}
     .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;}
     .coin-logo{width:96px;height:96px;margin:14px auto;}
     .coin-logo img{width:100%;height:100%;object-fit:contain;display:block;}
-    .valor-actual{font-size:30px;font-weight:800;margin-top:8px;text-align:center;}
+    .valor-actual{font-size:30px;font-weight:800;margin-top:8px;text-align:center;display:flex;align-items:center;justify-content:center;gap:8px;}
+    .valor-num{font-weight:800;}
+    .valor-arrow{font-weight:900;font-size:20px;line-height:1;}
+    .valor-up{color:var(--green);}
+    .valor-down{color:var(--red);}
     .meta-line{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:#333;}
     .chart-wrap{width:100%;margin-top:14px;background:transparent;border-radius:12px;padding:6px;}
     canvas{width:100% !important;height:320px !important;display:block;}
@@ -28,14 +32,8 @@
     .modal input, .modal select, .modal textarea{width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd;box-sizing:border-box;}
     .modal .row{display:flex;gap:8px;margin-top:12px;}
     .modal .btn{flex:1;padding:10px;border-radius:8px;border:0;cursor:pointer;font-weight:700;}
-    .btn-primary{background:#0b8a3e;color:#fff;}
+    .btn-primary{background:var(--green);color:#fff;}
     .btn-ghost{background:#f3f3f3;color:#333;border:1px solid #ddd;}
-    .tx-list{list-style:none;padding:0;margin:0;}
-    .tx-item{padding:10px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;gap:12px;align-items:center;}
-    .tx-left{display:flex;flex-direction:column;gap:4px;}
-    .tx-meta{font-size:12px;color:#666;}
-    .tx-amount{font-weight:800;color:#0b8a3e;}
-    .pager{display:flex;gap:8px;justify-content:center;margin-top:12px;}
     @media (max-width:400px){canvas{height:260px !important;} .botones{grid-template-columns:1fr;}}
   </style>
 </head>
@@ -46,7 +44,11 @@
 
     <div class="coin-logo"><img src="LOGO.png" alt="Logo SCHOOLCOIN"></div>
 
-    <div class="valor-actual" id="valorActual">0.00 €</div>
+    <div class="valor-actual" id="valorDisplay">
+      <span id="valorArrow" class="valor-arrow">—</span>
+      <span id="valorNum" class="valor-num">0.00 €</span>
+    </div>
+
     <div class="meta-line">
       <div id="trendText">—</div>
       <div id="timestamp">—</div>
@@ -87,62 +89,32 @@
     function formatMoney(v){return Number(v).toFixed(2)+' €';}
     function formatDate(d){return d.toLocaleString('es-ES',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 
-    function nextValue(prev, rng){
+    function nextValue(prev){
       const meanReversion = (BASE - prev) * 0.08;
-      const noise = (rng() - 0.5) * 0.006;
+      const noise = (Math.random() - 0.5) * 0.006;
       return Number(clamp(prev + meanReversion + noise, MIN, MAX).toFixed(4));
     }
 
-    // Generador aleatorio con semilla (para variar la gráfica cada recarga)
-    function seededRng(seed) {
-      let s = seed >>> 0;
-      return function() {
-        s = (s + 0x6D2B79F5) | 0;
-        let t = Math.imul(s ^ s >>> 15, 1 | s);
-        t = (t + Math.imul(t ^ t >>> 7, 61 | t)) ^ t;
-        return ((t ^ t >>> 14) >>> 0) / 4294967296;
-      };
-    }
-
-    // GENERAR SERIE INICIAL: cada recarga usa una semilla aleatoria distinta
+    // GENERAR SERIE INICIAL
     function generateInitialSeries(){
       const labels = [];
       const data = [];
       const nowAligned = Math.floor(Date.now() / UPDATE_INTERVAL_MS) * UPDATE_INTERVAL_MS;
       const start = nowAligned - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
-      // semilla aleatoria por recarga (Date.now + random)
-      const seed = Math.floor(Math.random() * 1e9) ^ (Date.now() & 0xffffffff);
-      const rng = seededRng(seed);
-      // valor inicial aleatorio cercano a BASE para variar la gráfica cada recarga
-      let val = BASE + (rng() - 0.5) * 0.02;
+      let val = BASE + (Math.random() - 0.5) * 0.01;
       for(let i=0;i<PRESET_POINTS;i++){
         labels.push(new Date(start + i * UPDATE_INTERVAL_MS));
-        val = nextValue(val, rng);
+        val = nextValue(val);
         data.push(val);
       }
       return {labels,data};
     }
 
-    // Datos maestros (cambia cada recarga)
     const master = generateInitialSeries();
     const masterLabels = master.labels.slice();
     const masterValues = master.data.slice();
 
-    // TRANSACTIONS: empieza vacío; solo se añaden cuando se envía/recibe SC
-    const TRANSACTIONS = [];
-
-    // cuentas simuladas (para origen/destino)
-    const ACCOUNTS = [];
-    for(let i=1;i<=20;i++) ACCOUNTS.push('user' + String(i).padStart(2,'0'));
-
-    function randomHex(len=8){
-      const chars = '0123456789abcdef';
-      let s = '';
-      for(let i=0;i<len;i++) s += chars[Math.floor(Math.random()*chars.length)];
-      return s;
-    }
-
-    // Derivar serie para la gráfica (muy parecida al master)
+    // Serie para la gráfica
     function deriveSeriesFromMaster(jitterScale = 0.0008){
       const labels = masterLabels.slice();
       const data = masterValues.map(v => {
@@ -155,22 +127,42 @@
     let series = deriveSeriesFromMaster(0.0008);
 
     // UI refs
-    const valorActualEl = document.getElementById('valorActual');
+    const valorArrowEl = document.getElementById('valorArrow');
+    const valorNumEl = document.getElementById('valorNum');
     const timestampEl = document.getElementById('timestamp');
     const trendTextEl = document.getElementById('trendText');
     const infoBox = document.getElementById('infoBox');
 
+    // updateMainDisplay ahora pinta flecha y color
     function updateMainDisplay(value,date){
-      valorActualEl.textContent = formatMoney(value);
-      timestampEl.textContent = formatDate(date);
       const prev = series.data.length > 1 ? series.data[series.data.length - 2] : value;
       const diff = value - prev;
       const arrow = diff > 0 ? '▲' : (diff < 0 ? '▼' : '—');
+      // aplicar color y texto
+      if(diff > 0){
+        valorArrowEl.textContent = arrow;
+        valorArrowEl.classList.remove('valor-down');
+        valorArrowEl.classList.add('valor-up');
+        valorNumEl.classList.remove('valor-down');
+        valorNumEl.classList.add('valor-up');
+      } else if(diff < 0){
+        valorArrowEl.textContent = arrow;
+        valorArrowEl.classList.remove('valor-up');
+        valorArrowEl.classList.add('valor-down');
+        valorNumEl.classList.remove('valor-up');
+        valorNumEl.classList.add('valor-down');
+      } else {
+        valorArrowEl.textContent = '—';
+        valorArrowEl.classList.remove('valor-up','valor-down');
+        valorNumEl.classList.remove('valor-up','valor-down');
+      }
+      valorNumEl.textContent = formatMoney(value);
+      timestampEl.textContent = formatDate(date);
       const pct = prev ? ((diff / prev) * 100).toFixed(2) + '%' : '';
-      trendTextEl.textContent = arrow + ' ' + pct;
+      trendTextEl.textContent = (diff > 0 ? '▲ ' : (diff < 0 ? '▼ ' : '— ')) + pct;
     }
 
-    // CHART
+    // CHART con línea más fina (borderWidth: 1)
     const ctx = document.getElementById('grafica').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
@@ -180,6 +172,7 @@
           label: 'SCHOOLCOIN',
           data: series.data,
           borderColor: '#0b8a3e',
+          borderWidth: 1,               // línea más fina
           backgroundColor: 'rgba(11,138,62,0.12)',
           pointRadius: (ctx) => ctx.active ? 6 : 0,
           pointHoverRadius: 6,
@@ -224,7 +217,7 @@
       }
     });
 
-    // Selección única
+    // selección única y handlers (igual que antes)
     function clearActiveSelection(){
       try{
         chart.setActiveElements([]);
@@ -247,7 +240,6 @@
       infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
     }
 
-    // Interacciones canvas
     const canvasEl = document.getElementById('grafica');
     canvasEl.addEventListener('mousemove', (evt) => {
       const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
@@ -282,10 +274,10 @@
       }
     }, {passive:true});
 
-    // Mostrar valor inicial
+    // Mostrar valor inicial con flecha neutra
     updateMainDisplay(series.data[series.data.length-1], new Date(series.labels[series.labels.length-1]));
 
-    // ACTUALIZACIONES deterministas: añadir punto maestro y derivar
+    // ACTUALIZACIONES deterministas
     let paused = false;
     let updateTimer = null;
 
@@ -295,7 +287,6 @@
       masterValues.push(newMasterVal);
       if(masterLabels.length > PRESET_POINTS){ masterLabels.shift(); masterValues.shift(); }
 
-      // derivar nuevo valor para la gráfica (jitter pequeño)
       const mainVal = Number(clamp(newMasterVal + (Math.random()-0.5)*0.0008, MIN, MAX).toFixed(4));
       chart.data.labels.push(nextDate);
       chart.data.datasets[0].data.push(mainVal);
@@ -318,7 +309,7 @@
         const lastTime = (lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime();
         const nextTime = new Date(lastTime + UPDATE_INTERVAL_MS);
         const prev = masterValues[masterValues.length - 1];
-        const nv = nextValue(prev, Math.random);
+        const nv = nextValue(prev);
         pushNewMasterPoint(nextTime, nv);
       }, UPDATE_INTERVAL_MS);
     }
@@ -336,29 +327,21 @@
     }
     function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
-    // BOTONES: Enviar / Ingresos / Gastos
+    // BOTONES básicos (Enviar / Ingresos / Gastos / Mi cuenta)
+    // TRANSACTIONS vacías por defecto; se añaden solo al enviar/ingresar/gastar
+    const TRANSACTIONS = [];
+    function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+
     document.getElementById('btnEnviar').addEventListener('click', () => {
-      const html = `<h3>Enviar SCHOOLCOIN</h3>
-        <label>Destinatario</label><input id="m_dest" placeholder="Dirección o usuario">
-        <label>Cantidad</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01">
-        <div class="row"><button class="btn btn-ghost" id="m_cancel">Cancelar</button><button class="btn btn-primary" id="m_send">Enviar</button></div>`;
+      const html = `<h3>Enviar SCHOOLCOIN</h3><label>Destinatario</label><input id="m_dest" placeholder="Dirección o usuario"><label>Cantidad</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01"><div class="row"><button class="btn btn-ghost" id="m_cancel">Cancelar</button><button class="btn btn-primary" id="m_send">Enviar</button></div>`;
       const bd = openModal(html);
       bd.querySelector('#m_cancel').addEventListener('click', () => closeModal(bd));
       bd.querySelector('#m_send').addEventListener('click', () => {
         const dest = bd.querySelector('#m_dest').value || 'desconocido';
         const amt = parseFloat(bd.querySelector('#m_amt').value) || 0;
-        // crear transacción: from = you, to = dest
         const lastIndex = masterLabels.length - 1;
-        const tx = {
-          txid: randomHex(12),
-          from: 'you',
-          to: dest,
-          amount: Number(amt.toFixed(4)),
-          timestamp: new Date(masterLabels[lastIndex]).toISOString(),
-          index: lastIndex
-        };
+        const tx = { txid: randomHex(12), from: 'you', to: dest, amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex };
         TRANSACTIONS.push(tx);
-        // opcional: reflejar actividad en precio (pequeño impacto)
         const prev = masterValues[masterValues.length - 1];
         const impact = clamp(amt * 0.00002, 0, 0.003);
         const nv = clamp(prev + impact * (Math.random() > 0.5 ? 1 : -1), MIN, MAX);
@@ -377,16 +360,8 @@
         const from = bd.querySelector('#i_from').value || 'external';
         const amt = parseFloat(bd.querySelector('#i_amt').value) || 0;
         const lastIndex = masterLabels.length - 1;
-        const tx = {
-          txid: randomHex(12),
-          from,
-          to: 'you',
-          amount: Number(amt.toFixed(4)),
-          timestamp: new Date(masterLabels[lastIndex]).toISOString(),
-          index: lastIndex
-        };
+        const tx = { txid: randomHex(12), from, to: 'you', amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex };
         TRANSACTIONS.push(tx);
-        // impacto pequeño al alza
         const prev = masterValues[masterValues.length - 1];
         const nv = clamp(prev + clamp(amt * 0.00002, 0, 0.003), MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
@@ -404,16 +379,8 @@
         const to = bd.querySelector('#g_to').value || 'external';
         const amt = parseFloat(bd.querySelector('#g_amt').value) || 0;
         const lastIndex = masterLabels.length - 1;
-        const tx = {
-          txid: randomHex(12),
-          from: 'you',
-          to,
-          amount: Number(amt.toFixed(4)),
-          timestamp: new Date(masterLabels[lastIndex]).toISOString(),
-          index: lastIndex
-        };
+        const tx = { txid: randomHex(12), from: 'you', to, amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex };
         TRANSACTIONS.push(tx);
-        // impacto pequeño a la baja
         const prev = masterValues[masterValues.length - 1];
         const nv = clamp(prev - clamp(amt * 0.00002, 0, 0.003), MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
@@ -423,60 +390,17 @@
       });
     });
 
-    // MI CUENTA: mostrar transacciones solo si existen
+    // Mi cuenta: vacía hasta que haya transacciones
     document.getElementById('btnCuenta').addEventListener('click', () => {
       if(TRANSACTIONS.length === 0){
         const bd = openModal(`<h3>Mi cuenta</h3><p>No hay transacciones todavía.</p><div class="row"><button class="btn btn-primary" id="closeEmpty">Cerrar</button></div>`);
         bd.querySelector('#closeEmpty').addEventListener('click', () => closeModal(bd));
         return;
       }
-      const PAGE_SIZE = 12;
-      let page = 0;
-      function renderPage(p){
-        const start = p * PAGE_SIZE;
-        const slice = TRANSACTIONS.slice().reverse().slice(start, start + PAGE_SIZE);
-        let listHtml = '<ul class="tx-list">';
-        slice.forEach(tx => {
-          listHtml += `<li class="tx-item" data-index="${tx.index}" data-txid="${tx.txid}">
-            <div class="tx-left">
-              <div><strong>${tx.txid}</strong></div>
-              <div class="tx-meta">${new Date(tx.timestamp).toLocaleString('es-ES')} · ${tx.from} → ${tx.to}</div>
-            </div>
-            <div class="tx-amount">${Number(tx.amount).toFixed(4)} SC</div>
-          </li>`;
-        });
-        listHtml += '</ul>';
-        const totalPages = Math.ceil(TRANSACTIONS.length / PAGE_SIZE);
-        const pager = `<div class="pager">
-          <button class="btn-ghost" id="prevPage" ${page===0?'disabled':''}>Anterior</button>
-          <div style="align-self:center">Página ${page+1} / ${totalPages}</div>
-          <button class="btn-ghost" id="nextPage" ${page+1>=totalPages?'disabled':''}>Siguiente</button>
-        </div>`;
-        return `<h3>Mi cuenta — Transacciones</h3><p><strong>Total transacciones:</strong> ${TRANSACTIONS.length}</p>${listHtml}${pager}<div class="row" style="margin-top:12px;"><button class="btn btn-primary" id="closeTx">Cerrar</button></div>`;
-      }
-      const bd = openModal(renderPage(page));
-      bd.addEventListener('click', (e) => {
-        if(e.target && e.target.id === 'closeTx') { bd.remove(); return; }
-        if(e.target && e.target.id === 'prevPage' && page>0){ page--; bd.querySelector('.modal').innerHTML = renderPage(page); return; }
-        if(e.target && e.target.id === 'nextPage' && (page+1)*PAGE_SIZE < TRANSACTIONS.length){ page++; bd.querySelector('.modal').innerHTML = renderPage(page); return; }
-        const li = e.target.closest('.tx-item');
-        if(li){
-          const txid = li.getAttribute('data-txid');
-          const tx = TRANSACTIONS.find(t => t.txid === txid);
-          if(tx){
-            bd.querySelector('.modal').innerHTML = `<h3>Transacción ${tx.txid}</h3>
-              <p><strong>De:</strong> ${tx.from}</p>
-              <p><strong>A:</strong> ${tx.to}</p>
-              <p><strong>Cantidad:</strong> ${Number(tx.amount).toFixed(4)} SC</p>
-              <p><strong>Fecha:</strong> ${new Date(tx.timestamp).toLocaleString('es-ES')}</p>
-              <div class="row"><button class="btn btn-ghost" id="tx_back">Volver</button><button class="btn btn-primary" id="tx_focus">Ver en gráfica</button></div>`;
-            bd.querySelector('#tx_back').addEventListener('click', () => { bd.querySelector('.modal').innerHTML = renderPage(page); });
-            bd.querySelector('#tx_focus').addEventListener('click', () => {
-              highlightPoint(tx.index);
-            });
-          }
-        }
-      });
+      // si hay transacciones, mostramos las más recientes (simple)
+      const list = TRANSACTIONS.slice().reverse().slice(0, 20).map(tx => `<li style="padding:8px;border-bottom:1px solid #eee;"><strong>${tx.txid}</strong><div style="font-size:12px;color:#666;">${new Date(tx.timestamp).toLocaleString('es-ES')} · ${tx.from} → ${tx.to}</div><div style="font-weight:800;margin-top:6px;">${Number(tx.amount).toFixed(4)} SC</div></li>`).join('');
+      const bd = openModal(`<h3>Mi cuenta</h3><ul style="list-style:none;padding:0;margin:0;">${list}</ul><div class="row" style="margin-top:12px;"><button class="btn btn-primary" id="closeTx">Cerrar</button></div>`);
+      bd.querySelector('#closeTx').addEventListener('click', () => closeModal(bd));
     });
 
     // Pause / add sample
@@ -490,7 +414,7 @@
       const lastTime = (lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime();
       const nextTime = new Date(lastTime + UPDATE_INTERVAL_MS);
       const prev = masterValues[masterValues.length - 1];
-      const nv = nextValue(prev, Math.random);
+      const nv = nextValue(prev);
       pushNewMasterPoint(nextTime, nv);
     });
 
