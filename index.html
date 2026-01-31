@@ -61,15 +61,13 @@
       <div style="flex:0 0 160px; text-align:center;">
         <div style="width:84px;height:84px;margin:8px auto;"><img src="LOGO.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;"></div>
         <div id="valorDisplay" style="font-weight:900;font-size:28px;margin-top:6px;text-align:center;">0.000 €</div>
-        <div id="accountCodeDisplay" class="account-code" title="Código de tu cuenta">—</div>
+        <!-- account code removed from header per request; shown only in Mi cuenta -->
       </div>
 
       <div class="col">
         <div style="font-weight:700;margin-bottom:6px;">Gráfica</div>
         <div class="chart-wrap"><canvas id="grafica"></canvas></div>
       </div>
-
-      <!-- tercera columna eliminada -->
     </div>
 
     <div class="botones" style="margin-top:14px;">
@@ -90,20 +88,33 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    // ---------- Estado global ----------
+    // ---------- Persistencia y formato del código de cuenta ----------
+    // Formato: IES + 8 dígitos (ej: IES12345678)
+    function generateSpanishStyleAccountCode() {
+      const prefix = 'IES';
+      let digits = '';
+      for (let i = 0; i < 8; i++) digits += Math.floor(Math.random() * 10);
+      return prefix + digits;
+    }
+    function getOrCreateAccountCode() {
+      const key = 'schoolcoin_account_code';
+      try {
+        const stored = localStorage.getItem(key);
+        if (stored && /^IES\d{8}$/.test(stored)) return stored;
+        const code = generateSpanishStyleAccountCode();
+        localStorage.setItem(key, code);
+        return code;
+      } catch (e) {
+        return generateSpanishStyleAccountCode();
+      }
+    }
+    const accountCode = getOrCreateAccountCode();
+
+    // ---------- Estado global y utilidades ----------
     const UPDATE_INTERVAL_MS = 5000;
     const PRESET_POINTS = 600;
     const MIN = 0.05, MAX = 0.50, BASE = 0.275, MAX_STEP_PER_TICK = 0.0009;
 
-    // Generar código aleatorio de cuenta al iniciar (se mostrará y se usará como ref)
-    function randomHex(len=8){ const chars='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
-    const accountCode = randomHex(10); // código de cuenta persistente durante la sesión
-    document.getElementById('accountCodeDisplay').textContent = accountCode;
-
-    // Transacciones
-    const TRANSACTIONS = [];
-
-    // UTIL
     function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
     function formatDynamicDecimals(num){
       if (!isFinite(num)) return String(num);
@@ -114,8 +125,9 @@
       if(frac.length <= 3) return parts[0] + '.' + frac.padEnd(3,'0');
       return parts[0] + '.' + frac;
     }
+    function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
-    // ---------- Generación de serie (misma lógica previa) ----------
+    // ---------- Generación de serie ----------
     function nextValue(prev){
       const meanReversion = (BASE - prev) * 0.10;
       const baseNoise = (Math.random() - 0.5) * 0.0022;
@@ -129,7 +141,6 @@
       const next = clamp(prev + limitedDelta, MIN, MAX);
       return Number(next.toFixed(6));
     }
-
     function generateInitialSeries(){
       const labels = [];
       const data = [];
@@ -147,6 +158,7 @@
     const initial = generateInitialSeries();
     const masterLabels = initial.labels.slice();
     const masterValues = initial.data.slice();
+    const TRANSACTIONS = [];
 
     // ---------- Chart ----------
     const ctx = document.getElementById('grafica').getContext('2d');
@@ -293,7 +305,7 @@
         <div class="modal-body">
           <div class="field"><label>Destinatario</label><input id="m_dest" type="text" placeholder="Dirección o usuario"></div>
           <div class="field"><label>Cantidad (SC)</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01"></div>
-          <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
+          <div class="small-note">Referencia de cuenta (no visible en cabecera): <strong>${accountCode}</strong></div>
           <div class="row-actions"><button class="btn-ghost" id="m_cancel">Cancelar</button><button class="btn-primary" id="m_send">Enviar</button></div>
         </div>`;
       const bd = openModal(html);
@@ -302,7 +314,6 @@
         const dest = bd.querySelector('#m_dest').value || 'desconocido';
         const amt = parseFloat(bd.querySelector('#m_amt').value) || 0;
         const lastIndex = masterLabels.length - 1;
-        // añadir transacción con ref = accountCode y tipo 'envio'
         TRANSACTIONS.push({
           txid: randomHex(16),
           ref: accountCode,
@@ -349,7 +360,6 @@
         }
         errEl.style.display = 'none';
         const lastIndex = masterLabels.length - 1;
-        // añadir transacción tipo 'ingreso' con ref = accountCode
         TRANSACTIONS.push({
           txid: randomHex(16),
           ref: accountCode,
@@ -389,7 +399,6 @@
         const lastIndex = masterLabels.length - 1;
         const priceNow = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
         const euros = Number((amt * priceNow).toFixed(6));
-        // añadir transacción tipo 'cambio' con detalle euro y ref = accountCode
         TRANSACTIONS.push({
           txid: randomHex(16),
           ref: accountCode,
@@ -411,90 +420,27 @@
       });
     });
 
-    // ---------- Mi cuenta (abre por defecto con filtro 'ingreso' y muestra código) ----------
+    // ---------- Mi cuenta (solo muestra el código de cuenta) ----------
     document.getElementById('btnCuenta').addEventListener('click', () => {
-      renderAccountModal('ingreso', 0); // por defecto 'INGRESO'
+      renderAccountModal();
     });
 
-    function renderAccountModal(filter='all', page=0){
-      const PAGE_SIZE = 10;
-      let filtered = TRANSACTIONS.slice();
-      if(filter !== 'all') filtered = filtered.filter(t => t.type === filter);
-      const total = filtered.length;
-      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-      const start = page * PAGE_SIZE;
-      const pageItems = filtered.slice().reverse().slice(start, start + PAGE_SIZE);
-
-      const filtersHtml = `
-        <div style="padding:8px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-          <div style="font-weight:800;margin-right:8px;">Cuenta:</div>
-          <div class="account-code">${accountCode}</div>
-        </div>
-        <div style="padding:8px 0;display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn-ghost filter ${filter==='all'?'active':''}" data-filter="all">Todos</button>
-          <button class="btn-ghost filter ${filter==='ingreso'?'active':''}" data-filter="ingreso">Ingresos</button>
-          <button class="btn-ghost filter ${filter==='gasto'?'active':''}" data-filter="gasto">Gastos</button>
-          <button class="btn-ghost filter ${filter==='envio'?'active':''}" data-filter="envio">Envíos</button>
-          <button class="btn-ghost filter ${filter==='cambio'?'active':''}" data-filter="cambio">Cambios</button>
-        </div>`;
-
-      let listHtml = '';
-      if(pageItems.length === 0){
-        listHtml = `<div class="empty">No hay transacciones que coincidan.</div>`;
-      } else {
-        listHtml = `<div style="display:flex;flex-direction:column;gap:10px;">`;
-        pageItems.forEach(tx => {
-          const shortId = tx.txid.slice(0,12) + (tx.txid.length>12 ? '…' : '');
-          let amountLabel = '';
-          if(tx.type === 'cambio') amountLabel = `${Number(tx.amount).toFixed(4)} SC → ${Number(tx.euro).toFixed(6)} €`;
-          else amountLabel = `${Number(tx.amount).toFixed(4)} SC`;
-          // mostrar siempre "INGRESO" en la lista si es tipo ingreso
-          const typeLabel = tx.type === 'ingreso' ? 'INGRESO' : tx.type.toUpperCase();
-          listHtml += `
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,0.04);">
-              <div style="min-width:0;">
-                <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">${shortId} · Ref: ${tx.ref}</div>
-                <div style="font-size:12px;color:var(--muted);margin-top:6px;">${new Date(tx.timestamp).toLocaleString('es-ES')} · ${typeLabel}</div>
-              </div>
-              <div style="font-weight:900;color:var(--accent);min-width:120px;text-align:right;">${amountLabel}</div>
-            </div>`;
-        });
-        listHtml += `</div>`;
-      }
-
-      const pagerHtml = `
-        <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;">
-          <button class="btn-ghost" id="prevPage" ${page===0?'disabled':''}>Anterior</button>
-          <div style="align-self:center;color:var(--muted)">Página ${page+1} / ${totalPages}</div>
-          <button class="btn-ghost" id="nextPage" ${page+1>=totalPages?'disabled':''}>Siguiente</button>
-        </div>`;
-
+    function renderAccountModal(){
       const modalHtml = `
         <div class="modal-header"><h3>Mi cuenta</h3></div>
-        <div class="modal-body">
-          ${filtersHtml}
-          ${listHtml}
-          ${pagerHtml}
-          <div style="display:flex;justify-content:flex-end;margin-top:12px;"><button class="btn-primary" id="closeAccount">Cerrar</button></div>
-        </div>`;
-
+        <div class="modal-body" style="text-align:center;">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Código de cuenta</div>
+          <div style="display:inline-block;background:#fff;padding:12px 16px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);font-weight:900;font-size:18px;">
+            ${accountCode}
+          </div>
+          <div style="margin-top:12px;color:var(--muted);font-size:13px;">Guarda este código para recibir ingresos.</div>
+          <div style="display:flex;justify-content:center;margin-top:16px;">
+            <button class="btn-primary" id="closeAccount">Cerrar</button>
+          </div>
+        </div>
+      `;
       const bd = openModal(modalHtml);
-
-      bd.querySelectorAll('.filter').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const f = btn.getAttribute('data-filter');
-          bd.remove();
-          renderAccountModal(f, 0);
-        });
-      });
-
-      const prev = bd.querySelector('#prevPage');
-      const next = bd.querySelector('#nextPage');
-      if(prev) prev.addEventListener('click', () => { bd.remove(); renderAccountModal(filter, Math.max(0, page-1)); });
-      if(next) next.addEventListener('click', () => { bd.remove(); renderAccountModal(filter, page+1); });
-
-      const closeBtn = bd.querySelector('#closeAccount');
-      if(closeBtn) closeBtn.addEventListener('click', () => closeModal(bd));
+      bd.querySelector('#closeAccount').addEventListener('click', () => closeModal(bd));
     }
 
     // ---------- Pause / add sample ----------
@@ -510,9 +456,6 @@
       const nv = nextValue(prev);
       pushNewMasterPoint(nextTime, nv);
     });
-
-    // Helper randomHex (ya definida arriba, redeclarada por seguridad)
-    function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
   </script>
 </body>
 </html>
