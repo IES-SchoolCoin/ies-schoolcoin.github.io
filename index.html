@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - App</title>
+  <title>SCHOOLCOIN - Más variación</title>
 
   <style>
     :root{
@@ -29,7 +29,7 @@
     .info-box{margin-top:12px;background:rgba(0,0,0,0.06);padding:10px;border-radius:8px;font-size:13px;}
     .controls{display:flex;gap:8px;margin-top:10px;align-items:center;}
     .control-btn{background:#fff;border:1px solid #ccc;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;}
-    /* Modal y lista con tema de la app */
+    /* Modal y lista */
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
     .modal{background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95));color:var(--text);border-radius:16px;padding:14px;max-width:720px;width:100%;box-sizing:border-box;max-height:86vh;overflow:auto;box-shadow:var(--shadow);}
     .modal h3{margin:0 0 8px 0;font-size:18px;}
@@ -92,34 +92,52 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    // ---------- Ajustes solicitados ----------
-    // Eliminados controles de usuario; la serie ahora está diseñada para
-    // oscilar a largo plazo entre 0.05 € y 0.50 € (5-50 cents).
+    // ---------- Requisitos ----------
+    // Intervalo por tick (no tocar): 5s
     const UPDATE_INTERVAL_MS = 5000;
     const PRESET_POINTS = 600;
-    const MIN = 0.05;   // 5 cents
-    const MAX = 0.50;   // 50 cents
-    const BASE = 0.275; // punto medio (27.5 cents)
+
+    // Rango a largo plazo: 0.05 € - 0.50 €
+    const MIN = 0.05;
+    const MAX = 0.50;
+    const BASE = 0.275;
+
+    // Queremos permitir hasta ±0.01 € en 60s.
+    // Con ticks de 5s, pasos por minuto = 60/5 = 12.
+    // Por tanto, step_max ≈ 0.01 / 12 ≈ 0.0008333
+    const MAX_STEP_PER_TICK = 0.0009; // margen pequeño por seguridad
 
     function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
     function formatMoney(v){ return Number(v).toFixed(2) + ' €'; }
     function formatDate(d){ return new Date(d).toLocaleString('es-ES', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
     function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
-    // nextValue: parámetros ajustados para que la serie tienda a permanecer
-    // dentro de [MIN, MAX] a largo plazo, con ruido moderado y mean reversion.
+    // nextValue: mezcla mean reversion + ruido continuo + posibilidad de saltos controlados.
+    // Se limita el cambio absoluto por tick a MAX_STEP_PER_TICK para garantizar que
+    // en 1 minuto no supere ~0.01 € por acumulación natural.
     function nextValue(prev){
-      // fuerza de retorno más alta para mantener en rango
-      const meanReversion = (BASE - prev) * 0.12;
-      // ruido reducido pero suficiente para variación
-      const noise = (Math.random() - 0.5) * 0.0035;
-      // ocasional pequeño salto con baja probabilidad
-      let v = prev + meanReversion + noise;
-      if(Math.random() < 0.03){ // 3% probabilidad de salto
-        const jump = (Math.random() - 0.5) * 0.06; // hasta ±6%
-        v = v * (1 + jump);
+      // mean reversion hacia BASE (mantiene a largo plazo en el rango)
+      const meanReversion = (BASE - prev) * 0.10;
+
+      // ruido continuo: permite variación constante
+      // ruido base aumentado ligeramente para que se note movimiento
+      const baseNoise = (Math.random() - 0.5) * 0.0022; // ±0.0011
+      // combinar
+      let candidate = prev + meanReversion + baseNoise;
+
+      // ocasional salto (baja probabilidad) para simular micro-eventos
+      if(Math.random() < 0.04){ // 4% probabilidad por tick
+        const jumpPct = (Math.random() * 2 - 1) * 0.02; // hasta ±2% instantáneo
+        candidate = candidate * (1 + jumpPct);
       }
-      return Number(clamp(v, MIN, MAX).toFixed(4));
+
+      // limitar cambio absoluto por tick
+      const delta = candidate - prev;
+      const limitedDelta = clamp(delta, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
+      const next = clamp(prev + limitedDelta, MIN, MAX);
+
+      // devolver con 4 decimales
+      return Number(next.toFixed(4));
     }
 
     // Generar serie inicial alineada en tiempo
@@ -128,7 +146,7 @@
       const data = [];
       const nowAligned = Math.floor(Date.now() / UPDATE_INTERVAL_MS) * UPDATE_INTERVAL_MS;
       const start = nowAligned - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
-      let val = BASE + (Math.random() - 0.5) * 0.04; // inicio cercano al BASE
+      let val = BASE + (Math.random() - 0.5) * 0.04;
       for(let i=0;i<PRESET_POINTS;i++){
         labels.push(new Date(start + i * UPDATE_INTERVAL_MS));
         val = nextValue(val);
@@ -159,7 +177,7 @@
           pointRadius: (ctx) => ctx.active ? 6 : 0,
           pointHoverRadius: 6,
           pointHitRadius: 12,
-          tension: 0.18,
+          tension: 0.16,
           fill: true
         }]
       },
@@ -186,7 +204,7 @@
             type: 'time',
             time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } },
             grid: { display: false },
-            ticks: { display: false } // ocultar números debajo
+            ticks: { display: false }
           },
           y: {
             beginAtZero: false,
@@ -278,13 +296,19 @@
       masterValues.push(newMasterVal);
       if(masterLabels.length > PRESET_POINTS){ masterLabels.shift(); masterValues.shift(); }
 
+      // suavizado ligero (EMA) para mantener continuidad pero permitir cambios de hasta MAX_STEP_PER_TICK
       const lastSmoothed = chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1];
-      const raw = newMasterVal + (Math.random() - 0.5) * 0.0015;
-      const alpha = 0.12;
-      const smoothed = lastSmoothed * (1 - alpha) + raw * alpha;
+      const raw = newMasterVal + (Math.random() - 0.5) * 0.0008; // ruido pequeño adicional
+      const alpha = 0.10; // suavizado algo menor para permitir más variación
+      let smoothed = lastSmoothed * (1 - alpha) + raw * alpha;
+
+      // asegurar que el paso no exceda MAX_STEP_PER_TICK (por si el raw produce delta mayor)
+      const delta = smoothed - lastSmoothed;
+      const limitedDelta = clamp(delta, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
+      smoothed = clamp(lastSmoothed + limitedDelta, MIN, MAX);
 
       chart.data.labels.push(nextDate);
-      chart.data.datasets[0].data.push(Number(clamp(smoothed, MIN, MAX).toFixed(4)));
+      chart.data.datasets[0].data.push(Number(smoothed.toFixed(4)));
       if(chart.data.labels.length > PRESET_POINTS){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
       chart.update('none');
 
@@ -306,7 +330,7 @@
     }
     scheduleNextUpdate();
 
-    // ---------- Modal helpers ----------
+    // ---------- Modal helpers y botones (sin cambios funcionales) ----------
     function openModal(htmlContent){
       const bd = document.createElement('div');
       bd.className = 'modal-backdrop';
@@ -317,7 +341,7 @@
     }
     function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
-    // ---------- Buttons: Enviar / Ingresos / Cambiar / Mi cuenta ----------
+    // Enviar / Ingresos / Cambiar / Mi cuenta (idénticos a versiones previas)
     document.getElementById('btnEnviar').addEventListener('click', () => {
       const html = `<h3>Enviar SCHOOLCOIN</h3>
         <label>Destinatario</label><input id="m_dest" placeholder="Dirección o usuario" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd;">
@@ -387,7 +411,7 @@
       });
     });
 
-    // Mi cuenta: bonita, simplificada, detalle al pulsar
+    // Mi cuenta (idéntica a versión previa)
     document.getElementById('btnCuenta').addEventListener('click', () => {
       renderAccountModal('all', 0);
     });
@@ -493,7 +517,7 @@
       });
     }
 
-    // ---------- Pause / Add sample ----------
+    // Pause / add sample
     document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
