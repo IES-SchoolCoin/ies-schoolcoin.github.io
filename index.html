@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - App completa</title>
+  <title>SCHOOLCOIN - App</title>
 
   <style>
     :root{
@@ -29,10 +29,6 @@
     .info-box{margin-top:12px;background:rgba(0,0,0,0.06);padding:10px;border-radius:8px;font-size:13px;}
     .controls{display:flex;gap:8px;margin-top:10px;align-items:center;}
     .control-btn{background:#fff;border:1px solid #ccc;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;}
-    .vol-control{margin-top:12px;background:rgba(255,255,255,0.9);padding:10px;border-radius:8px;font-size:13px;}
-    .vol-row{display:flex;gap:8px;align-items:center;margin-top:6px;}
-    .vol-row label{width:90px;font-weight:700;}
-    .vol-row input[type="range"]{flex:1;}
     /* Modal y lista con tema de la app */
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
     .modal{background:linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95));color:var(--text);border-radius:16px;padding:14px;max-width:720px;width:100%;box-sizing:border-box;max-height:86vh;overflow:auto;box-shadow:var(--shadow);}
@@ -73,25 +69,8 @@
       </div>
 
       <div class="col">
-        <div style="font-weight:700;margin-bottom:6px;">Controles</div>
-        <div class="vol-control">
-          <div style="font-weight:700;margin-bottom:6px;">Control de volatilidad</div>
-          <div class="vol-row">
-            <label>Ruido</label>
-            <input id="noiseRange" type="range" min="0" max="10" value="4">
-            <div id="noiseVal" style="width:48px;text-align:right;">4</div>
-          </div>
-          <div class="vol-row">
-            <label>Saltos %</label>
-            <input id="jumpRange" type="range" min="0" max="20" value="6">
-            <div id="jumpVal" style="width:48px;text-align:right;">6</div>
-          </div>
-          <div class="vol-row">
-            <label>Prob. salto</label>
-            <input id="jumpProb" type="range" min="0" max="100" value="8">
-            <div id="jumpProbVal" style="width:48px;text-align:right;">8%</div>
-          </div>
-        </div>
+        <div style="font-weight:700;margin-bottom:6px;">Información</div>
+        <div class="info-box" id="infoBox">Toca o haz clic en un punto para ver su fecha, hora y valor. Mi cuenta está vacía hasta que envíes o recibas SC.</div>
       </div>
     </div>
 
@@ -102,12 +81,10 @@
       <div class="boton" id="btnCuenta">Mi cuenta</div>
     </div>
 
-    <div class="controls">
+    <div class="controls" style="margin-top:12px;">
       <button class="control-btn" id="pauseBtn">Pausar actualizaciones</button>
       <button class="control-btn" id="addSample">Añadir valor ahora</button>
     </div>
-
-    <div class="info-box" id="infoBox">Toca o haz clic en un punto para ver su fecha, hora y valor. Mi cuenta está vacía hasta que envíes o recibas SC.</div>
   </div>
 
   <!-- Chart.js + adapter -->
@@ -115,62 +92,46 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    // ---------- Config y util ----------
+    // ---------- Ajustes solicitados ----------
+    // Eliminados controles de usuario; la serie ahora está diseñada para
+    // oscilar a largo plazo entre 0.05 € y 0.50 € (5-50 cents).
     const UPDATE_INTERVAL_MS = 5000;
     const PRESET_POINTS = 600;
-    const BASE = 0.175;
-    const MIN = 0.10;
-    const MAX = 0.30;
-
-    const noiseRange = document.getElementById('noiseRange');
-    const noiseVal = document.getElementById('noiseVal');
-    const jumpRange = document.getElementById('jumpRange');
-    const jumpVal = document.getElementById('jumpVal');
-    const jumpProb = document.getElementById('jumpProb');
-    const jumpProbVal = document.getElementById('jumpProbVal');
-
-    function getNoiseAmp(){ return Number(noiseRange.value) / 10; }
-    function getJumpPct(){ return Number(jumpRange.value) / 100; }
-    function getJumpProb(){ return Number(jumpProb.value) / 100; }
-
-    noiseRange.addEventListener('input', () => { noiseVal.textContent = noiseRange.value; });
-    jumpRange.addEventListener('input', () => { jumpVal.textContent = jumpRange.value; });
-    jumpProb.addEventListener('input', () => { jumpProbVal.textContent = jumpProb.value + '%'; });
+    const MIN = 0.05;   // 5 cents
+    const MAX = 0.50;   // 50 cents
+    const BASE = 0.275; // punto medio (27.5 cents)
 
     function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
     function formatMoney(v){ return Number(v).toFixed(2) + ' €'; }
     function formatDate(d){ return new Date(d).toLocaleString('es-ES', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
     function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
-    // ---------- Generación inicial ----------
-    function nextValueBase(prev, noiseAmp, meanStrength, jumpChanceFactor){
-      const meanReversion = (BASE - prev) * meanStrength;
-      const noise = (Math.random() - 0.5) * 2 * 0.004 * noiseAmp;
-      let v = prev + meanReversion + noise;
-      const prob = getJumpProb() * jumpChanceFactor;
-      if(Math.random() < prob){
-        const jumpPct = (Math.random() * 2 - 1) * getJumpPct();
-        v = v * (1 + jumpPct);
-      }
-      return clamp(v, MIN, MAX);
-    }
-
+    // nextValue: parámetros ajustados para que la serie tienda a permanecer
+    // dentro de [MIN, MAX] a largo plazo, con ruido moderado y mean reversion.
     function nextValue(prev){
-      const noiseAmp = 0.2 + getNoiseAmp() * 1.6;
-      const meanStrength = 0.06 - getNoiseAmp() * 0.03;
-      const jumpChanceFactor = 0.5 + getNoiseAmp() * 1.0;
-      return Number(nextValueBase(prev, noiseAmp, meanStrength, jumpChanceFactor).toFixed(4));
+      // fuerza de retorno más alta para mantener en rango
+      const meanReversion = (BASE - prev) * 0.12;
+      // ruido reducido pero suficiente para variación
+      const noise = (Math.random() - 0.5) * 0.0035;
+      // ocasional pequeño salto con baja probabilidad
+      let v = prev + meanReversion + noise;
+      if(Math.random() < 0.03){ // 3% probabilidad de salto
+        const jump = (Math.random() - 0.5) * 0.06; // hasta ±6%
+        v = v * (1 + jump);
+      }
+      return Number(clamp(v, MIN, MAX).toFixed(4));
     }
 
+    // Generar serie inicial alineada en tiempo
     function generateInitialSeries(){
       const labels = [];
       const data = [];
       const nowAligned = Math.floor(Date.now() / UPDATE_INTERVAL_MS) * UPDATE_INTERVAL_MS;
       const start = nowAligned - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
-      let val = BASE + (Math.random() - 0.5) * 0.02;
+      let val = BASE + (Math.random() - 0.5) * 0.04; // inicio cercano al BASE
       for(let i=0;i<PRESET_POINTS;i++){
         labels.push(new Date(start + i * UPDATE_INTERVAL_MS));
-        val = nextValueBase(val, 0.4, 0.06, 0.06);
+        val = nextValue(val);
         data.push(Number(val.toFixed(4)));
       }
       return {labels, data};
@@ -194,7 +155,7 @@
           data: masterValues.slice(),
           borderColor: '#0b8a3e',
           borderWidth: 1,
-          backgroundColor: 'rgba(11,138,62,0.12)',
+          backgroundColor: 'rgba(11,138,62,0.10)',
           pointRadius: (ctx) => ctx.active ? 6 : 0,
           pointHoverRadius: 6,
           pointHitRadius: 12,
@@ -225,7 +186,7 @@
             type: 'time',
             time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } },
             grid: { display: false },
-            ticks: { display: false }
+            ticks: { display: false } // ocultar números debajo
           },
           y: {
             beginAtZero: false,
@@ -238,25 +199,22 @@
       }
     });
 
-    // Exponer chart para modal detalle
     window.chartInstance = chart;
 
     // UI refs
     const valorDisplay = document.getElementById('valorDisplay');
     const infoBox = document.getElementById('infoBox');
-    const trendText = document.getElementById('trendText'); // may be undefined in this layout
 
     function updateMainDisplay(value, date){
       valorDisplay.textContent = formatMoney(value);
-      // color by direction
       const prev = chart.data.datasets[0].data.length > 1 ? chart.data.datasets[0].data[chart.data.datasets[0].data.length - 2] : value;
       const diff = value - prev;
+      const pct = prev ? ((diff / prev) * 100).toFixed(2) + '%' : '';
+      infoBox.textContent = `${formatDate(date)} · ${diff>0?'▲':'▼'} ${pct}`;
       valorDisplay.style.color = diff > 0 ? 'var(--accent)' : (diff < 0 ? 'var(--danger)' : 'var(--text)');
-      // timestamp shown in infoBox for compact layout
-      infoBox.textContent = `${formatDate(date)} · ${diff>0?'▲':'▼'} ${prev?((diff/prev)*100).toFixed(2)+'%':''}`;
     }
 
-    // selection helpers
+    // selección única
     function clearActiveSelection(){
       try{ chart.setActiveElements([]); chart.tooltip.setActiveElements([], {x:0,y:0}); chart.update('none'); }catch(e){}
     }
@@ -310,7 +268,7 @@
     // initial display
     updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1], new Date(chart.data.labels[chart.data.labels.length - 1]));
 
-    // ---------- Updates ----------
+    // ---------- Updates (deterministas) ----------
     let paused = false;
     let updateTimer = null;
 
@@ -321,7 +279,7 @@
       if(masterLabels.length > PRESET_POINTS){ masterLabels.shift(); masterValues.shift(); }
 
       const lastSmoothed = chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1];
-      const raw = newMasterVal + (Math.random() - 0.5) * getNoiseAmp() * 0.002;
+      const raw = newMasterVal + (Math.random() - 0.5) * 0.0015;
       const alpha = 0.12;
       const smoothed = lastSmoothed * (1 - alpha) + raw * alpha;
 
