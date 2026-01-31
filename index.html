@@ -3,30 +3,25 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Corregido</title>
+  <title>SCHOOLCOIN - Corregido actualizaciones</title>
 
   <style>
-    :root{
-      --bg: #f7d54a;
-      --top: #000;
-      --btn: #8b5e3c;
-      --text: #222;
-    }
-    html,body{height:100%; margin:0; font-family:Inter, Arial, sans-serif; background:var(--bg); color:var(--text);}
-    .contenedor{width:100%; max-width:420px; margin:0 auto; padding:16px; box-sizing:border-box;}
-    .top-bar{background:var(--top); color:#fff; padding:10px; font-weight:700; text-align:center; border-radius:8px;}
-    .header{margin-top:14px; font-size:22px; font-weight:800; text-align:center;}
-    .coin-logo{width:96px; height:96px; margin:14px auto;}
-    .coin-logo img{width:100%; height:100%; object-fit:contain; display:block;}
-    .valor-actual{font-size:30px; font-weight:800; margin-top:8px;}
-    .meta-line{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; font-size:13px; color:#333;}
-    .chart-wrap{width:100%; margin-top:14px; background:transparent; border-radius:12px; padding:6px 6px 2px 6px;}
-    canvas{width:100% !important; height:320px !important; display:block;}
-    .botones{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;}
-    .boton{background:var(--btn); color:#fff; padding:12px; border-radius:10px; font-weight:700; text-align:center; cursor:pointer; user-select:none;}
-    .info-box{margin-top:12px; background:rgba(0,0,0,0.06); padding:10px; border-radius:8px; font-size:13px;}
-    .controls{display:flex; gap:8px; margin-top:10px; justify-content:center;}
-    .control-btn{background:#fff; border:1px solid #ccc; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600;}
+    :root{--bg:#f7d54a;--top:#000;--btn:#8b5e3c;--text:#222;}
+    html,body{height:100%;margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text);}
+    .contenedor{width:100%;max-width:420px;margin:0 auto;padding:16px;box-sizing:border-box;}
+    .top-bar{background:var(--top);color:#fff;padding:10px;font-weight:700;text-align:center;border-radius:8px;}
+    .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;}
+    .coin-logo{width:96px;height:96px;margin:14px auto;}
+    .coin-logo img{width:100%;height:100%;object-fit:contain;display:block;}
+    .valor-actual{font-size:30px;font-weight:800;margin-top:8px;}
+    .meta-line{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:#333;}
+    .chart-wrap{width:100%;margin-top:14px;background:transparent;border-radius:12px;padding:6px;}
+    canvas{width:100% !important;height:320px !important;display:block;}
+    .botones{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;}
+    .boton{background:var(--btn);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;}
+    .info-box{margin-top:12px;background:rgba(0,0,0,0.06);padding:10px;border-radius:8px;font-size:13px;}
+    .controls{display:flex;gap:8px;margin-top:10px;justify-content:center;}
+    .control-btn{background:#fff;border:1px solid #ccc;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;}
     @media (max-width:400px){ .botones{grid-template-columns:1fr;} canvas{height:260px !important;} }
   </style>
 </head>
@@ -68,7 +63,7 @@
   <script>
     // CONFIG
     const UPDATE_INTERVAL_MS = 5000;
-    const PRESET_POINTS = 1200; // muchos puntos
+    const PRESET_POINTS = 600; // reduce si el rendimiento baja
     const BASE = 0.175;
     const MIN = 0.15;
     const MAX = 0.20;
@@ -81,11 +76,10 @@
     function nextValue(prev){
       const meanReversion = (BASE - prev) * 0.08;
       const noise = (Math.random() - 0.5) * 0.006;
-      let v = prev + meanReversion + noise;
-      return Number(clamp(v,MIN,MAX).toFixed(4));
+      return Number(clamp(prev + meanReversion + noise, MIN, MAX).toFixed(4));
     }
 
-    // GENERAR MUCHOS VALORES CON TIMESTAMPS EN SEGUNDOS (determinista)
+    // GENERAR SERIE INICIAL (timestamps deterministas)
     function generateInitialSeries(){
       const labels = [];
       const data = [];
@@ -120,7 +114,7 @@
       trendTextEl.textContent = arrow + ' ' + pct;
     }
 
-    // CHART: usamos pointRadius scriptable para que solo se muestre cuando el punto esté activo
+    // CHART: pointRadius scriptable para mostrar solo punto activo
     const ctx = document.getElementById('grafica').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
@@ -131,7 +125,6 @@
           data: values,
           borderColor: '#0b8a3e',
           backgroundColor: 'rgba(11,138,62,0.12)',
-          // scriptable: muestra punto solo si está activo (hover/selected)
           pointRadius: (ctx) => ctx.active ? 6 : 0,
           pointHoverRadius: 6,
           pointHitRadius: 12,
@@ -142,18 +135,17 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 200 },
+        animation: { duration: 0 }, // sin animaciones para evitar estados intermedios
         interaction: { mode: 'nearest', intersect: false },
         plugins: {
           legend: { display: false },
           tooltip: {
             enabled: true,
-            // evitar que tooltip quede "pegado" por external handlers
             external: null,
             callbacks: {
-              label: function(ctx){
-                const v = Number(ctx.parsed.y).toFixed(4);
-                const date = ctx.label instanceof Date ? formatDate(ctx.label) : ctx.label;
+              label: function(c){
+                const v = Number(c.parsed.y).toFixed(4);
+                const date = c.label instanceof Date ? formatDate(c.label) : c.label;
                 return ` ${v} € — ${date}`;
               }
             }
@@ -173,24 +165,20 @@
             grid: { display: false },
             ticks: { callback: v => Number(v).toFixed(2)+' €', color: '#333' }
           }
-        },
-        // limpiar selección cuando se actualiza para evitar puntos "pegados"
-        plugins: {
-          ...this?.plugins,
         }
       }
     });
 
-    // función para limpiar selección activa y tooltip
+    // Limpia selección activa y tooltip de forma segura
     function clearActiveSelection(){
       try{
         chart.setActiveElements([]);
         chart.tooltip.setActiveElements([], {x:0,y:0});
         chart.update('none');
-      }catch(e){ /* no bloquear si falla */ }
+      }catch(e){}
     }
 
-    // resaltar punto (permanece hasta que se limpie o se seleccione otro)
+    // Resaltar punto seleccionado
     function highlightPoint(index){
       if(index == null) return;
       clearActiveSelection();
@@ -205,12 +193,21 @@
       infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
     }
 
-    // limpiar al salir del canvas (evita puntos visibles sin interacción)
+    // Evitar puntos "pegados" al salir del canvas
     const canvasEl = document.getElementById('grafica');
     canvasEl.addEventListener('mouseleave', () => clearActiveSelection());
 
-    // soporte táctil: usar touchend para seleccionar punto cercano
-    canvasEl.addEventListener('touchend', function(e){
+    // Click y touch handlers
+    canvasEl.addEventListener('click', (evt) => {
+      const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+      if(pts.length) highlightPoint(pts[0].index);
+      else {
+        const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
+        if(pts2.length) highlightPoint(pts2[0].index);
+      }
+    });
+
+    canvasEl.addEventListener('touchend', (e) => {
       if(e.changedTouches && e.changedTouches.length){
         const t = e.changedTouches[0];
         const simulated = {clientX: t.clientX, clientY: t.clientY};
@@ -223,33 +220,30 @@
       }
     }, {passive:true});
 
-    // click en escritorio
-    canvasEl.addEventListener('click', function(evt){
-      const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
-      if(pts.length) highlightPoint(pts[0].index);
-      else {
-        const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
-        if(pts2.length) highlightPoint(pts2[0].index);
-      }
-    });
-
-    // actualizar display inicial
+    // Mostrar valor inicial
     updateMainDisplay(values[values.length-1], new Date(labels[labels.length-1]));
 
-    // ACTUALIZACIONES deterministas (siguiente timestamp = última etiqueta + intervalo)
+    // ACTUALIZACIONES deterministas y seguras
     let paused = false;
     let updateTimer = null;
 
     function pushNewPoint(nextDate, newVal){
-      // limpiar selección antes de cambiar datos para evitar inconsistencias
+      // limpiar selección antes de tocar datos
       clearActiveSelection();
+      // insertar
       chart.data.labels.push(nextDate);
       chart.data.datasets[0].data.push(newVal);
       if(chart.data.labels.length > PRESET_POINTS){
         chart.data.labels.shift();
         chart.data.datasets[0].data.shift();
       }
-      chart.update('active');
+      // actualizar sin animación
+      chart.update('none');
+      // pequeña espera y limpieza final para evitar estados intermedios
+      setTimeout(() => {
+        clearActiveSelection();
+      }, 20);
+      // mantener arrays locales
       labels.push(nextDate);
       values.push(newVal);
       if(labels.length > PRESET_POINTS){ labels.shift(); values.shift(); }
@@ -271,7 +265,7 @@
 
     scheduleNextUpdate();
 
-    // controles
+    // Controles
     document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
