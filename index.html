@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Simulación rápida</title>
+  <title>SCHOOLCOIN - Simulación interactiva</title>
 
   <style>
     :root{
@@ -31,7 +31,6 @@
     .meta-line{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; font-size:13px; color:#333;}
 
     .chart-wrap{width:100%; margin-top:14px; background:transparent; border-radius:12px; padding:6px 6px 2px 6px;}
-    /* Aseguramos altura fija para que la gráfica siempre se vea */
     canvas{width:100% !important; height:260px !important; display:block;}
 
     .botones{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;}
@@ -79,11 +78,11 @@
     </div>
 
     <div class="info-box" id="infoBox">
-      Haz clic en un punto de la gráfica para ver su fecha y valor aquí.
+      Haz clic o toca un punto de la gráfica para ver su fecha y valor aquí.
     </div>
   </div>
 
-  <!-- Chart.js + adaptador de fechas (date-fns) -->
+  <!-- Chart.js + adaptador de fechas -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/dist/date-fns.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -91,8 +90,8 @@
   <script>
     // ---------- CONFIGURACIÓN ----------
     const UPDATE_INTERVAL_MS = 5000; // 5 segundos
-    const PRESET_POINTS = 120; // cuantos puntos preestablecidos (120 * 5s = 10min historial)
-    const BASE = 0.175; // valor base en euros (17.5 cents)
+    const PRESET_POINTS = 120;
+    const BASE = 0.175;
     const MIN = 0.15;
     const MAX = 0.20;
 
@@ -103,7 +102,6 @@
       return d.toLocaleString('es-ES', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'});
     }
 
-    // Genera un valor nuevo siguiendo un patrón de "random walk" alrededor de BASE
     function nextValue(prev){
       const meanReversion = (BASE - prev) * 0.08;
       const noise = (Math.random() - 0.5) * 0.006;
@@ -112,7 +110,6 @@
       return Number(v.toFixed(4));
     }
 
-    // Genera etiquetas de tiempo espaciadas según UPDATE_INTERVAL_MS hacia atrás
     function generateInitialSeries(){
       const labels = [];
       const data = [];
@@ -128,12 +125,12 @@
       return {labels, data};
     }
 
-    // ---------- INICIALIZACIÓN DE DATOS ----------
+    // ---------- DATOS INICIALES ----------
     const initial = generateInitialSeries();
     const labels = initial.labels.slice();
     const values = initial.data.slice();
 
-    // ---------- ACTUALIZAR UI ----------
+    // ---------- UI ----------
     const valorActualEl = document.getElementById('valorActual');
     const timestampEl = document.getElementById('timestamp');
     const trendTextEl = document.getElementById('trendText');
@@ -149,7 +146,7 @@
       trendTextEl.textContent = arrow + ' ' + pct;
     }
 
-    // ---------- CREAR GRÁFICA ----------
+    // ---------- GRÁFICA ----------
     const ctx = document.getElementById('grafica').getContext('2d');
 
     const chart = new Chart(ctx, {
@@ -161,8 +158,9 @@
           data: values,
           borderColor: '#0b8a3e',
           backgroundColor: 'rgba(11,138,62,0.12)',
-          pointRadius: 4,
-          pointHoverRadius: 6,
+          pointRadius: 0,           // puntos invisibles por defecto
+          pointHoverRadius: 6,      // se muestran al hover
+          pointHitRadius: 10,       // área de interacción
           tension: 0.25,
           fill: true
         }]
@@ -177,6 +175,8 @@
         plugins: {
           legend: { display: false },
           tooltip: {
+            enabled: true,
+            external: null,
             callbacks: {
               label: function(context){
                 const v = Number(context.parsed.y).toFixed(4);
@@ -208,21 +208,44 @@
           }
         },
         onClick: (evt, elements) => {
-          if(elements.length){
-            const el = elements[0];
-            const idx = el.index;
-            const val = chart.data.datasets[0].data[idx];
-            const lab = chart.data.labels[idx];
-            infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
+          // obtener el punto más cercano con intersección
+          const points = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+          if(points.length === 0){
+            // si no hay intersección, buscar el más cercano sin intersect
+            const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
+            if(pts.length) highlightPoint(pts[0].index);
+            return;
           }
+          highlightPoint(points[0].index);
+        },
+        onHover: (evt, elements) => {
+          // Chart.js ya muestra tooltip y punto al hover; no necesitamos más aquí.
         }
       }
     });
 
+    // función para resaltar un punto (muestra punto y tooltip)
+    function highlightPoint(index){
+      if(index == null) return;
+      // activar visualmente el punto (temporalmente)
+      const datasetIndex = 0;
+      // establecer elementos activos para tooltip
+      const active = [{datasetIndex, index}];
+      // mostrar tooltip en la posición del punto
+      chart.setActiveElements(active);
+      chart.tooltip.setActiveElements(active, {x: chart.scales.x.getPixelForValue(chart.data.labels[index]), y: chart.scales.y.getPixelForValue(chart.data.datasets[0].data[index])});
+      chart.update('none'); // actualizar sin animación extra
+
+      // mostrar detalle en la caja inferior
+      const val = chart.data.datasets[0].data[index];
+      const lab = chart.data.labels[index];
+      infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
+    }
+
     // Inicializar display con último punto
     updateMainDisplay(values[values.length - 1], new Date(labels[labels.length - 1]));
 
-    // ---------- LÓGICA DE ACTUALIZACIÓN RÁPIDA ----------
+    // ---------- ACTUALIZACIONES ----------
     let paused = false;
     let updateTimer = null;
 
@@ -266,7 +289,31 @@
       pushNewPoint(new Date(), nv);
     });
 
-    // Forzar render inicial (en algunos navegadores el canvas necesita un pequeño retraso)
+    // soporte táctil extra: al tocar el canvas, forzamos el mismo comportamiento que click
+    const canvasEl = document.getElementById('grafica');
+    canvasEl.addEventListener('touchstart', function(e){
+      // dejar que Chart.js procese el evento y luego simular click breve
+      // usamos setTimeout corto para esperar al procesamiento nativo
+      setTimeout(() => {
+        // obtener el primer touch y crear un evento sintético para Chart.js
+        const touch = e.touches[0];
+        if(!touch) return;
+        const rect = canvasEl.getBoundingClientRect();
+        const simulatedEvent = {
+          clientX: touch.clientX,
+          clientY: touch.clientY,
+          // Chart.js only needs clientX/clientY for getElementsAtEventForMode
+        };
+        const pts = chart.getElementsAtEventForMode(simulatedEvent, 'nearest', {intersect: true}, true);
+        if(pts.length) highlightPoint(pts[0].index);
+        else {
+          const pts2 = chart.getElementsAtEventForMode(simulatedEvent, 'nearest', {intersect: false}, true);
+          if(pts2.length) highlightPoint(pts2[0].index);
+        }
+      }, 10);
+    }, {passive: true});
+
+    // Forzar render inicial
     window.addEventListener('load', () => {
       setTimeout(() => chart.resize(), 100);
     });
