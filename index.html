@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Tiempo real simulado</title>
+  <title>SCHOOLCOIN - Simulación rápida</title>
 
   <style>
     :root{
@@ -87,8 +87,8 @@
 
   <script>
     // ---------- CONFIGURACIÓN ----------
-    const UPDATE_INTERVAL_MS = 2 * 60 * 1000; // 2 minutos
-    const PRESET_POINTS = 60; // cuantos puntos preestablecidos (60 * 2min = 120min historial)
+    const UPDATE_INTERVAL_MS = 5000; // 5 segundos
+    const PRESET_POINTS = 120; // cuantos puntos preestablecidos (120 * 5s = 600s = 10min historial)
     const BASE = 0.175; // valor base en euros (17.5 cents)
     const MIN = 0.15;
     const MAX = 0.20;
@@ -102,26 +102,23 @@
 
     // Genera un valor nuevo siguiendo un patrón de "random walk" alrededor de BASE
     function nextValue(prev){
-      // paso aleatorio pequeño, con tendencia a volver a BASE
-      const meanReversion = (BASE - prev) * 0.05; // tira hacia BASE
-      const noise = (Math.random() - 0.5) * 0.01; // ruido +/- 0.005
+      const meanReversion = (BASE - prev) * 0.08; // mayor fuerza de retorno
+      const noise = (Math.random() - 0.5) * 0.006; // ruido más pequeño para actualizaciones rápidas
       let v = prev + meanReversion + noise;
       v = clamp(v, MIN, MAX);
       return Number(v.toFixed(4));
     }
 
-    // Genera etiquetas de tiempo espaciadas 2 minutos hacia atrás
+    // Genera etiquetas de tiempo espaciadas según UPDATE_INTERVAL_MS hacia atrás
     function generateInitialSeries(){
       const labels = [];
       const data = [];
       const now = Date.now();
-      // empezamos PRESET_POINTS * 2min atrás
       const start = now - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
-      let val = BASE + (Math.random() - 0.5) * 0.01; // valor inicial cercano a BASE
+      let val = BASE + (Math.random() - 0.5) * 0.01;
       for(let i=0;i<PRESET_POINTS;i++){
         const t = new Date(start + i * UPDATE_INTERVAL_MS);
         labels.push(t);
-        // simular varios pasos para dar variación
         val = nextValue(val);
         data.push(Number(val.toFixed(4)));
       }
@@ -130,7 +127,7 @@
 
     // ---------- INICIALIZACIÓN DE DATOS ----------
     const initial = generateInitialSeries();
-    const labels = initial.labels.slice(); // array de Date
+    const labels = initial.labels.slice();
     const values = initial.data.slice();
 
     // ---------- ACTUALIZAR UI ----------
@@ -142,7 +139,6 @@
     function updateMainDisplay(value, date){
       valorActualEl.textContent = formatMoney(value);
       timestampEl.textContent = formatDate(date);
-      // tendencia: comparar con anterior
       const prev = values.length > 1 ? values[values.length - 2] : value;
       const diff = value - prev;
       const arrow = diff > 0 ? '▲' : (diff < 0 ? '▼' : '—');
@@ -156,7 +152,7 @@
     const chart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: labels, // Date objects
+        labels: labels,
         datasets: [{
           label: 'SCHOOLCOIN',
           data: values,
@@ -191,17 +187,17 @@
           x: {
             type: 'time',
             time: {
-              unit: 'minute',
-              displayFormats: { minute: 'HH:mm' }
+              unit: 'second',
+              displayFormats: { second: 'HH:mm:ss' }
             },
-            grid: { display: false }, // QUITAR CUADRÍCULA X
-            ticks: { color: '#333' }
+            grid: { display: false },
+            ticks: { color: '#333', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
           },
           y: {
             beginAtZero: false,
             suggestedMin: MIN - 0.01,
             suggestedMax: MAX + 0.01,
-            grid: { display: false }, // QUITAR CUADRÍCULA Y
+            grid: { display: false },
             ticks: {
               callback: function(val){ return Number(val).toFixed(2) + ' €'; },
               color: '#333'
@@ -223,20 +219,18 @@
     // Inicializar display con último punto
     updateMainDisplay(values[values.length - 1], new Date(labels[labels.length - 1]));
 
-    // ---------- LÓGICA DE ACTUALIZACIÓN CADA 2 MINUTOS ----------
+    // ---------- LÓGICA DE ACTUALIZACIÓN RÁPIDA ----------
     let paused = false;
     let updateTimer = null;
 
     function pushNewPoint(nowDate, newVal){
-      // añadir al final y eliminar el primero para mantener longitud
       chart.data.labels.push(nowDate);
       chart.data.datasets[0].data.push(newVal);
       if(chart.data.labels.length > PRESET_POINTS){
         chart.data.labels.shift();
         chart.data.datasets[0].data.shift();
       }
-      chart.update('active'); // animado
-      // actualizar arrays locales
+      chart.update('active');
       labels.push(nowDate);
       values.push(newVal);
       if(labels.length > PRESET_POINTS){ labels.shift(); values.shift(); }
@@ -254,32 +248,21 @@
       }, UPDATE_INTERVAL_MS);
     }
 
-    // arrancar el timer
     scheduleNextUpdate();
 
-    // botón pausar / reanudar
+    // controles
     const pauseBtn = document.getElementById('pauseBtn');
     pauseBtn.addEventListener('click', () => {
       paused = !paused;
       pauseBtn.textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
     });
 
-    // botón añadir valor ahora (útil para pruebas)
     document.getElementById('addSample').addEventListener('click', () => {
       const prev = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
       const nv = nextValue(prev);
       pushNewPoint(new Date(), nv);
     });
 
-    // actualizar reloj en la UI cada segundo (solo la hora actual)
-    setInterval(() => {
-      const now = new Date();
-      // solo actualizar la parte de segundos en timestamp si quieres mostrar en tiempo real
-      // aquí mantenemos timestamp del último valor, pero también mostramos reloj en infoBox si se desea
-      // no tocamos timestamp principal para que muestre la hora del último valor recibido
-    }, 1000);
-
-    // Si quieres que la gráfica sea "draggable" o zoomable, se puede añadir Chart.js Zoom plugin más adelante.
   </script>
 </body>
 </html>
