@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>SCHOOLCOIN - App</title>
   <style>
-    /* ---------------- Variables base ---------------- */
     :root{
       --app-bg: #f7d54a;
       --chart-color: #0b8a3e;
@@ -17,7 +16,6 @@
       --font-family: Inter, Arial, sans-serif;
     }
 
-    /* ---------------- Forzar fondo a pantalla completa ---------------- */
     html,body{
       height:100%;
       min-height:100vh;
@@ -32,7 +30,6 @@
       -webkit-font-smoothing:antialiased;
     }
 
-    /* ---------------- Layout ---------------- */
     .contenedor{width:100%;max-width:980px;margin:0 auto;padding:18px;box-sizing:border-box;min-height:calc(100vh - 48px);}
     .top-bar{background:#000;color:#fff;padding:12px;font-weight:800;text-align:center;border-radius:10px;position:relative;}
     .top-left-actions{position:absolute;left:12px;top:8px;display:flex;gap:8px;align-items:center;}
@@ -41,16 +38,17 @@
     .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
     .col{flex:1;min-width:300px;}
     .chart-wrap{margin-top:14px;border-radius:12px;padding:6px;background:transparent;}
-    canvas{width:100% !important;height:420px !important;display:block;border-radius:8px;background:transparent;}
+    canvas{width:100% !important;height:360px !important;display:block;border-radius:8px;background:transparent;}
+    @media (max-width:900px){ canvas{height:320px !important;} }
+
     .botones{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
     .boton{background:var(--chart-color);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;box-shadow:var(--shadow);border:0;}
     .control-btn{background:#fff;border:1px solid rgba(0,0,0,0.08);padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700;}
     .icon-btn{background:transparent;border:0;color:#fff;cursor:pointer;padding:6px;border-radius:8px;font-weight:700;}
     .icon-btn svg{width:20px;height:20px;vertical-align:middle;fill:#fff;opacity:0.95;}
 
-    /* ---------------- Modal ---------------- */
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
-    .modal{width:100%;max-width:820px;border-radius:14px;background:linear-gradient(180deg,var(--card-bg),#fbfbfb);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}
+    .modal{width:100%;max-width:920px;border-radius:14px;background:linear-gradient(180deg,var(--card-bg),#fbfbfb);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}
     .modal-header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(0,0,0,0.04);}
     .modal-header h3{margin:0;font-size:16px;color:var(--text);}
     .modal-body{padding:14px 16px;max-height:72vh;overflow:auto;box-sizing:border-box;}
@@ -68,19 +66,16 @@
     .bg-btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff;cursor:pointer;}
     .bg-btn[aria-pressed="true"]{outline:3px solid rgba(0,0,0,0.06);transform:scale(1.02);}
 
-    /* ---------------- Login ---------------- */
     .login-backdrop{position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55));display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
     .login-card{width:100%;max-width:520px;background:var(--card-bg);padding:18px;border-radius:14px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.06);}
     .login-card h2{margin:0 0 8px 0;font-size:20px;color:var(--text);}
     .login-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;}
 
-    /* ---------------- Multi-step form styles ---------------- */
-    .steps { display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap; }
+    .steps { display:flex;gap:12px;margin-bottom:12px;align-items:center;flex-wrap:wrap; }
     .step-dot { width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:#eee;color:#333;font-weight:700;border:2px solid rgba(0,0,0,0.04); }
     .step-dot.active { background:var(--chart-color); color:#fff; border-color:var(--chart-color); }
     .step-label { font-size:13px;color:var(--muted); }
 
-    /* ---------------- Loading overlay for account creation ---------------- */
     .full-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;flex-direction:column;color:#fff;}
     .spinner{
       width:120px;height:120px;border-radius:50%;border:12px solid rgba(255,255,255,0.12);border-top-color:rgba(255,255,255,0.95);
@@ -88,12 +83,11 @@
     }
     @keyframes spin{to{transform:rotate(360deg);}}
 
-    /* ---------------- Info content styling ---------------- */
     .info-content h4{margin:8px 0 6px 0;color:var(--text);}
     .info-content p{margin:6px 0;color:var(--muted);line-height:1.45;}
     .info-section{margin-bottom:12px;padding-bottom:8px;border-bottom:1px dashed rgba(0,0,0,0.04);}
 
-    @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:360px !important;} .botones{grid-template-columns:1fr 1fr;} .login-card{max-width:92vw;} .modal{max-width:92vw;} }
+    @media (max-width:900px){ .contenedor{max-width:420px;} .botones{grid-template-columns:1fr 1fr;} .login-card{max-width:92vw;} .modal{max-width:92vw;} }
   </style>
 </head>
 <body>
@@ -101,7 +95,6 @@
     <div class="top-bar">
       SCHOOLCOIN
       <div class="top-left-actions">
-        <!-- Question/info icon top-left -->
         <button id="infoBtn" class="icon-btn" title="Información" aria-label="Información">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 9h2V7h-2v2zm0 8h2v-6h-2v6zM12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2z"/></svg>
         </button>
@@ -161,19 +154,19 @@
       <div id="createForm" style="display:none;margin-top:12px;">
         <h3 style="margin:0 0 8px 0;color:var(--text);">Crear cuenta</h3>
 
-        <!-- Steps indicator -->
+        <!-- Steps indicator with names -->
         <div class="steps" id="stepsIndicator" aria-hidden="false">
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="step-dot active" data-step="1">1</div>
-            <div class="step-label">Datos básicos</div>
+            <div class="step-label">-- Nombre</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="step-dot" data-step="2">2</div>
-            <div class="step-label">Detalles</div>
+            <div class="step-label">-- Detalles</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div class="step-dot" data-step="3">3</div>
-            <div class="step-label">Contacto y condiciones</div>
+            <div class="step-label">-- Contacto</div>
           </div>
         </div>
 
@@ -207,9 +200,6 @@
           <div class="field"><label>Contacto de padre/madre/tutor</label><input id="c_parent" type="text" placeholder="Nombre y teléfono"></div>
           <div class="field"><label>Dirección</label><input id="c_address" type="text" placeholder="Dirección"></div>
           <div class="field"><label>Observaciones / Alergias</label><textarea id="c_notes" rows="2" placeholder="Alergias, necesidades..."></textarea></div>
-          <div class="field"><label>Acepto las normas y condiciones</label>
-            <select id="c_terms"><option value="">Selecciona...</option><option value="yes">Sí, acepto</option></select>
-          </div>
           <div style="display:flex;gap:8px;justify-content:space-between;margin-top:8px;">
             <button id="backTo2" class="btn-ghost">Atrás</button>
             <button id="submitCreate" class="btn-primary">Crear cuenta</button>
@@ -232,9 +222,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    /**************************************************************************
-     * Auth UI + multi-step create account flow with loader
-     **************************************************************************/
+    /* ---------------- Auth + multi-step create account flow ---------------- */
     const loginOverlay = document.getElementById('loginOverlay');
     const appRoot = document.getElementById('appRoot');
     const loginBtn = document.getElementById('loginBtn');
@@ -247,7 +235,6 @@
     const fullLoader = document.getElementById('fullLoader');
     const createError = document.getElementById('createError');
 
-    // Step controls
     const steps = Array.from(document.querySelectorAll('.step'));
     const stepDots = Array.from(document.querySelectorAll('.step-dot'));
     let currentStep = 1;
@@ -258,12 +245,10 @@
       stepDots.forEach(d => {
         if (Number(d.dataset.step) === n) d.classList.add('active'); else d.classList.remove('active');
       });
-      // scroll to top of modal for better UX
       const modalBody = document.querySelector('.modal-body');
       if(modalBody) modalBody.scrollTop = 0;
     }
 
-    // Basic session helpers
     function isLoggedIn(){ try { return sessionStorage.getItem('schoolcoin_user') !== null; } catch(e){ return false; } }
     function showAppAfterLogin(){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); }
     function saveSession(user){ try { sessionStorage.setItem('schoolcoin_user', JSON.stringify(user)); } catch(e){} }
@@ -292,9 +277,7 @@
       loginForm.style.display = 'block';
     });
 
-    // Navigation buttons
     document.getElementById('nextTo2').addEventListener('click', () => {
-      // Validate step 1 fields minimally
       const name = document.getElementById('c_name').value.trim();
       const surname = document.getElementById('c_surname').value.trim();
       const email = document.getElementById('c_email').value.trim();
@@ -310,13 +293,9 @@
     });
 
     document.getElementById('backTo1').addEventListener('click', () => { showStep(1); });
-    document.getElementById('nextTo3').addEventListener('click', () => {
-      // Minimal validation for step 2 (optional fields can be empty)
-      showStep(3);
-    });
+    document.getElementById('nextTo3').addEventListener('click', () => { showStep(3); });
     document.getElementById('backTo2').addEventListener('click', () => { showStep(2); });
 
-    // Final submit
     document.getElementById('submitCreate').addEventListener('click', () => {
       createError.style.display = 'none';
       const data = {
@@ -331,21 +310,27 @@
         phone: document.getElementById('c_phone').value || '',
         parent: document.getElementById('c_parent').value || '',
         address: document.getElementById('c_address').value || '',
-        notes: document.getElementById('c_notes').value || '',
-        terms: document.getElementById('c_terms').value || ''
+        notes: document.getElementById('c_notes').value || ''
       };
-      // Final validation: required fields and terms
-      if(!data.name || !data.surname || !data.email || !data.pass || !data.pass2 || data.pass !== data.pass2 || data.terms !== 'yes'){
+
+      if(!data.name || !data.surname || !data.email || !data.pass || !data.pass2 || data.pass !== data.pass2){
         createError.style.display = 'block';
-        createError.textContent = 'Rellena todos los campos obligatorios, confirma la contraseña y acepta las condiciones.';
+        createError.textContent = 'Rellena todos los campos obligatorios y confirma la contraseña.';
         return;
       }
 
-      // Show full loader for 10s then welcome
+      // Show loader for 10s
       fullLoader.style.display = 'flex';
       setTimeout(() => {
         fullLoader.style.display = 'none';
         saveSession({ name: data.name.trim(), surname: data.surname.trim(), email: data.email.trim(), createdAt: new Date().toISOString() });
+
+        // Close the create form and the entire login overlay; do NOT reopen the login form
+        createForm.style.display = 'none';
+        loginForm.style.display = 'none';
+        loginOverlay.style.display = 'none';
+        appRoot.setAttribute('aria-hidden','false');
+
         const welcomeHtml = `
           <div class="modal-header"><h3>¡Cuenta creada!</h3></div>
           <div class="modal-body" style="text-align:center;">
@@ -354,24 +339,16 @@
             <div class="row-actions"><button class="btn-primary" id="welcomeOk">Comenzar</button></div>
           </div>`;
         const bd = openModal(welcomeHtml);
-        bd.querySelector('#welcomeOk').addEventListener('click', () => {
-          closeModal(bd);
-          loginOverlay.style.display = 'none';
-          appRoot.setAttribute('aria-hidden','false');
-        });
+        bd.querySelector('#welcomeOk').addEventListener('click', () => closeModal(bd));
       }, 10000);
     });
 
-    /**************************************************************************
-     * Account code (IES + 8 dígitos)
-     **************************************************************************/
+    /* ---------------- Account code (IES + 8 dígitos) ---------------- */
     function generateSpanishStyleAccountCode() { const prefix = 'IES'; let digits = ''; for (let i = 0; i < 8; i++) digits += Math.floor(Math.random() * 10); return prefix + digits; }
     function getOrCreateAccountCode() { const key = 'schoolcoin_account_code'; try { const stored = localStorage.getItem(key); if (stored && /^IES\d{8}$/.test(stored)) return stored; const code = generateSpanishStyleAccountCode(); localStorage.setItem(key, code); return code; } catch (e) { return generateSpanishStyleAccountCode(); } }
     const accountCode = getOrCreateAccountCode();
 
-    /**************************************************************************
-     * Modal helpers
-     **************************************************************************/
+    /* ---------------- Modal helpers ---------------- */
     function openModal(contentHtml){
       const bd = document.createElement('div');
       bd.className = 'modal-backdrop';
@@ -382,12 +359,10 @@
     }
     function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
-    /**************************************************************************
-     * Market simulation & chart (kept from previous implementation)
-     **************************************************************************/
+    /* ---------------- Market simulation & chart ---------------- */
     const UPDATE_INTERVAL_MS = 5000;
     const PRESET_POINTS = 600;
-    const MIN = 0.05, MAX = 0.50, BASE = 0.275, MAX_STEP_PER_TICK = 0.0009;
+    const MIN = 0.05, MAX = 0.50, BASE = 0.175, MAX_STEP_PER_TICK = 0.0009;
 
     function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
     function formatDynamicDecimals(num){ if (!isFinite(num)) return String(num); const s = num.toFixed(8).replace(/0+$/,'').replace(/\.$/,''); const parts = s.split('.'); if(parts.length === 1) return parts[0]; const frac = parts[1]; if(frac.length <= 3) return parts[0] + '.' + frac.padEnd(3,'0'); return parts[0] + '.' + frac; }
@@ -537,9 +512,7 @@
     scheduleNextUpdate();
     updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
 
-    /**************************************************************************
-     * Transactions (botones funcionales)
-     **************************************************************************/
+    /* ---------------- Transactions (botones funcionales) ---------------- */
     function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
     document.getElementById('btnEnviar').addEventListener('click', () => {
@@ -647,9 +620,7 @@
       bd.querySelector('#closeAccount').addEventListener('click', () => closeModal(bd));
     });
 
-    /**************************************************************************
-     * Appearance presets & full-page background
-     **************************************************************************/
+    /* ---------------- Appearance presets & full-page background ---------------- */
     const PRESETS = [
       { id: 'sunny', name: 'Sunny Warm', bgPrimary: '#FFF7D6', bgSecondary: '#F7D54A', chart: '#0b8a3e' },
       { id: 'ocean', name: 'Ocean Breeze', bgPrimary: '#E6F7FF', bgSecondary: '#6EC1E4', chart: '#0a6fa0' },
@@ -744,9 +715,7 @@
 
     (function(){ const p = loadPresetChoice(); applyPreset(p); })();
 
-    /**************************************************************************
-     * Info modal (question mark) - includes the full developed description
-     **************************************************************************/
+    /* ---------------- Info modal (question mark) ---------------- */
     const infoBtn = document.getElementById('infoBtn');
     infoBtn.addEventListener('click', () => {
       const content = `
@@ -799,9 +768,7 @@
       bd.querySelector('#closeInfo').addEventListener('click', () => closeModal(bd));
     });
 
-    /**************************************************************************
-     * Pause / add sample
-     **************************************************************************/
+    /* ---------------- Pause / add sample ---------------- */
     document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
@@ -815,7 +782,7 @@
       pushNewMasterPoint(nextTime, nv);
     });
 
-    /* Observe chart color var changes to update dataset */
+    /* ---------------- Observe chart color var changes ---------------- */
     const observer = new MutationObserver(() => {
       const accent = getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e';
       chart.data.datasets[0].borderColor = accent;
