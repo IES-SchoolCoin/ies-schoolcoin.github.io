@@ -16,10 +16,33 @@
       --radius: 12px;
       --shadow: 0 8px 28px rgba(0,0,0,0.12);
       --text: #222;
+      --font-family: Inter, Arial, sans-serif;
+      --ui-radius: 10px;
     }
-    html,body{height:100%;margin:0;font-family:Inter,Arial,sans-serif;background:var(--app-bg);color:var(--text);-webkit-font-smoothing:antialiased;}
-    .contenedor{width:100%;max-width:920px;margin:0 auto;padding:18px;box-sizing:border-box;}
-    .top-bar{background:#000;color:#fff;padding:12px;font-weight:800;text-align:center;border-radius:10px;}
+
+    /* Theme variants (applied via body data-style) */
+    body[data-style="minimal"]{
+      --shadow: none;
+      --accent: #0b8a3e;
+      --app-bg: #f7f7f7;
+      --card-bg: #fff;
+      --muted: #666;
+      --text: #111;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    body[data-style="modern"]{
+      --shadow: 0 12px 36px rgba(0,0,0,0.12);
+      --accent: #0b8a3e;
+      --app-bg: linear-gradient(180deg,#fff7d6,#f7d54a);
+      --card-bg: rgba(255,255,255,0.95);
+      --muted: #555;
+      --text: #111;
+      --ui-radius: 14px;
+    }
+
+    html,body{height:100%;margin:0;font-family:var(--font-family);background:var(--app-bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+    .contenedor{width:100%;max-width:980px;margin:0 auto;padding:18px;box-sizing:border-box;}
+    .top-bar{background:#000;color:#fff;padding:12px;font-weight:800;text-align:center;border-radius:calc(var(--ui-radius) - 2px);position:relative;}
     .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;}
     .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
     .col{flex:1;min-width:300px;}
@@ -28,12 +51,17 @@
     .botones{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
     .boton{background:var(--accent);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;box-shadow:var(--shadow);border:0;}
     .control-btn{background:#fff;border:1px solid rgba(0,0,0,0.08);padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700;}
+    /* Settings icon top-right */
+    .top-actions{position:absolute;right:12px;top:8px;display:flex;gap:8px;align-items:center;}
+    .icon-btn{background:transparent;border:0;color:#fff;cursor:pointer;padding:6px;border-radius:8px;font-weight:700;}
+    .icon-btn svg{width:20px;height:20px;vertical-align:middle;fill:#fff;opacity:0.95;}
+
     /* Modal backdrop y modal */
     .modal-backdrop{position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0.45),rgba(0,0,0,0.45));display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
-    .modal{width:100%;max-width:520px;border-radius:14px;background:linear-gradient(180deg,#fff,#fbfbfb);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}
+    .modal{width:100%;max-width:560px;border-radius:14px;background:linear-gradient(180deg,var(--card-bg),#fbfbfb);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}
     .modal-header{background:linear-gradient(90deg,var(--app-bg),#ffe77a);padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(0,0,0,0.04);}
     .modal-header h3{margin:0;font-size:16px;color:#111;}
-    .modal-body{padding:14px 16px;max-height:62vh;overflow:auto;box-sizing:border-box;}
+    .modal-body{padding:14px 16px;max-height:72vh;overflow:auto;box-sizing:border-box;}
     .modal-body{scrollbar-width:none;-ms-overflow-style:none;}
     .modal-body::-webkit-scrollbar{width:0;height:0;display:none;}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
@@ -49,19 +77,34 @@
     .confirm-card{background:linear-gradient(180deg,#fff,#fcfcfc);padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 6px 18px rgba(0,0,0,0.04);}
     .error{color:var(--danger);font-weight:700;margin-top:6px;}
     .account-code{font-weight:900;color:#111;background:#fff;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);display:inline-block;margin-top:8px;}
+    /* Login overlay */
+    .login-backdrop{position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55));display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
+    .login-card{width:100%;max-width:420px;background:var(--card-bg);padding:18px;border-radius:14px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.06);}
+    .login-card h2{margin:0 0 8px 0;font-size:20px;}
+    .login-note{font-size:13px;color:var(--muted);margin-bottom:12px;}
+    /* Personalization preview */
+    .preview-swatch{width:36px;height:36px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);display:inline-block;vertical-align:middle;margin-left:8px;}
+    /* small responsive */
     @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:360px !important;} .botones{grid-template-columns:1fr 1fr;} }
   </style>
 </head>
-<body>
-  <div class="contenedor">
-    <div class="top-bar">SCHOOLCOIN</div>
+<body data-style="default">
+  <div class="contenedor" id="appRoot" aria-hidden="true">
+    <div class="top-bar">
+      SCHOOLCOIN
+      <div class="top-actions">
+        <button id="settingsBtn" class="icon-btn" title="Configuración">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.6A3.4 3.4 0 1 0 12 15.4 3.4 3.4 0 0 0 12 8.6zm8.1 3.4c0-.6-.1-1.2-.2-1.8l2.1-1.6-2-3.5-2.5.6c-.5-.4-1-.7-1.6-1L14 1.5h-4l-.9 2.2c-.6.2-1.1.6-1.6 1L4.9 4.7 2.9 8.2l2.1 1.6c-.1.6-.2 1.2-.2 1.8s.1 1.2.2 1.8L2.9 15.8l2 3.5 2.5-.6c.5.4 1 .7 1.6 1L10 22.5h4l.9-2.2c.6-.2 1.1-.6 1.6-1l2.5.6 2-3.5-2.1-1.6c.1-.6.2-1.2.2-1.8z"/></svg>
+        </button>
+      </div>
+    </div>
+
     <div class="header">IES-SchoolCoin</div>
 
     <div class="row" style="align-items:center;">
       <div style="flex:0 0 160px; text-align:center;">
         <div style="width:84px;height:84px;margin:8px auto;"><img src="LOGO.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;"></div>
         <div id="valorDisplay" style="font-weight:900;font-size:28px;margin-top:6px;text-align:center;">0.000 €</div>
-        <!-- account code removed from header per request; shown only in Mi cuenta -->
       </div>
 
       <div class="col">
@@ -83,13 +126,78 @@
     </div>
   </div>
 
+  <!-- Login overlay (shown before entering) -->
+  <div id="loginOverlay" class="login-backdrop" role="dialog" aria-modal="true">
+    <div class="login-card" role="document">
+      <h2>Iniciar sesión</h2>
+      <div class="login-note">Introduce tu nombre, apellidos y contraseña para acceder a la app.</div>
+      <div class="field"><label>Nombre</label><input id="loginName" type="text" placeholder="Nombre"></div>
+      <div class="field"><label>Apellidos</label><input id="loginSurname" type="text" placeholder="Apellidos"></div>
+      <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Contraseña"></div>
+      <div id="loginError" class="error" style="display:none;">Rellena todos los campos para continuar.</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+        <button id="loginBtn" class="btn-primary">Entrar</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    // ---------- Persistencia y formato del código de cuenta ----------
-    // Formato: IES + 8 dígitos (ej: IES12345678)
+    /**************************************************************************
+     * Session & Auth (simple client-side)
+     * - Before showing the app, user must "log in" with name, surname, pass.
+     * - This is a UI gate for the demo; credentials are not sent anywhere.
+     **************************************************************************/
+
+    const loginOverlay = document.getElementById('loginOverlay');
+    const appRoot = document.getElementById('appRoot');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+
+    function isLoggedIn(){
+      try {
+        return sessionStorage.getItem('schoolcoin_user') !== null;
+      } catch(e){ return false; }
+    }
+
+    function showAppAfterLogin(){
+      loginOverlay.style.display = 'none';
+      appRoot.setAttribute('aria-hidden','false');
+    }
+
+    function saveSession(name, surname){
+      const user = { name: name.trim(), surname: surname.trim(), loggedAt: new Date().toISOString() };
+      try { sessionStorage.setItem('schoolcoin_user', JSON.stringify(user)); } catch(e){}
+    }
+
+    // If already logged in in this tab, hide login
+    if(isLoggedIn()){
+      loginOverlay.style.display = 'none';
+      appRoot.setAttribute('aria-hidden','false');
+    } else {
+      loginOverlay.style.display = 'flex';
+      appRoot.setAttribute('aria-hidden','true');
+    }
+
+    loginBtn.addEventListener('click', () => {
+      const name = document.getElementById('loginName').value || '';
+      const surname = document.getElementById('loginSurname').value || '';
+      const pass = document.getElementById('loginPass').value || '';
+      if(!name.trim() || !surname.trim() || !pass.trim()){
+        loginError.style.display = 'block';
+        return;
+      }
+      loginError.style.display = 'none';
+      saveSession(name, surname);
+      showAppAfterLogin();
+    });
+
+    /**************************************************************************
+     * Account code (IES + 8 digits) persisted in localStorage
+     **************************************************************************/
     function generateSpanishStyleAccountCode() {
       const prefix = 'IES';
       let digits = '';
@@ -110,7 +218,122 @@
     }
     const accountCode = getOrCreateAccountCode();
 
-    // ---------- Estado global y utilidades ----------
+    /**************************************************************************
+     * Personalization / Settings
+     * - Settings button top-right opens a modal where user can choose:
+     *   - Primary color (color input)
+     *   - Style: default / minimal / modern
+     *   - Font family (system / Inter)
+     * - Settings persist in localStorage and apply immediately.
+     **************************************************************************/
+
+    const settingsBtn = document.getElementById('settingsBtn');
+
+    function getSavedPrefs(){
+      try {
+        const raw = localStorage.getItem('schoolcoin_prefs');
+        return raw ? JSON.parse(raw) : null;
+      } catch(e){ return null; }
+    }
+    function savePrefs(prefs){
+      try { localStorage.setItem('schoolcoin_prefs', JSON.stringify(prefs)); } catch(e){}
+    }
+    function applyPrefs(prefs){
+      if(!prefs) return;
+      // color: update CSS variable --accent and derived
+      if(prefs.color){
+        document.documentElement.style.setProperty('--accent', prefs.color);
+        // darker accent for hover if provided
+        document.documentElement.style.setProperty('--accent-600', prefs.color);
+      }
+      // style: set data-style on body
+      document.body.setAttribute('data-style', prefs.style || 'default');
+      // font
+      if(prefs.font === 'system'){
+        document.documentElement.style.setProperty('--font-family', 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial');
+      } else {
+        document.documentElement.style.setProperty('--font-family', 'Inter, Arial, sans-serif');
+      }
+    }
+
+    // Build settings modal content
+    function openSettingsModal(){
+      const prefs = getSavedPrefs() || { color: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0b8a3e', style: document.body.getAttribute('data-style') || 'default', font: 'inter' };
+      const html = `
+        <div class="modal-header"><h3>Configuración</h3></div>
+        <div class="modal-body">
+          <div style="font-weight:800;margin-bottom:8px;">Personalización</div>
+          <div class="field">
+            <label>Color principal</label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input id="prefColor" type="color" value="${prefs.color || '#0b8a3e'}">
+              <div class="preview-swatch" id="colorPreview" style="background:${prefs.color || '#0b8a3e'}"></div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Estilo</label>
+            <select id="prefStyle">
+              <option value="default" ${prefs.style === 'default' ? 'selected' : ''}>Por defecto</option>
+              <option value="minimal" ${prefs.style === 'minimal' ? 'selected' : ''}>Minimalista</option>
+              <option value="modern" ${prefs.style === 'modern' ? 'selected' : ''}>Moderno</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label>Tipografía</label>
+            <select id="prefFont">
+              <option value="inter" ${prefs.font === 'inter' ? 'selected' : ''}>Inter / Sans</option>
+              <option value="system" ${prefs.font === 'system' ? 'selected' : ''}>Sistema</option>
+            </select>
+          </div>
+
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+            <button class="btn-ghost" id="resetPrefs">Restablecer</button>
+            <button class="btn-primary" id="savePrefs">Guardar</button>
+          </div>
+        </div>
+      `;
+      const bd = openModal(html);
+
+      const colorInput = bd.querySelector('#prefColor');
+      const preview = bd.querySelector('#colorPreview');
+      const styleSelect = bd.querySelector('#prefStyle');
+      const fontSelect = bd.querySelector('#prefFont');
+      const saveBtn = bd.querySelector('#savePrefs');
+      const resetBtn = bd.querySelector('#resetPrefs');
+
+      colorInput.addEventListener('input', () => {
+        preview.style.background = colorInput.value;
+      });
+
+      saveBtn.addEventListener('click', () => {
+        const newPrefs = { color: colorInput.value, style: styleSelect.value, font: fontSelect.value };
+        savePrefs(newPrefs);
+        applyPrefs(newPrefs);
+        closeModal(bd);
+      });
+
+      resetBtn.addEventListener('click', () => {
+        localStorage.removeItem('schoolcoin_prefs');
+        // revert to defaults
+        document.documentElement.style.removeProperty('--accent');
+        document.documentElement.style.removeProperty('--accent-600');
+        document.body.setAttribute('data-style', 'default');
+        document.documentElement.style.setProperty('--font-family', 'Inter, Arial, sans-serif');
+        closeModal(bd);
+      });
+    }
+
+    settingsBtn.addEventListener('click', openSettingsModal);
+
+    // Apply saved prefs on load
+    applyPrefs(getSavedPrefs());
+
+    /**************************************************************************
+     * Market simulation + UI (kept from previous implementation)
+     **************************************************************************/
+
     const UPDATE_INTERVAL_MS = 5000;
     const PRESET_POINTS = 600;
     const MIN = 0.05, MAX = 0.50, BASE = 0.275, MAX_STEP_PER_TICK = 0.0009;
@@ -125,9 +348,7 @@
       if(frac.length <= 3) return parts[0] + '.' + frac.padEnd(3,'0');
       return parts[0] + '.' + frac;
     }
-    function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
-    // ---------- Generación de serie ----------
     function nextValue(prev){
       const meanReversion = (BASE - prev) * 0.10;
       const baseNoise = (Math.random() - 0.5) * 0.0022;
@@ -141,6 +362,7 @@
       const next = clamp(prev + limitedDelta, MIN, MAX);
       return Number(next.toFixed(6));
     }
+
     function generateInitialSeries(){
       const labels = [];
       const data = [];
@@ -160,7 +382,6 @@
     const masterValues = initial.data.slice();
     const TRANSACTIONS = [];
 
-    // ---------- Chart ----------
     const ctx = document.getElementById('grafica').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
@@ -169,7 +390,7 @@
         datasets: [{
           label: 'SCHOOLCOIN',
           data: masterValues.slice(),
-          borderColor: '#0b8a3e',
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0b8a3e',
           borderWidth: 1,
           backgroundColor: 'rgba(11,138,62,0.10)',
           pointRadius: (ctx) => ctx.active ? 6 : 0,
@@ -216,17 +437,15 @@
       chart.update('none');
     }
 
-    // ---------- Display principal ----------
     const valorDisplay = document.getElementById('valorDisplay');
     function updateMainDisplay(value){
       valorDisplay.textContent = formatDynamicDecimals(value) + ' €';
       const prev = chart.data.datasets[0].data.length > 1 ? chart.data.datasets[0].data[chart.data.datasets[0].data.length - 2] : value;
       const diff = value - prev;
-      valorDisplay.style.color = diff > 0 ? 'var(--accent)' : (diff < 0 ? 'var(--danger)' : 'var(--text)');
+      valorDisplay.style.color = diff > 0 ? getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || 'var(--accent)' : (diff < 0 ? 'var(--danger)' : 'var(--text)');
       adjustYAxisToPrice(value);
     }
 
-    // ---------- Selección y resaltado ----------
     function clearActiveSelection(){ try{ chart.setActiveElements([]); chart.tooltip.setActiveElements([], {x:0,y:0}); chart.update('none'); }catch(e){} }
     function highlightPoint(index){
       if(index == null) return;
@@ -242,7 +461,6 @@
     }
     window.highlightPoint = highlightPoint;
 
-    // ---------- Actualizaciones ----------
     let paused = false;
     let updateTimer = null;
 
@@ -284,10 +502,16 @@
     }
     scheduleNextUpdate();
 
-    // initial display
     updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
 
-    // ---------- Modal helpers ----------
+    /**************************************************************************
+     * Buttons: Enviar / Ingresos / Cambiar / Mi cuenta
+     * - Enviar: creates 'envio' tx with ref = accountCode
+     * - Ingresos: requires center code IESJRCOIN (password field)
+     * - Cambiar: calculates euros using current price and stores price_at
+     * - Mi cuenta: shows only account code (as requested)
+     **************************************************************************/
+
     function openModal(contentHtml){
       const bd = document.createElement('div');
       bd.className = 'modal-backdrop';
@@ -298,7 +522,6 @@
     }
     function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
-    // ---------- Enviar ----------
     document.getElementById('btnEnviar').addEventListener('click', () => {
       const html = `
         <div class="modal-header"><h3>Enviar SchoolCoins</h3></div>
@@ -334,7 +557,6 @@
       });
     });
 
-    // ---------- Ingresos (requiere código del centro IESJRCOIN) ----------
     document.getElementById('btnIngresos').addEventListener('click', () => {
       const html = `
         <div class="modal-header"><h3>Registrar Ingreso</h3></div>
@@ -379,7 +601,6 @@
       });
     });
 
-    // ---------- Cambiar (sincronizado al precio actual) ----------
     document.getElementById('btnCambiar').addEventListener('click', () => {
       const currentPrice = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
       const html = `
@@ -420,7 +641,6 @@
       });
     });
 
-    // ---------- Mi cuenta (solo muestra el código de cuenta) ----------
     document.getElementById('btnCuenta').addEventListener('click', () => {
       renderAccountModal();
     });
@@ -443,7 +663,7 @@
       bd.querySelector('#closeAccount').addEventListener('click', () => closeModal(bd));
     }
 
-    // ---------- Pause / add sample ----------
+    // Pause / add sample
     document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
@@ -456,6 +676,18 @@
       const nv = nextValue(prev);
       pushNewMasterPoint(nextTime, nv);
     });
+
+    // Ensure chart accent color follows prefs when prefs change
+    const observer = new MutationObserver(() => {
+      const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#0b8a3e';
+      chart.data.datasets[0].borderColor = accent;
+      chart.update('none');
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+
+    // Apply saved prefs again to ensure UI matches on load
+    (function(){ const p = getSavedPrefs(); if(p) applyPrefs(p); })();
+
   </script>
 </body>
 </html>
