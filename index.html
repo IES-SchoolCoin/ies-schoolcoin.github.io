@@ -390,6 +390,291 @@
       setTimeout(() => clearActiveSelection(), 20);
       updateMainDisplay(Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]));
     }
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SCHOOLCOIN - App</title>
+  <style>
+    :root{
+      --app-bg: #f7d54a;
+      --chart-color: #0b8a3e;
+      --muted: #666;
+      --card-bg: #fff;
+      --danger: #c62828;
+      --shadow: 0 8px 28px rgba(0,0,0,0.12);
+      --text: #222;
+      --font-family: Inter, Arial, sans-serif;
+    }
+    body[data-style="minimal"]{ --shadow:none; --font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial; }
+    body[data-style="modern"]{ --shadow:0 12px 36px rgba(0,0,0,0.12); }
+    html,body{height:100%;margin:0;font-family:var(--font-family);background:var(--app-bg);color:var(--text);-webkit-font-smoothing:antialiased;transition:background 300ms ease;}
+    .contenedor{width:100%;max-width:980px;margin:0 auto;padding:18px;box-sizing:border-box;}
+    .top-bar{background:#000;color:#fff;padding:12px;font-weight:800;text-align:center;border-radius:10px;position:relative;}
+    .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;}
+    .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
+    .col{flex:1;min-width:300px;}
+    .chart-wrap{margin-top:14px;border-radius:12px;padding:6px;background:transparent;}
+    canvas{width:100% !important;height:420px !important;display:block;border-radius:8px;background:transparent;}
+    .botones{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
+    .boton{background:var(--chart-color);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;box-shadow:var(--shadow);border:0;}
+    .control-btn{background:#fff;border:1px solid rgba(0,0,0,0.08);padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700;}
+    .top-actions{position:absolute;right:12px;top:8px;display:flex;gap:8px;align-items:center;}
+    .icon-btn{background:transparent;border:0;color:#fff;cursor:pointer;padding:6px;border-radius:8px;font-weight:700;}
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+    .modal{width:100%;max-width:720px;border-radius:14px;background:linear-gradient(180deg,var(--card-bg),#fbfbfb);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}
+    .modal-header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(0,0,0,0.04);}
+    .modal-header h3{margin:0;font-size:16px;color:#111;}
+    .modal-body{padding:14px 16px;max-height:72vh;overflow:auto;box-sizing:border-box;}
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
+    .field label{font-weight:700;font-size:13px;color:#222;}
+    .field input[type="text"], .field input[type="number"], .field input[type="password"], .field select, .field input[type="color"]{padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);font-size:14px;background:#fff;}
+    .row-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;}
+    .btn-primary{background:var(--chart-color);color:#fff;border:0;padding:10px 12px;border-radius:10px;font-weight:800;cursor:pointer;}
+    .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:10px 12px;border-radius:10px;cursor:pointer;}
+    .muted{color:var(--muted);font-size:13px;}
+    .small-note{font-size:12px;color:#444;margin-top:6px;}
+    .bg-btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff;cursor:pointer;}
+    .bg-btn[aria-pressed="true"]{outline:3px solid rgba(0,0,0,0.06);transform:scale(1.02);}
+    .login-backdrop{position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55));display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
+    .login-card{width:100%;max-width:420px;background:var(--card-bg);padding:18px;border-radius:14px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.06);}
+    @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:360px !important;} .botones{grid-template-columns:1fr 1fr;} }
+  </style>
+</head>
+<body data-style="default">
+  <div class="contenedor" id="appRoot" aria-hidden="true">
+    <div class="top-bar">
+      SCHOOLCOIN
+      <div class="top-actions">
+        <button id="settingsBtn" class="icon-btn" title="Configuración" aria-label="Configuración">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.6A3.4 3.4 0 1 0 12 15.4 3.4 3.4 0 0 0 12 8.6zm8.1 3.4c0-.6-.1-1.2-.2-1.8l2.1-1.6-2-3.5-2.5.6c-.5-.4-1-.7-1.6-1L14 1.5h-4l-.9 2.2c-.6.2-1.1.6-1.6 1L4.9 4.7 2.9 8.2l2.1 1.6c-.1.6-.2 1.2-.2 1.8s.1 1.2.2 1.8L2.9 15.8l2 3.5 2.5-.6c.5.4 1 .7 1.6 1L10 22.5h4l.9-2.2c.6-.2 1.1-.6 1.6-1l2.5.6 2-3.5-2.1-1.6c.1-.6.2-1.2.2-1.8z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="header">IES-SchoolCoin</div>
+
+    <div class="row" style="align-items:center;">
+      <div style="flex:0 0 160px; text-align:center;">
+        <div style="width:84px;height:84px;margin:8px auto;"><img src="LOGO.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;"></div>
+        <div id="valorDisplay" style="font-weight:900;font-size:28px;margin-top:6px;text-align:center;">0.000 €</div>
+      </div>
+
+      <div class="col">
+        <div style="font-weight:700;margin-bottom:6px;">Gráfica</div>
+        <div class="chart-wrap"><canvas id="grafica"></canvas></div>
+      </div>
+    </div>
+
+    <div class="botones" style="margin-top:14px;">
+      <div class="boton" id="btnEnviar">Enviar</div>
+      <div class="boton" id="btnIngresos">Ingresos</div>
+      <div class="boton" id="btnCambiar">Cambiar</div>
+      <div class="boton" id="btnCuenta">Mi cuenta</div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:8px;">
+      <button class="control-btn" id="pauseBtn">Pausar actualizaciones</button>
+      <button class="control-btn" id="addSample">Añadir valor ahora</button>
+    </div>
+  </div>
+
+  <!-- Login overlay -->
+  <div id="loginOverlay" class="login-backdrop" role="dialog" aria-modal="true">
+    <div class="login-card" role="document">
+      <h2>Iniciar sesión</h2>
+      <div class="login-note">Introduce tu nombre, apellidos y contraseña para acceder a la app.</div>
+      <div class="field"><label>Nombre</label><input id="loginName" type="text" placeholder="Nombre"></div>
+      <div class="field"><label>Apellidos</label><input id="loginSurname" type="text" placeholder="Apellidos"></div>
+      <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Contraseña"></div>
+      <div id="loginError" class="error" style="display:none;">Rellena todos los campos para continuar.</div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+        <button id="loginBtn" class="btn-primary">Entrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+
+  <script>
+    /* ---------- Auth gate ---------- */
+    const loginOverlay = document.getElementById('loginOverlay');
+    const appRoot = document.getElementById('appRoot');
+    const loginBtn = document.getElementById('loginBtn');
+    const loginError = document.getElementById('loginError');
+
+    function isLoggedIn(){ try { return sessionStorage.getItem('schoolcoin_user') !== null; } catch(e){ return false; } }
+    function showAppAfterLogin(){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); }
+    function saveSession(name, surname){ const user = { name: name.trim(), surname: surname.trim(), loggedAt: new Date().toISOString() }; try { sessionStorage.setItem('schoolcoin_user', JSON.stringify(user)); } catch(e){} }
+
+    if(isLoggedIn()){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); } else { loginOverlay.style.display = 'flex'; appRoot.setAttribute('aria-hidden','true'); }
+
+    loginBtn.addEventListener('click', () => {
+      const name = document.getElementById('loginName').value || '';
+      const surname = document.getElementById('loginSurname').value || '';
+      const pass = document.getElementById('loginPass').value || '';
+      if(!name.trim() || !surname.trim() || !pass.trim()){ loginError.style.display = 'block'; return; }
+      loginError.style.display = 'none';
+      saveSession(name, surname);
+      showAppAfterLogin();
+    });
+
+    /* ---------- Account code ---------- */
+    function generateSpanishStyleAccountCode() { const prefix = 'IES'; let digits = ''; for (let i = 0; i < 8; i++) digits += Math.floor(Math.random() * 10); return prefix + digits; }
+    function getOrCreateAccountCode() { const key = 'schoolcoin_account_code'; try { const stored = localStorage.getItem(key); if (stored && /^IES\d{8}$/.test(stored)) return stored; const code = generateSpanishStyleAccountCode(); localStorage.setItem(key, code); return code; } catch (e) { return generateSpanishStyleAccountCode(); } }
+    const accountCode = getOrCreateAccountCode();
+
+    /* ---------- Modal helpers ---------- */
+    function openModal(contentHtml){
+      const bd = document.createElement('div');
+      bd.className = 'modal-backdrop';
+      bd.innerHTML = `<div class="modal">${contentHtml}</div>`;
+      document.body.appendChild(bd);
+      bd.addEventListener('click', (e) => { if(e.target === bd) bd.remove(); });
+      return bd;
+    }
+    function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
+
+    /* ---------- Market simulation & chart ---------- */
+    const UPDATE_INTERVAL_MS = 5000;
+    const PRESET_POINTS = 600;
+    const MIN = 0.05, MAX = 0.50, BASE = 0.275, MAX_STEP_PER_TICK = 0.0009;
+
+    function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+    function formatDynamicDecimals(num){ if (!isFinite(num)) return String(num); const s = num.toFixed(8).replace(/0+$/,'').replace(/\.$/,''); const parts = s.split('.'); if(parts.length === 1) return parts[0]; const frac = parts[1]; if(frac.length <= 3) return parts[0] + '.' + frac.padEnd(3,'0'); return parts[0] + '.' + frac; }
+
+    function nextValue(prev){
+      const meanReversion = (BASE - prev) * 0.10;
+      const baseNoise = (Math.random() - 0.5) * 0.0022;
+      let candidate = prev + meanReversion + baseNoise;
+      if(Math.random() < 0.04){ const jumpPct = (Math.random() * 2 - 1) * 0.02; candidate = candidate * (1 + jumpPct); }
+      const delta = candidate - prev;
+      const limitedDelta = clamp(delta, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
+      const next = clamp(prev + limitedDelta, MIN, MAX);
+      return Number(next.toFixed(6));
+    }
+
+    function generateInitialSeries(){
+      const labels = []; const data = [];
+      const nowAligned = Math.floor(Date.now() / UPDATE_INTERVAL_MS) * UPDATE_INTERVAL_MS;
+      const start = nowAligned - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
+      let val = BASE + (Math.random() - 0.5) * 0.04;
+      for(let i=0;i<PRESET_POINTS;i++){ labels.push(new Date(start + i * UPDATE_INTERVAL_MS)); val = nextValue(val); data.push(Number(val.toFixed(6))); }
+      return {labels, data};
+    }
+
+    const initial = generateInitialSeries();
+    const masterLabels = initial.labels.slice();
+    const masterValues = initial.data.slice();
+    const TRANSACTIONS = [];
+
+    const ctx = document.getElementById('grafica').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: masterLabels.slice(),
+        datasets: [{
+          label: 'SCHOOLCOIN',
+          data: masterValues.slice(),
+          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e',
+          borderWidth: 1,
+          backgroundColor: (function(){ const c = getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e'; return `rgba(${parseInt(c.slice(1,3),16)},${parseInt(c.slice(3,5),16)},${parseInt(c.slice(5,7),16)},0.10)`; })(),
+          pointRadius: (ctx) => ctx.active ? 6 : 0,
+          pointHoverRadius: 6,
+          pointHitRadius: 12,
+          tension: 0.16,
+          fill: true
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 0 },
+        interaction: { mode: 'nearest', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            enabled: true,
+            callbacks: {
+              label: function(c){
+                const v = Number(c.parsed.y);
+                const date = c.label instanceof Date ? new Date(c.label).toLocaleString('es-ES') : c.label;
+                return ` ${formatDynamicDecimals(v)} € — ${date}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: { type: 'time', time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } }, grid: { display: false }, ticks: { display: false } },
+          y: { beginAtZero: false, grid: { display: true, color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#333', callback: v => Number(Number(v).toFixed(2)) + ' €' } }
+        }
+      }
+    });
+    window.chartInstance = chart;
+
+    function adjustYAxisToPrice(currentPrice){
+      const span = Math.max(0.02, Math.abs(currentPrice) * 0.12);
+      const min = clamp(currentPrice - span, MIN, MAX);
+      const max = clamp(currentPrice + span, MIN, MAX);
+      const margin = (max - min) * 0.06;
+      chart.options.scales.y.min = clamp(min - margin, MIN, MAX);
+      chart.options.scales.y.max = clamp(max + margin, MIN, MAX);
+      chart.update('none');
+    }
+
+    const valorDisplay = document.getElementById('valorDisplay');
+    function updateMainDisplay(value){
+      valorDisplay.textContent = formatDynamicDecimals(value) + ' €';
+      const prev = chart.data.datasets[0].data.length > 1 ? chart.data.datasets[0].data[chart.data.datasets[0].data.length - 2] : value;
+      const diff = value - prev;
+      valorDisplay.style.color = diff > 0 ? getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e' : (diff < 0 ? 'var(--danger)' : 'var(--text)');
+      adjustYAxisToPrice(value);
+    }
+
+    function clearActiveSelection(){ try{ chart.setActiveElements([]); chart.tooltip.setActiveElements([], {x:0,y:0}); chart.update('none'); }catch(e){} }
+    function highlightPoint(index){
+      if(index == null) return;
+      clearActiveSelection();
+      const active = [{datasetIndex:0, index}];
+      chart.setActiveElements(active);
+      const x = chart.scales.x.getPixelForValue(chart.data.labels[index]);
+      const y = chart.scales.y.getPixelForValue(chart.data.datasets[0].data[index]);
+      chart.tooltip.setActiveElements(active, {x,y});
+      chart.update('none');
+      const val = chart.data.datasets[0].data[index];
+      valorDisplay.textContent = formatDynamicDecimals(Number(val)) + ' €';
+    }
+    window.highlightPoint = highlightPoint;
+
+    let paused = false;
+    let updateTimer = null;
+
+    function pushNewMasterPoint(nextDate, newMasterVal){
+      clearActiveSelection();
+      masterLabels.push(nextDate);
+      masterValues.push(newMasterVal);
+      if(masterLabels.length > PRESET_POINTS){ masterLabels.shift(); masterValues.shift(); }
+
+      const lastSmoothed = chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1];
+      const raw = newMasterVal + (Math.random() - 0.5) * 0.0008;
+      const alpha = 0.10;
+      let smoothed = lastSmoothed * (1 - alpha) + raw * alpha;
+
+      const delta = smoothed - lastSmoothed;
+      const limitedDelta = clamp(delta, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
+      smoothed = clamp(lastSmoothed + limitedDelta, MIN, MAX);
+
+      chart.data.labels.push(nextDate);
+      chart.data.datasets[0].data.push(Number(smoothed.toFixed(6)));
+      if(chart.data.labels.length > PRESET_POINTS){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
+      chart.update('none');
+
+      setTimeout(() => clearActiveSelection(), 20);
+      updateMainDisplay(Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]));
+    }
 
     function scheduleNextUpdate(){
       if(updateTimer) clearInterval(updateTimer);
@@ -406,127 +691,96 @@
     scheduleNextUpdate();
     updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
 
-    /* ---------- Settings modal with chart color and many background styles ---------- */
-    const settingsBtn = document.getElementById('settingsBtn');
-    settingsBtn.addEventListener('click', openSettingsModal);
+    /* ---------- Transactions (botones funcionales) ---------- */
+    function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
-    function openSettingsModal(){
-      const prefs = getSavedPrefs() || { chartColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e', bgColor: getComputedStyle(document.documentElement).getPropertyValue('--app-bg').trim() || '#f7d54a', bgStyle: 'gradient-sun', style: document.body.getAttribute('data-style') || 'default', font: 'inter' };
+    document.getElementById('btnEnviar').addEventListener('click', () => {
       const html = `
-        <div class="modal-header"><h3>Configuración y personalización</h3></div>
+        <div class="modal-header"><h3>Enviar SchoolCoins</h3></div>
         <div class="modal-body">
-          <div style="font-weight:800;margin-bottom:8px;">Colores</div>
-          <div class="field"><label>Color de la gráfica</label><div style="display:flex;align-items:center;gap:8px;"><input id="chartColor" type="color" value="${prefs.chartColor}"><div class="preview-swatch" id="chartPreview" style="background:${prefs.chartColor}"></div></div></div>
-          <div class="field"><label>Color base de fondo</label><div style="display:flex;align-items:center;gap:8px;"><input id="bgColor" type="color" value="${prefs.bgColor}"><div class="preview-swatch" id="bgPreview" style="background:${prefs.bgColor}"></div></div></div>
-
-          <div style="font-weight:800;margin-top:12px;margin-bottom:8px;">Estilos de fondo</div>
-          <div id="bgOptions" style="display:flex;flex-wrap:wrap;">
-            <div class="bg-option" data-id="solid"><div>Color sólido</div><div class="bg-sample" style="background:${prefs.bgColor};"></div></div>
-            <div class="bg-option" data-id="gradient-sun"><div>Degradado solar</div><div class="bg-sample" style="background:linear-gradient(180deg, ${prefs.bgColor}, ${shadeColor(prefs.bgColor, -18)});"></div></div>
-            <div class="bg-option" data-id="radial-soft"><div>Radial suave</div><div class="bg-sample" style="background:radial-gradient(circle at 10% 20%, ${prefs.bgColor} 0%, ${shadeColor(prefs.bgColor, -10)} 60%, ${shadeColor(prefs.bgColor, -25)} 100%);"></div></div>
-            <div class="bg-option" data-id="diagonal-stripes"><div>Rayas diagonales</div><div class="bg-sample" style="background:repeating-linear-gradient(135deg, ${prefs.bgColor} 0 8px, ${shadeColor(prefs.bgColor, -6)} 8px 16px);"></div></div>
-            <div class="bg-option" data-id="repeating-dots"><div>Puntos repetidos</div><div class="bg-sample" style="background:radial-gradient(circle at 10px 10px, ${prefs.bgColor} 2px, transparent 3px);background-size:40px 40px;"></div></div>
-            <div class="bg-option" data-id="noise-subtle"><div>Ruido sutil</div><div class="bg-sample" style="background:${prefs.bgColor};opacity:0.95;filter:grayscale(0.1);"></div></div>
-          </div>
-
-          <div style="font-weight:800;margin-top:12px;margin-bottom:8px;">Apariencia</div>
-          <div class="field"><label>Estilo</label><select id="prefStyle"><option value="default">Por defecto</option><option value="minimal">Minimalista</option><option value="modern">Moderno</option></select></div>
-          <div class="field"><label>Tipografía</label><select id="prefFont"><option value="inter">Inter / Sans</option><option value="system">Sistema</option></select></div>
-
-          <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-            <button class="btn-ghost" id="resetPrefs">Restablecer</button>
-            <button class="btn-primary" id="savePrefs">Guardar</button>
-          </div>
-        </div>
-      `;
+          <div class="field"><label>Destinatario</label><input id="m_dest" type="text" placeholder="Dirección o usuario"></div>
+          <div class="field"><label>Cantidad (SC)</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01"></div>
+          <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
+          <div class="row-actions"><button class="btn-ghost" id="m_cancel">Cancelar</button><button class="btn-primary" id="m_send">Enviar</button></div>
+        </div>`;
       const bd = openModal(html);
-
-      // elements
-      const chartColorInput = bd.querySelector('#chartColor');
-      const chartPreview = bd.querySelector('#chartPreview');
-      const bgColorInput = bd.querySelector('#bgColor');
-      const bgPreview = bd.querySelector('#bgPreview');
-      const bgOptions = bd.querySelectorAll('.bg-option');
-      const styleSelect = bd.querySelector('#prefStyle');
-      const fontSelect = bd.querySelector('#prefFont');
-      const saveBtn = bd.querySelector('#savePrefs');
-      const resetBtn = bd.querySelector('#resetPrefs');
-
-      // set selects to prefs
-      styleSelect.value = prefs.style || 'default';
-      fontSelect.value = prefs.font || 'inter';
-
-      // mark active bg option
-      let activeBg = prefs.bgStyle || 'gradient-sun';
-      bgOptions.forEach(o => { if(o.dataset.id === activeBg) o.classList.add('active'); });
-
-      // live previews
-      chartColorInput.addEventListener('input', () => { chartPreview.style.background = chartColorInput.value; });
-      bgColorInput.addEventListener('input', () => { bgPreview.style.background = bgColorInput.value; bgOptions.forEach(o => {
-        // update sample backgrounds dynamically
-        const id = o.dataset.id;
-        const sample = o.querySelector('.bg-sample');
-        if(!sample) return;
-        switch(id){
-          case 'solid': sample.style.background = bgColorInput.value; break;
-          case 'gradient-sun': sample.style.background = `linear-gradient(180deg, ${bgColorInput.value}, ${shadeColor(bgColorInput.value, -18)})`; break;
-          case 'radial-soft': sample.style.background = `radial-gradient(circle at 10% 20%, ${bgColorInput.value} 0%, ${shadeColor(bgColorInput.value, -10)} 60%, ${shadeColor(bgColorInput.value, -25)} 100%)`; break;
-          case 'diagonal-stripes': sample.style.background = `repeating-linear-gradient(135deg, ${bgColorInput.value} 0 8px, ${shadeColor(bgColorInput.value, -6)} 8px 16px)`; break;
-          case 'repeating-dots': sample.style.background = `radial-gradient(circle at 10px 10px, ${bgColorInput.value} 2px, transparent 3px)`; sample.style.backgroundSize = '40px 40px'; break;
-          case 'noise-subtle': sample.style.background = bgColorInput.value; break;
-        }
-      }); });
-
-      bgOptions.forEach(o => {
-        o.addEventListener('click', () => {
-          bgOptions.forEach(x => x.classList.remove('active'));
-          o.classList.add('active');
-          activeBg = o.dataset.id;
-        });
+      bd.querySelector('#m_cancel').addEventListener('click', () => closeModal(bd));
+      bd.querySelector('#m_send').addEventListener('click', () => {
+        const dest = bd.querySelector('#m_dest').value || 'desconocido';
+        const amt = parseFloat(bd.querySelector('#m_amt').value) || 0;
+        const lastIndex = masterLabels.length - 1;
+        TRANSACTIONS.push({ txid: randomHex(16), ref: accountCode, type:'envio', from:'you', to:dest, amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex });
+        const prev = masterValues[masterValues.length - 1];
+        const impact = clamp(amt * 0.00002, 0, 0.003);
+        const nv = clamp(prev + impact * (Math.random() > 0.5 ? 1 : -1), MIN, MAX);
+        const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
+        pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Enviado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">Enviado ${amt.toFixed(4)} SC</div><div class="muted">a ${dest}</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="m_ok">Aceptar</button></div></div>`;
+        bd.querySelector('#m_ok').addEventListener('click', () => closeModal(bd));
       });
+    });
 
-      saveBtn.addEventListener('click', () => {
-        const newPrefs = {
-          chartColor: chartColorInput.value,
-          bgColor: bgColorInput.value,
-          bgStyle: activeBg,
-          style: styleSelect.value,
-          font: fontSelect.value
-        };
-        savePrefs(newPrefs);
-        applyPrefs(newPrefs);
-        closeModal(bd);
+    document.getElementById('btnIngresos').addEventListener('click', () => {
+      const html = `
+        <div class="modal-header"><h3>Registrar Ingreso</h3></div>
+        <div class="modal-body">
+          <div class="field"><label>Origen</label><input id="i_from" type="text" placeholder="Usuario o fuente"></div>
+          <div class="field"><label>Cantidad (SC)</label><input id="i_amt" type="number" step="0.01" placeholder="10.00"></div>
+          <div class="field"><label>Código de verificación del centro</label><input id="i_code" type="password" placeholder="Introduce el código (oculto)"></div>
+          <div id="i_error" class="error" style="display:none;">Código incorrecto</div>
+          <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
+          <div class="row-actions"><button class="btn-ghost" id="i_cancel">Cancelar</button><button class="btn-primary" id="i_ok">Confirmar</button></div>
+        </div>`;
+      const bd = openModal(html);
+      const CODE = 'IESJRCOIN';
+      bd.querySelector('#i_cancel').addEventListener('click', () => closeModal(bd));
+      bd.querySelector('#i_ok').addEventListener('click', () => {
+        const from = bd.querySelector('#i_from').value || 'external';
+        const amt = parseFloat(bd.querySelector('#i_amt').value) || 0;
+        const code = bd.querySelector('#i_code').value || '';
+        const errEl = bd.querySelector('#i_error');
+        if(code !== CODE){ errEl.style.display = 'block'; return; }
+        errEl.style.display = 'none';
+        const lastIndex = masterLabels.length - 1;
+        TRANSACTIONS.push({ txid: randomHex(16), ref: accountCode, type:'ingreso', from, to:'you', amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex });
+        const prev = masterValues[masterValues.length - 1];
+        const nv = clamp(prev + clamp(amt * 0.00002, 0, 0.003), MIN, MAX);
+        const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
+        pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Ingreso registrado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">+${amt.toFixed(4)} SC</div><div class="muted">Origen: ${from}</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="i_done">Aceptar</button></div></div>`;
+        bd.querySelector('#i_done').addEventListener('click', () => closeModal(bd));
       });
+    });
 
-      resetBtn.addEventListener('click', () => {
-        localStorage.removeItem(PREFS_KEY);
-        // revert to defaults
-        document.documentElement.style.removeProperty('--chart-color');
-        document.documentElement.style.removeProperty('--app-bg');
-        document.body.setAttribute('data-style','default');
-        document.documentElement.style.setProperty('--font-family','Inter, Arial, sans-serif');
-        // update chart colors to default
-        chart.data.datasets[0].borderColor = '#0b8a3e';
-        chart.data.datasets[0].backgroundColor = hexToRgba('#0b8a3e', 0.10);
-        chart.update('none');
-        applyBackgroundStyle('gradient-sun', '#f7d54a');
-        closeModal(bd);
+    document.getElementById('btnCambiar').addEventListener('click', () => {
+      const currentPrice = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
+      const html = `
+        <div class="modal-header"><h3>Cambiar SchoolCoins a €</h3></div>
+        <div class="modal-body">
+          <div class="field"><label>Cantidad (SC)</label><input id="c_amt" type="number" step="0.0001" placeholder="10.00"></div>
+          <div class="field"><label>Precio por SC</label><div style="padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,0.06);font-weight:800;">${formatDynamicDecimals(currentPrice)} €</div><div class="small-note">Equivalencia se calculará al confirmar y se guardará en la transacción.</div></div>
+          <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
+          <div class="row-actions"><button class="btn-ghost" id="c_cancel">Cancelar</button><button class="btn-primary" id="c_ok">Cambiar</button></div>
+        </div>`;
+      const bd = openModal(html);
+      const input = bd.querySelector('#c_amt');
+      bd.querySelector('#c_cancel').addEventListener('click', () => closeModal(bd));
+      bd.querySelector('#c_ok').addEventListener('click', () => {
+        const amt = parseFloat(input.value) || 0;
+        if(amt <= 0){ input.focus(); return; }
+        const lastIndex = masterLabels.length - 1;
+        const priceNow = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
+        const euros = Number((amt * priceNow).toFixed(6));
+        TRANSACTIONS.push({ txid: randomHex(16), ref: accountCode, type:'cambio', from:'you', to:'exchange', amount: Number(amt.toFixed(4)), euro: euros, price_at: priceNow, timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex });
+        const prev = masterValues[masterValues.length - 1];
+        const nv = clamp(prev + (Math.random()-0.5) * 0.0008, MIN, MAX);
+        const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
+        pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Cambio realizado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">${amt.toFixed(4)} SC → ${euros.toFixed(6)} €</div><div class="muted">Precio usado: ${formatDynamicDecimals(priceNow)} €</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="c_done">Aceptar</button></div></div>`;
+        bd.querySelector('#c_done').addEventListener('click', () => closeModal(bd));
       });
-    }
+    });
 
-    /* ---------- Helper: open/close modal ---------- */
-    function openModal(contentHtml){
-      const bd = document.createElement('div');
-      bd.className = 'modal-backdrop';
-      bd.innerHTML = `<div class="modal">${contentHtml}</div>`;
-      document.body.appendChild(bd);
-      bd.addEventListener('click', (e) => { if(e.target === bd) bd.remove(); });
-      return bd;
-    }
-    function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
-
-    /* ---------- Other UI actions (Enviar/Ingresos/Cambiar/Mi cuenta) remain as before ---------- */
-    // For brevity, reuse simple versions: they still use accountCode and require center code for ingresos.
     document.getElementById('btnCuenta').addEventListener('click', () => {
       const modalHtml = `
         <div class="modal-header"><h3>Mi cuenta</h3></div>
@@ -545,7 +799,154 @@
       bd.querySelector('#closeAccount').addEventListener('click', () => closeModal(bd));
     });
 
-    // Pause / add sample
+    /* ---------- Personalización (botón Configuración) ---------- */
+    const PREFS_KEY = 'schoolcoin_prefs_v3';
+    function getSavedPrefs(){ try { const raw = localStorage.getItem(PREFS_KEY); return raw ? JSON.parse(raw) : null; } catch(e){ return null; } }
+    function savePrefs(p){ try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch(e){} }
+    function clampHex(hex){ return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex) ? hex : '#0b8a3e'; }
+    function hexToRgba(hex, alpha){ if(!hex) return `rgba(11,138,62,${alpha})`; const h = hex.replace('#',''); const full = h.length === 3 ? h.split('').map(c=>c+c).join('') : h; const bigint = parseInt(full, 16); const r = (bigint >> 16) & 255; const g = (bigint >> 8) & 255; const b = bigint & 255; return `rgba(${r},${g},${b},${alpha})`; }
+    function shadeColor(hex, amount){ if(!hex) return hex; let h = hex.replace('#',''); if(h.length===3) h = h.split('').map(c=>c+c).join(''); const num = parseInt(h,16); let r = (num >> 16) + amount; let g = ((num >> 8) & 0x00FF) + amount; let b = (num & 0x0000FF) + amount; r = Math.max(Math.min(255, r), 0); g = Math.max(Math.min(255, g), 0); b = Math.max(Math.min(255, b), 0); return '#' + (r<<16 | g<<8 | b).toString(16).padStart(6,'0'); }
+
+    function applyBackgroundStyle(styleId, primary, secondary){
+      primary = clampHex(primary || '#f7d54a');
+      secondary = clampHex(secondary || shadeColor(primary, -18));
+      switch(styleId){
+        case 'solid': document.body.style.background = primary; document.body.style.backgroundSize = ''; break;
+        case 'gradient': document.body.style.background = `linear-gradient(180deg, ${primary} 0%, ${secondary} 100%)`; document.body.style.backgroundSize = ''; break;
+        case 'radial': document.body.style.background = `radial-gradient(circle at 10% 20%, ${primary} 0%, ${secondary} 70%)`; document.body.style.backgroundSize = ''; break;
+        case 'stripes': document.body.style.background = `repeating-linear-gradient(135deg, ${primary} 0 10px, ${secondary} 10px 20px)`; document.body.style.backgroundSize = ''; break;
+        case 'dots': document.body.style.background = `radial-gradient(circle, ${secondary} 2px, transparent 3px), ${primary}`; document.body.style.backgroundSize = '24px 24px'; break;
+        case 'noise': const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' fill='${primary}'/><rect width='100%' height='100%' filter='url(#n)' opacity='0.03'/></svg>`); document.body.style.background = `url("data:image/svg+xml;utf8,${svg}")`; document.body.style.backgroundSize = 'cover'; break;
+        default: document.body.style.background = primary;
+      }
+    }
+
+    function applyPrefs(p){
+      if(!p) return;
+      if(p.chartColor){
+        const c = clampHex(p.chartColor);
+        document.documentElement.style.setProperty('--chart-color', c);
+        if(window.chartInstance && chartInstance.data && chartInstance.data.datasets && chartInstance.data.datasets[0]){
+          chartInstance.data.datasets[0].borderColor = c;
+          chartInstance.data.datasets[0].backgroundColor = hexToRgba(c, 0.10);
+          chartInstance.update('none');
+        }
+      }
+      applyBackgroundStyle(p.bgStyle || 'gradient', p.bgPrimary || '#f7d54a', p.bgSecondary || shadeColor(p.bgPrimary || '#f7d54a', -18));
+      if(p.style) document.body.setAttribute('data-style', p.style);
+      if(p.font === 'system') document.documentElement.style.setProperty('--font-family', 'system-ui, -apple-system, "Segoe UI", Roboto, Arial'); else document.documentElement.style.setProperty('--font-family', 'Inter, Arial, sans-serif');
+    }
+
+    function openSettingsModalSimple(){
+      const prefs = getSavedPrefs() || { chartColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e', bgPrimary: '#f7d54a', bgSecondary: shadeColor('#f7d54a', -18), bgStyle: 'gradient', style: document.body.getAttribute('data-style') || 'default', font: 'inter' };
+      const html = `
+        <div class="modal-header"><h3>Personalización</h3></div>
+        <div class="modal-body" style="display:grid;grid-template-columns:1fr 220px;gap:12px;">
+          <div>
+            <div style="font-weight:800;margin-bottom:8px;">Colores</div>
+            <div class="field"><label>Color de la gráfica</label><input id="s_chartColor" type="color" value="${prefs.chartColor}"></div>
+            <div style="font-weight:800;margin-top:10px;margin-bottom:8px;">Fondo (primario / secundario)</div>
+            <div class="field" style="display:flex;gap:8px;align-items:center;">
+              <div style="flex:1;"><label>Primario</label><input id="s_bgPrimary" type="color" value="${prefs.bgPrimary}"></div>
+              <div style="flex:1;"><label>Secundario</label><input id="s_bgSecondary" type="color" value="${prefs.bgSecondary}"></div>
+            </div>
+            <div style="font-weight:800;margin-top:10px;margin-bottom:8px;">Estilo de fondo</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+              <button class="bg-btn" data-id="solid">Sólido</button>
+              <button class="bg-btn" data-id="gradient">Degradado</button>
+              <button class="bg-btn" data-id="radial">Radial</button>
+              <button class="bg-btn" data-id="stripes">Rayas</button>
+              <button class="bg-btn" data-id="dots">Puntos</button>
+              <button class="bg-btn" data-id="noise">Ruido</button>
+            </div>
+            <div style="font-weight:800;margin-top:12px;margin-bottom:8px;">Apariencia</div>
+            <div class="field"><label>Estilo</label><select id="s_style"><option value="default">Por defecto</option><option value="minimal">Minimalista</option><option value="modern">Moderno</option></select></div>
+            <div class="field"><label>Tipografía</label><select id="s_font"><option value="inter">Inter / Sans</option><option value="system">Sistema</option></select></div>
+            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+              <button class="btn-ghost" id="s_cancel">Cancelar</button>
+              <button class="btn-primary" id="s_save">Guardar</button>
+            </div>
+          </div>
+          <div style="border-left:1px solid rgba(0,0,0,0.04);padding-left:12px;">
+            <div style="font-weight:800;margin-bottom:8px;">Previsualización</div>
+            <div id="previewBox" style="border-radius:10px;padding:12px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,0.04);min-height:220px;display:flex;flex-direction:column;justify-content:center;align-items:center;">
+              <div id="previewTitle" style="font-weight:900;margin-bottom:8px;">SCHOOLCOIN</div>
+              <div id="previewChart" style="width:160px;height:80px;border-radius:8px;background:linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02));display:flex;align-items:center;justify-content:center;color:#333;font-weight:700;">Gráfica</div>
+              <div style="margin-top:10px;color:var(--muted);font-size:13px;text-align:center;">Fondo y colores aplicados en la página</div>
+            </div>
+          </div>
+        </div>
+      `;
+      const bd = openModal(html);
+
+      const chartColorEl = bd.querySelector('#s_chartColor');
+      const bgPrimaryEl = bd.querySelector('#s_bgPrimary');
+      const bgSecondaryEl = bd.querySelector('#s_bgSecondary');
+      const styleSelect = bd.querySelector('#s_style');
+      const fontSelect = bd.querySelector('#s_font');
+      const saveBtn = bd.querySelector('#s_save');
+      const cancelBtn = bd.querySelector('#s_cancel');
+      const previewBox = bd.querySelector('#previewBox');
+      const bgBtns = bd.querySelectorAll('.bg-btn');
+
+      let activeBg = prefs.bgStyle || 'gradient';
+      chartColorEl.value = prefs.chartColor;
+      bgPrimaryEl.value = prefs.bgPrimary;
+      bgSecondaryEl.value = prefs.bgSecondary;
+      styleSelect.value = prefs.style || 'default';
+      fontSelect.value = prefs.font || 'inter';
+      bgBtns.forEach(b => { if(b.dataset.id === activeBg) b.setAttribute('aria-pressed','true'); else b.setAttribute('aria-pressed','false'); });
+
+      function updatePreview(){
+        const c = chartColorEl.value;
+        const p = bgPrimaryEl.value;
+        const s = bgSecondaryEl.value;
+        const previewChart = bd.querySelector('#previewChart');
+        previewChart.style.background = hexToRgba(c, 0.12);
+        previewChart.style.border = `2px solid ${c}`;
+        let sampleBg = '';
+        switch(activeBg){
+          case 'solid': sampleBg = p; break;
+          case 'gradient': sampleBg = `linear-gradient(180deg, ${p}, ${s})`; break;
+          case 'radial': sampleBg = `radial-gradient(circle at 10% 20%, ${p}, ${s})`; break;
+          case 'stripes': sampleBg = `repeating-linear-gradient(135deg, ${p} 0 10px, ${s} 10px 20px)`; break;
+          case 'dots': sampleBg = `radial-gradient(circle, ${s} 2px, transparent 3px), ${p}`; break;
+          case 'noise': sampleBg = p; break;
+          default: sampleBg = p;
+        }
+        previewBox.style.background = sampleBg;
+      }
+      updatePreview();
+
+      chartColorEl.addEventListener('input', updatePreview);
+      bgPrimaryEl.addEventListener('input', () => { if(!bd._secondaryEdited) bgSecondaryEl.value = shadeColor(bgPrimaryEl.value, -18); updatePreview(); });
+      bgSecondaryEl.addEventListener('input', () => { bd._secondaryEdited = true; updatePreview(); });
+
+      bgBtns.forEach(b => {
+        b.addEventListener('click', () => {
+          bgBtns.forEach(x => x.setAttribute('aria-pressed','false'));
+          b.setAttribute('aria-pressed','true');
+          activeBg = b.dataset.id;
+          updatePreview();
+        });
+      });
+
+      saveBtn.addEventListener('click', () => {
+        const newPrefs = { chartColor: chartColorEl.value, bgPrimary: bgPrimaryEl.value, bgSecondary: bgSecondaryEl.value, bgStyle: activeBg, style: styleSelect.value, font: fontSelect.value };
+        savePrefs(newPrefs);
+        applyPrefs(newPrefs);
+        closeModal(bd);
+      });
+
+      cancelBtn.addEventListener('click', () => closeModal(bd));
+    }
+
+    const settingsBtn = document.getElementById('settingsBtn');
+    if(settingsBtn) settingsBtn.addEventListener('click', openSettingsModalSimple);
+
+    (function(){ const p = getSavedPrefs(); if(p) applyPrefs(p); else applyBackgroundStyle('gradient', '#f7d54a', shadeColor('#f7d54a', -18)); })();
+
+    /* ---------- Pause / add sample ---------- */
     document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
@@ -559,7 +960,7 @@
       pushNewMasterPoint(nextTime, nv);
     });
 
-    // Observe CSS variable changes to update chart color live
+    /* Observe style changes to update chart color live */
     const observer = new MutationObserver(() => {
       const accent = getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e';
       chart.data.datasets[0].borderColor = accent;
@@ -567,24 +968,6 @@
       chart.update('none');
     });
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
-
-    // Utility: shadeColor used in template generation
-    function shadeColor(hex, percent){
-      if(!hex) return hex;
-      let h = hex.replace('#','');
-      if(h.length===3) h = h.split('').map(c=>c+c).join('');
-      const num = parseInt(h,16);
-      let r = (num >> 16) + percent;
-      let g = ((num >> 8) & 0x00FF) + percent;
-      let b = (num & 0x0000FF) + percent;
-      r = Math.max(Math.min(255, r), 0);
-      g = Math.max(Math.min(255, g), 0);
-      b = Math.max(Math.min(255, b), 0);
-      return '#' + (r<<16 | g<<8 | b).toString(16).padStart(6,'0');
-    }
-
-    // Ensure initial background style from prefs
-    (function(){ const p = getSavedPrefs(); if(p){ applyPrefs(p); } else { applyBackgroundStyle('gradient-sun', '#f7d54a'); } })();
 
   </script>
 </body>
