@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Más variación</title>
+  <title>SCHOOLCOIN - Gráfica ampliada y eje dinámico</title>
 
   <style>
     :root{
@@ -23,10 +23,11 @@
     .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
     .col{flex:1;min-width:300px;}
     .chart-wrap{margin-top:14px;border-radius:12px;padding:6px;background:transparent;}
-    canvas{width:100% !important;height:320px !important;display:block;border-radius:8px;background:transparent;}
+    /* Gráfica más grande */
+    canvas{width:100% !important;height:520px !important;display:block;border-radius:8px;background:transparent;}
     .botones{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
     .boton{background:var(--accent);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;box-shadow:var(--shadow);border:0;}
-    .info-box{margin-top:12px;background:rgba(0,0,0,0.06);padding:10px;border-radius:8px;font-size:13px;}
+    .info-box{display:none;} /* eliminado visualmente según petición */
     .controls{display:flex;gap:8px;margin-top:10px;align-items:center;}
     .control-btn{background:#fff;border:1px solid #ccc;padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:600;}
     /* Modal y lista */
@@ -49,7 +50,7 @@
     .btn-small{padding:8px 10px;border-radius:8px;border:0;background:var(--accent);color:#fff;cursor:pointer;font-weight:700;}
     .muted{color:var(--muted);font-size:13px;}
     .empty{padding:18px;text-align:center;color:var(--muted);background:rgba(255,255,255,0.6);border-radius:12px;}
-    @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:260px !important;} .botones{grid-template-columns:1fr 1fr;} }
+    @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:420px !important;} .botones{grid-template-columns:1fr 1fr;} }
   </style>
 </head>
 <body>
@@ -58,19 +59,20 @@
     <div class="header">IES-SchoolCoin</div>
 
     <div class="row" style="align-items:center;">
-      <div style="flex:0 0 120px; text-align:center;">
-        <div style="width:72px;height:72px;margin:8px auto;"><img src="LOGO.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;"></div>
-        <div id="valorDisplay" style="font-weight:800;font-size:22px;margin-top:6px;text-align:center;">0.00 €</div>
+      <div style="flex:0 0 140px; text-align:center;">
+        <div style="width:84px;height:84px;margin:8px auto;"><img src="LOGO.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;"></div>
+        <!-- valor grande: ahora mostrará decimales dinámicos -->
+        <div id="valorDisplay" style="font-weight:900;font-size:28px;margin-top:6px;text-align:center;">0.000</div>
       </div>
 
       <div class="col">
-        <div style="font-weight:700;margin-bottom:6px;">Gráfica</div>
+        <div style="font-weight:700;margin-bottom:6px;">Gráfica ampliada</div>
         <div class="chart-wrap"><canvas id="grafica"></canvas></div>
       </div>
 
       <div class="col">
         <div style="font-weight:700;margin-bottom:6px;">Información</div>
-        <div class="info-box" id="infoBox">Toca o haz clic en un punto para ver su fecha, hora y valor. Mi cuenta está vacía hasta que envíes o recibas SC.</div>
+        <div class="info-box" id="infoBox" style="display:none;">(oculto)</div>
       </div>
     </div>
 
@@ -92,55 +94,49 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    // ---------- Requisitos ----------
-    // Intervalo por tick (no tocar): 5s
+    // ---------- Config ----------
     const UPDATE_INTERVAL_MS = 5000;
     const PRESET_POINTS = 600;
-
-    // Rango a largo plazo: 0.05 € - 0.50 €
     const MIN = 0.05;
     const MAX = 0.50;
     const BASE = 0.275;
+    const MAX_STEP_PER_TICK = 0.0009;
 
-    // Queremos permitir hasta ±0.01 € en 60s.
-    // Con ticks de 5s, pasos por minuto = 60/5 = 12.
-    // Por tanto, step_max ≈ 0.01 / 12 ≈ 0.0008333
-    const MAX_STEP_PER_TICK = 0.0009; // margen pequeño por seguridad
-
+    // UTIL
     function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-    function formatMoney(v){ return Number(v).toFixed(2) + ' €'; }
     function formatDate(d){ return new Date(d).toLocaleString('es-ES', {year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
     function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
-    // nextValue: mezcla mean reversion + ruido continuo + posibilidad de saltos controlados.
-    // Se limita el cambio absoluto por tick a MAX_STEP_PER_TICK para garantizar que
-    // en 1 minuto no supere ~0.01 € por acumulación natural.
+    // Formateo dinámico de decimales:
+    // - Si el valor tiene más de 3 decimales significativos, muestra todos.
+    // - En caso contrario, muestra 3 decimales.
+    function formatDynamicDecimals(num){
+      if (!isFinite(num)) return String(num);
+      // convertir a string con 8 decimales, quitar ceros finales
+      const s = num.toFixed(8).replace(/0+$/,'').replace(/\.$/,'');
+      const parts = s.split('.');
+      if(parts.length === 1) return parts[0];
+      const frac = parts[1];
+      if(frac.length <= 3) return parts[0] + '.' + frac.padEnd(3,'0');
+      return parts[0] + '.' + frac; // muestra todos los decimales significativos
+    }
+
+    // nextValue: mantiene comportamiento anterior (variación continua)
     function nextValue(prev){
-      // mean reversion hacia BASE (mantiene a largo plazo en el rango)
       const meanReversion = (BASE - prev) * 0.10;
-
-      // ruido continuo: permite variación constante
-      // ruido base aumentado ligeramente para que se note movimiento
-      const baseNoise = (Math.random() - 0.5) * 0.0022; // ±0.0011
-      // combinar
+      const baseNoise = (Math.random() - 0.5) * 0.0022;
       let candidate = prev + meanReversion + baseNoise;
-
-      // ocasional salto (baja probabilidad) para simular micro-eventos
-      if(Math.random() < 0.04){ // 4% probabilidad por tick
-        const jumpPct = (Math.random() * 2 - 1) * 0.02; // hasta ±2% instantáneo
+      if(Math.random() < 0.04){
+        const jumpPct = (Math.random() * 2 - 1) * 0.02;
         candidate = candidate * (1 + jumpPct);
       }
-
-      // limitar cambio absoluto por tick
       const delta = candidate - prev;
       const limitedDelta = clamp(delta, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
       const next = clamp(prev + limitedDelta, MIN, MAX);
-
-      // devolver con 4 decimales
-      return Number(next.toFixed(4));
+      return Number(next.toFixed(6)); // mantener precisión interna
     }
 
-    // Generar serie inicial alineada en tiempo
+    // Generar serie inicial
     function generateInitialSeries(){
       const labels = [];
       const data = [];
@@ -150,7 +146,7 @@
       for(let i=0;i<PRESET_POINTS;i++){
         labels.push(new Date(start + i * UPDATE_INTERVAL_MS));
         val = nextValue(val);
-        data.push(Number(val.toFixed(4)));
+        data.push(Number(val.toFixed(6)));
       }
       return {labels, data};
     }
@@ -159,7 +155,6 @@
     const masterLabels = initial.labels.slice();
     const masterValues = initial.data.slice();
 
-    // TRANSACTIONS vacías por defecto
     const TRANSACTIONS = [];
 
     // ---------- Chart ----------
@@ -192,9 +187,9 @@
             enabled: true,
             callbacks: {
               label: function(c){
-                const v = Number(c.parsed.y).toFixed(4);
+                const v = Number(c.parsed.y);
                 const date = c.label instanceof Date ? formatDate(c.label) : c.label;
-                return ` ${v} € — ${date}`;
+                return ` ${formatDynamicDecimals(v)} € — ${date}`;
               }
             }
           }
@@ -208,10 +203,15 @@
           },
           y: {
             beginAtZero: false,
-            suggestedMin: MIN - 0.01,
-            suggestedMax: MAX + 0.01,
-            grid: { display: false },
-            ticks: { callback: v => Number(v).toFixed(2) + ' €', color: '#333' }
+            grid: { display: true, color: 'rgba(0,0,0,0.04)' },
+            ticks: {
+              color: '#333',
+              callback: function(v){
+                // v puede ser string; convertir a número
+                const n = Number(v);
+                return Number(n).toFixed(2) + ' €';
+              }
+            }
           }
         }
       }
@@ -219,17 +219,32 @@
 
     window.chartInstance = chart;
 
+    // Ajustar eje Y dinámicamente alrededor del precio real
+    function adjustYAxisToPrice(currentPrice){
+      // span relativo: 12% del precio, mínimo 0.02€
+      const span = Math.max(0.02, Math.abs(currentPrice) * 0.12);
+      const min = clamp(currentPrice - span, MIN, MAX);
+      const max = clamp(currentPrice + span, MIN, MAX);
+      // aplicar con un pequeño margen para que las guías no queden pegadas
+      const margin = (max - min) * 0.06;
+      chart.options.scales.y.min = clamp(min - margin, MIN, MAX);
+      chart.options.scales.y.max = clamp(max + margin, MIN, MAX);
+      // actualizar ticks para que muestren valores ajustados
+      chart.update('none');
+    }
+
     // UI refs
     const valorDisplay = document.getElementById('valorDisplay');
-    const infoBox = document.getElementById('infoBox');
 
     function updateMainDisplay(value, date){
-      valorDisplay.textContent = formatMoney(value);
+      // mostrar con decimales dinámicos
+      valorDisplay.textContent = formatDynamicDecimals(value) + ' €';
+      // color según dirección
       const prev = chart.data.datasets[0].data.length > 1 ? chart.data.datasets[0].data[chart.data.datasets[0].data.length - 2] : value;
       const diff = value - prev;
-      const pct = prev ? ((diff / prev) * 100).toFixed(2) + '%' : '';
-      infoBox.textContent = `${formatDate(date)} · ${diff>0?'▲':'▼'} ${pct}`;
       valorDisplay.style.color = diff > 0 ? 'var(--accent)' : (diff < 0 ? 'var(--danger)' : 'var(--text)');
+      // ajustar eje Y para que las guías se adapten al precio real
+      adjustYAxisToPrice(value);
     }
 
     // selección única
@@ -247,7 +262,8 @@
       chart.update('none');
       const val = chart.data.datasets[0].data[index];
       const lab = chart.data.labels[index];
-      infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
+      // actualizar display principal al punto seleccionado
+      valorDisplay.textContent = formatDynamicDecimals(Number(val)) + ' €';
     }
     window.highlightPoint = highlightPoint;
 
@@ -261,7 +277,7 @@
         if(pts2.length) highlightPoint(pts2[0].index);
       }
     });
-    canvasEl.addEventListener('mouseleave', () => { clearActiveSelection(); infoBox.textContent = 'Toca o haz clic en un punto para ver su fecha, hora y valor.'; });
+    canvasEl.addEventListener('mouseleave', () => { clearActiveSelection(); });
     canvasEl.addEventListener('click', (evt) => {
       const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
       if(pts.length) highlightPoint(pts[0].index);
@@ -284,9 +300,10 @@
     }, {passive:true});
 
     // initial display
-    updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1], new Date(chart.data.labels[chart.data.labels.length - 1]));
+    const lastIndexInit = chart.data.datasets[0].data.length - 1;
+    updateMainDisplay(Number(chart.data.datasets[0].data[lastIndexInit]), new Date(chart.data.labels[lastIndexInit]));
 
-    // ---------- Updates (deterministas) ----------
+    // ---------- Updates ----------
     let paused = false;
     let updateTimer = null;
 
@@ -296,24 +313,22 @@
       masterValues.push(newMasterVal);
       if(masterLabels.length > PRESET_POINTS){ masterLabels.shift(); masterValues.shift(); }
 
-      // suavizado ligero (EMA) para mantener continuidad pero permitir cambios de hasta MAX_STEP_PER_TICK
       const lastSmoothed = chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1];
-      const raw = newMasterVal + (Math.random() - 0.5) * 0.0008; // ruido pequeño adicional
-      const alpha = 0.10; // suavizado algo menor para permitir más variación
+      const raw = newMasterVal + (Math.random() - 0.5) * 0.0008;
+      const alpha = 0.10;
       let smoothed = lastSmoothed * (1 - alpha) + raw * alpha;
 
-      // asegurar que el paso no exceda MAX_STEP_PER_TICK (por si el raw produce delta mayor)
       const delta = smoothed - lastSmoothed;
       const limitedDelta = clamp(delta, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
       smoothed = clamp(lastSmoothed + limitedDelta, MIN, MAX);
 
       chart.data.labels.push(nextDate);
-      chart.data.datasets[0].data.push(Number(smoothed.toFixed(4)));
+      chart.data.datasets[0].data.push(Number(smoothed.toFixed(6)));
       if(chart.data.labels.length > PRESET_POINTS){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
       chart.update('none');
 
       setTimeout(() => clearActiveSelection(), 20);
-      updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1], nextDate);
+      updateMainDisplay(Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]), nextDate);
     }
 
     function scheduleNextUpdate(){
@@ -358,7 +373,7 @@
         const impact = clamp(amt * 0.00002, 0, 0.003);
         const nv = clamp(prev + impact * (Math.random() > 0.5 ? 1 : -1), MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
-        pushNewMasterPoint(nextTime, Number(nv.toFixed(4)));
+        pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
         bd.querySelector('.modal').innerHTML = `<h3>Enviado</h3><p>Enviado ${amt.toFixed(4)} SC a ${dest}.</p><div style="display:flex;justify-content:flex-end;margin-top:12px;"><button class="btn-small" id="m_ok">Aceptar</button></div>`;
         bd.querySelector('#m_ok').addEventListener('click', () => closeModal(bd));
       });
@@ -379,7 +394,7 @@
         const prev = masterValues[masterValues.length - 1];
         const nv = clamp(prev + clamp(amt * 0.00002, 0, 0.003), MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
-        pushNewMasterPoint(nextTime, Number(nv.toFixed(4)));
+        pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
         bd.querySelector('.modal').innerHTML = `<h3>Ingreso registrado</h3><p>+${amt.toFixed(2)} SC — transacción añadida.</p><div style="display:flex;justify-content:flex-end;margin-top:12px;"><button class="btn-small" id="i_done">Aceptar</button></div>`;
         bd.querySelector('#i_done').addEventListener('click', () => closeModal(bd));
       });
@@ -389,29 +404,29 @@
       const currentPrice = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
       const html = `<h3>Cambiar SchoolCoins a €</h3>
         <label>Cantidad (SC)</label><input id="c_amt" type="number" step="0.0001" placeholder="10.00" style="width:100%;padding:8px;margin-top:6px;border-radius:8px;border:1px solid #ddd;">
-        <div style="margin-top:8px;font-size:13px;color:#555;">Precio actual: <strong>${currentPrice.toFixed(4)} €</strong> por SC</div>
+        <div style="margin-top:8px;font-size:13px;color:#555;">Precio actual: <strong>${formatDynamicDecimals(currentPrice)} €</strong> por SC</div>
         <div style="margin-top:8px;font-size:13px;color:#555;">Equivalencia: <span id="c_equiv">0.00 €</span></div>
         <div style="display:flex;gap:8px;margin-top:12px;"><button class="btn-small" id="c_cancel">Cancelar</button><button class="btn-small" id="c_ok">Cambiar</button></div>`;
       const bd = openModal(html);
       const input = bd.querySelector('#c_amt');
       const equiv = bd.querySelector('#c_equiv');
-      input.addEventListener('input', () => { const v = parseFloat(input.value) || 0; equiv.textContent = (v * currentPrice).toFixed(4) + ' €'; });
+      input.addEventListener('input', () => { const v = parseFloat(input.value) || 0; equiv.textContent = (v * currentPrice).toFixed(6) + ' €'; });
       bd.querySelector('#c_cancel').addEventListener('click', () => closeModal(bd));
       bd.querySelector('#c_ok').addEventListener('click', () => {
         const amt = parseFloat(input.value) || 0;
         if(amt <= 0){ equiv.textContent = 'Introduce una cantidad válida'; return; }
         const lastIndex = masterLabels.length - 1;
-        TRANSACTIONS.push({txid: randomHex(16), type:'cambio', from:'you', to:'exchange', amount: Number(amt.toFixed(4)), euro: Number((amt * currentPrice).toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex});
+        TRANSACTIONS.push({txid: randomHex(16), type:'cambio', from:'you', to:'exchange', amount: Number(amt.toFixed(4)), euro: Number((amt * currentPrice).toFixed(6)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex});
         const prev = masterValues[masterValues.length - 1];
         const nv = clamp(prev + (Math.random()-0.5) * 0.0008, MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
-        pushNewMasterPoint(nextTime, Number(nv.toFixed(4)));
-        bd.querySelector('.modal').innerHTML = `<h3>Cambio realizado</h3><p>${amt.toFixed(4)} SC → ${(amt*currentPrice).toFixed(4)} €</p><div style="display:flex;justify-content:flex-end;margin-top:12px;"><button class="btn-small" id="c_done">Aceptar</button></div>`;
+        pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
+        bd.querySelector('.modal').innerHTML = `<h3>Cambio realizado</h3><p>${amt.toFixed(4)} SC → ${(amt*currentPrice).toFixed(6)} €</p><div style="display:flex;justify-content:flex-end;margin-top:12px;"><button class="btn-small" id="c_done">Aceptar</button></div>`;
         bd.querySelector('#c_done').addEventListener('click', () => closeModal(bd));
       });
     });
 
-    // Mi cuenta (idéntica a versión previa)
+    // Mi cuenta (idéntica a versiones previas)
     document.getElementById('btnCuenta').addEventListener('click', () => {
       renderAccountModal('all', 0);
     });
@@ -442,12 +457,12 @@
         pageItems.forEach(tx => {
           const shortId = tx.txid.slice(0,12) + (tx.txid.length>12 ? '…' : '');
           const typeClass = tx.type === 'gasto' ? 'gasto' : '';
-          const amountLabel = tx.type === 'cambio' ? `${Number(tx.amount).toFixed(4)} SC → ${Number(tx.euro).toFixed(4)} €` : `${Number(tx.amount).toFixed(4)} SC`;
+          const amountLabel = tx.type === 'cambio' ? `${Number(tx.amount).toFixed(4)} SC → ${Number(tx.euro).toFixed(6)} €` : `${Number(tx.amount).toFixed(4)} SC`;
           listHtml += `
             <div class="tx-card" data-txid="${tx.txid}">
               <div class="tx-left">
                 <div class="tx-id">${shortId}</div>
-                <div class="tx-meta"><span class="muted">${formatDate(tx.timestamp)}</span> · <span class="tx-type ${typeClass}">${tx.type}</span></div>
+                <div class="tx-meta"><span class="muted">${new Date(tx.timestamp).toLocaleString('es-ES')}</span> · <span class="tx-type ${typeClass}">${tx.type}</span></div>
               </div>
               <div class="tx-amount">${amountLabel}</div>
             </div>`;
@@ -500,7 +515,7 @@
               <div class="muted">Tipo</div><div style="margin-bottom:8px;font-weight:700;">${tx.type}</div>
               <div class="muted">De</div><div style="margin-bottom:8px;">${tx.from}</div>
               <div class="muted">A</div><div style="margin-bottom:8px;">${tx.to}</div>
-              <div class="muted">Cantidad</div><div style="margin-bottom:8px;font-weight:900;">${Number(tx.amount).toFixed(4)} SC ${tx.type==='cambio'?`→ ${Number(tx.euro).toFixed(4)} €`:''}</div>
+              <div class="muted">Cantidad</div><div style="margin-bottom:8px;font-weight:900;">${Number(tx.amount).toFixed(4)} SC ${tx.type==='cambio'?`→ ${Number(tx.euro).toFixed(6)} €`:''}</div>
               <div class="muted">Fecha</div><div style="margin-bottom:12px;">${new Date(tx.timestamp).toLocaleString('es-ES')}</div>
               <div style="display:flex;gap:8px;justify-content:flex-end;">
                 <button class="btn-small" id="backList">Volver</button>
