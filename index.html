@@ -34,10 +34,8 @@
     .modal-header{background:linear-gradient(90deg,var(--app-bg),#ffe77a);padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(0,0,0,0.04);}
     .modal-header h3{margin:0;font-size:16px;color:#111;}
     .modal-body{padding:14px 16px;max-height:62vh;overflow:auto;box-sizing:border-box;}
-    /* Ocultar scrollbar visualmente pero permitir scroll interno si hace falta */
     .modal-body{scrollbar-width:none;-ms-overflow-style:none;}
     .modal-body::-webkit-scrollbar{width:0;height:0;display:none;}
-    /* Formularios y controles */
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
     .field label{font-weight:700;font-size:13px;color:#222;}
     .field input[type="text"], .field input[type="number"], .field input[type="password"], .field select, .field textarea{
@@ -50,6 +48,7 @@
     .small-note{font-size:12px;color:#444;margin-top:6px;}
     .confirm-card{background:linear-gradient(180deg,#fff,#fcfcfc);padding:12px;border-radius:10px;border:1px solid rgba(0,0,0,0.04);box-shadow:0 6px 18px rgba(0,0,0,0.04);}
     .error{color:var(--danger);font-weight:700;margin-top:6px;}
+    .account-code{font-weight:900;color:#111;background:#fff;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);display:inline-block;margin-top:8px;}
     @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:360px !important;} .botones{grid-template-columns:1fr 1fr;} }
   </style>
 </head>
@@ -59,9 +58,10 @@
     <div class="header">IES-SchoolCoin</div>
 
     <div class="row" style="align-items:center;">
-      <div style="flex:0 0 140px; text-align:center;">
+      <div style="flex:0 0 160px; text-align:center;">
         <div style="width:84px;height:84px;margin:8px auto;"><img src="LOGO.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;"></div>
         <div id="valorDisplay" style="font-weight:900;font-size:28px;margin-top:6px;text-align:center;">0.000 €</div>
+        <div id="accountCodeDisplay" class="account-code" title="Código de tu cuenta">—</div>
       </div>
 
       <div class="col">
@@ -69,7 +69,7 @@
         <div class="chart-wrap"><canvas id="grafica"></canvas></div>
       </div>
 
-      <!-- Tercera columna eliminada por completo según petición -->
+      <!-- tercera columna eliminada -->
     </div>
 
     <div class="botones" style="margin-top:14px;">
@@ -90,11 +90,20 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    // --- Datos y gráfica ---
+    // ---------- Estado global ----------
     const UPDATE_INTERVAL_MS = 5000;
     const PRESET_POINTS = 600;
     const MIN = 0.05, MAX = 0.50, BASE = 0.275, MAX_STEP_PER_TICK = 0.0009;
 
+    // Generar código aleatorio de cuenta al iniciar (se mostrará y se usará como ref)
+    function randomHex(len=8){ const chars='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
+    const accountCode = randomHex(10); // código de cuenta persistente durante la sesión
+    document.getElementById('accountCodeDisplay').textContent = accountCode;
+
+    // Transacciones
+    const TRANSACTIONS = [];
+
+    // UTIL
     function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
     function formatDynamicDecimals(num){
       if (!isFinite(num)) return String(num);
@@ -106,6 +115,7 @@
       return parts[0] + '.' + frac;
     }
 
+    // ---------- Generación de serie (misma lógica previa) ----------
     function nextValue(prev){
       const meanReversion = (BASE - prev) * 0.10;
       const baseNoise = (Math.random() - 0.5) * 0.0022;
@@ -137,8 +147,8 @@
     const initial = generateInitialSeries();
     const masterLabels = initial.labels.slice();
     const masterValues = initial.data.slice();
-    const TRANSACTIONS = [];
 
+    // ---------- Chart ----------
     const ctx = document.getElementById('grafica').getContext('2d');
     const chart = new Chart(ctx, {
       type: 'line',
@@ -194,6 +204,7 @@
       chart.update('none');
     }
 
+    // ---------- Display principal ----------
     const valorDisplay = document.getElementById('valorDisplay');
     function updateMainDisplay(value){
       valorDisplay.textContent = formatDynamicDecimals(value) + ' €';
@@ -203,6 +214,7 @@
       adjustYAxisToPrice(value);
     }
 
+    // ---------- Selección y resaltado ----------
     function clearActiveSelection(){ try{ chart.setActiveElements([]); chart.tooltip.setActiveElements([], {x:0,y:0}); chart.update('none'); }catch(e){} }
     function highlightPoint(index){
       if(index == null) return;
@@ -218,7 +230,7 @@
     }
     window.highlightPoint = highlightPoint;
 
-    // Updates
+    // ---------- Actualizaciones ----------
     let paused = false;
     let updateTimer = null;
 
@@ -260,10 +272,10 @@
     }
     scheduleNextUpdate();
 
-    // Initial display
+    // initial display
     updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
 
-    // --- Modal helpers con estilo y sin scrollbar visible en backdrop ---
+    // ---------- Modal helpers ----------
     function openModal(contentHtml){
       const bd = document.createElement('div');
       bd.className = 'modal-backdrop';
@@ -274,13 +286,14 @@
     }
     function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
-    // --- Formularios Enviar / Ingresos / Cambiar: nuevo diseño coherente con tema ---
+    // ---------- Enviar ----------
     document.getElementById('btnEnviar').addEventListener('click', () => {
       const html = `
         <div class="modal-header"><h3>Enviar SchoolCoins</h3></div>
         <div class="modal-body">
           <div class="field"><label>Destinatario</label><input id="m_dest" type="text" placeholder="Dirección o usuario"></div>
           <div class="field"><label>Cantidad (SC)</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01"></div>
+          <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
           <div class="row-actions"><button class="btn-ghost" id="m_cancel">Cancelar</button><button class="btn-primary" id="m_send">Enviar</button></div>
         </div>`;
       const bd = openModal(html);
@@ -289,18 +302,28 @@
         const dest = bd.querySelector('#m_dest').value || 'desconocido';
         const amt = parseFloat(bd.querySelector('#m_amt').value) || 0;
         const lastIndex = masterLabels.length - 1;
-        TRANSACTIONS.push({txid: randomHex(16), type:'envio', from:'you', to:dest, amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex});
+        // añadir transacción con ref = accountCode y tipo 'envio'
+        TRANSACTIONS.push({
+          txid: randomHex(16),
+          ref: accountCode,
+          type:'envio',
+          from:'you',
+          to:dest,
+          amount: Number(amt.toFixed(4)),
+          timestamp: new Date(masterLabels[lastIndex]).toISOString(),
+          index: lastIndex
+        });
         const prev = masterValues[masterValues.length - 1];
         const impact = clamp(amt * 0.00002, 0, 0.003);
         const nv = clamp(prev + impact * (Math.random() > 0.5 ? 1 : -1), MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
         pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
-        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Enviado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">Enviado ${amt.toFixed(4)} SC</div><div class="muted">a ${dest}</div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="m_ok">Aceptar</button></div></div>`;
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Enviado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">Enviado ${amt.toFixed(4)} SC</div><div class="muted">a ${dest}</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="m_ok">Aceptar</button></div></div>`;
         bd.querySelector('#m_ok').addEventListener('click', () => closeModal(bd));
       });
     });
 
-    // Ingresos: ahora requiere código de verificación (oculto al escribir)
+    // ---------- Ingresos (requiere código del centro IESJRCOIN) ----------
     document.getElementById('btnIngresos').addEventListener('click', () => {
       const html = `
         <div class="modal-header"><h3>Registrar Ingreso</h3></div>
@@ -309,10 +332,11 @@
           <div class="field"><label>Cantidad (SC)</label><input id="i_amt" type="number" step="0.01" placeholder="10.00"></div>
           <div class="field"><label>Código de verificación del centro</label><input id="i_code" type="password" placeholder="Introduce el código (oculto)"></div>
           <div id="i_error" class="error" style="display:none;">Código incorrecto</div>
+          <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
           <div class="row-actions"><button class="btn-ghost" id="i_cancel">Cancelar</button><button class="btn-primary" id="i_ok">Confirmar</button></div>
         </div>`;
       const bd = openModal(html);
-      const CODE = 'IESJRCOIN'; // código requerido (exacto)
+      const CODE = 'IESJRCOIN';
       bd.querySelector('#i_cancel').addEventListener('click', () => closeModal(bd));
       bd.querySelector('#i_ok').addEventListener('click', () => {
         const from = bd.querySelector('#i_from').value || 'external';
@@ -325,23 +349,35 @@
         }
         errEl.style.display = 'none';
         const lastIndex = masterLabels.length - 1;
-        TRANSACTIONS.push({txid: randomHex(16), type:'ingreso', from, to:'you', amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex});
+        // añadir transacción tipo 'ingreso' con ref = accountCode
+        TRANSACTIONS.push({
+          txid: randomHex(16),
+          ref: accountCode,
+          type:'ingreso',
+          from,
+          to:'you',
+          amount: Number(amt.toFixed(4)),
+          timestamp: new Date(masterLabels[lastIndex]).toISOString(),
+          index: lastIndex
+        });
         const prev = masterValues[masterValues.length - 1];
         const nv = clamp(prev + clamp(amt * 0.00002, 0, 0.003), MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
         pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
-        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Ingreso registrado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">+${amt.toFixed(4)} SC</div><div class="muted">Origen: ${from}</div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="i_done">Aceptar</button></div></div>`;
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Ingreso registrado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">+${amt.toFixed(4)} SC</div><div class="muted">Origen: ${from}</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="i_done">Aceptar</button></div></div>`;
         bd.querySelector('#i_done').addEventListener('click', () => closeModal(bd));
       });
     });
 
+    // ---------- Cambiar (sincronizado al precio actual) ----------
     document.getElementById('btnCambiar').addEventListener('click', () => {
       const currentPrice = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
       const html = `
         <div class="modal-header"><h3>Cambiar SchoolCoins a €</h3></div>
         <div class="modal-body">
           <div class="field"><label>Cantidad (SC)</label><input id="c_amt" type="number" step="0.0001" placeholder="10.00"></div>
-          <div class="field"><label>Precio por SC</label><div style="padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,0.06);font-weight:800;">${formatDynamicDecimals(currentPrice)} €</div><div class="small-note">Se calculará la equivalencia al confirmar.</div></div>
+          <div class="field"><label>Precio por SC</label><div style="padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,0.06);font-weight:800;">${formatDynamicDecimals(currentPrice)} €</div><div class="small-note">Equivalencia se calculará al confirmar y se guardará en la transacción.</div></div>
+          <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
           <div class="row-actions"><button class="btn-ghost" id="c_cancel">Cancelar</button><button class="btn-primary" id="c_ok">Cambiar</button></div>
         </div>`;
       const bd = openModal(html);
@@ -351,19 +387,33 @@
         const amt = parseFloat(input.value) || 0;
         if(amt <= 0){ input.focus(); return; }
         const lastIndex = masterLabels.length - 1;
-        TRANSACTIONS.push({txid: randomHex(16), type:'cambio', from:'you', to:'exchange', amount: Number(amt.toFixed(4)), euro: Number((amt * currentPrice).toFixed(6)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex});
+        const priceNow = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
+        const euros = Number((amt * priceNow).toFixed(6));
+        // añadir transacción tipo 'cambio' con detalle euro y ref = accountCode
+        TRANSACTIONS.push({
+          txid: randomHex(16),
+          ref: accountCode,
+          type:'cambio',
+          from:'you',
+          to:'exchange',
+          amount: Number(amt.toFixed(4)),
+          euro: euros,
+          price_at: priceNow,
+          timestamp: new Date(masterLabels[lastIndex]).toISOString(),
+          index: lastIndex
+        });
         const prev = masterValues[masterValues.length - 1];
         const nv = clamp(prev + (Math.random()-0.5) * 0.0008, MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
         pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
-        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Cambio realizado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">${amt.toFixed(4)} SC → ${(amt*currentPrice).toFixed(6)} €</div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="c_done">Aceptar</button></div></div>`;
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Cambio realizado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">${amt.toFixed(4)} SC → ${euros.toFixed(6)} €</div><div class="muted">Precio usado: ${formatDynamicDecimals(priceNow)} €</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="c_done">Aceptar</button></div></div>`;
         bd.querySelector('#c_done').addEventListener('click', () => closeModal(bd));
       });
     });
 
-    // Mi cuenta (sin cambios funcionales)
+    // ---------- Mi cuenta (abre por defecto con filtro 'ingreso' y muestra código) ----------
     document.getElementById('btnCuenta').addEventListener('click', () => {
-      renderAccountModal('all', 0);
+      renderAccountModal('ingreso', 0); // por defecto 'INGRESO'
     });
 
     function renderAccountModal(filter='all', page=0){
@@ -376,12 +426,16 @@
       const pageItems = filtered.slice().reverse().slice(start, start + PAGE_SIZE);
 
       const filtersHtml = `
+        <div style="padding:8px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <div style="font-weight:800;margin-right:8px;">Cuenta:</div>
+          <div class="account-code">${accountCode}</div>
+        </div>
         <div style="padding:8px 0;display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn-ghost filter" data-filter="all">Todos</button>
-          <button class="btn-ghost filter" data-filter="ingreso">Ingresos</button>
-          <button class="btn-ghost filter" data-filter="gasto">Gastos</button>
-          <button class="btn-ghost filter" data-filter="envio">Envíos</button>
-          <button class="btn-ghost filter" data-filter="cambio">Cambios</button>
+          <button class="btn-ghost filter ${filter==='all'?'active':''}" data-filter="all">Todos</button>
+          <button class="btn-ghost filter ${filter==='ingreso'?'active':''}" data-filter="ingreso">Ingresos</button>
+          <button class="btn-ghost filter ${filter==='gasto'?'active':''}" data-filter="gasto">Gastos</button>
+          <button class="btn-ghost filter ${filter==='envio'?'active':''}" data-filter="envio">Envíos</button>
+          <button class="btn-ghost filter ${filter==='cambio'?'active':''}" data-filter="cambio">Cambios</button>
         </div>`;
 
       let listHtml = '';
@@ -391,12 +445,16 @@
         listHtml = `<div style="display:flex;flex-direction:column;gap:10px;">`;
         pageItems.forEach(tx => {
           const shortId = tx.txid.slice(0,12) + (tx.txid.length>12 ? '…' : '');
-          const amountLabel = tx.type === 'cambio' ? `${Number(tx.amount).toFixed(4)} SC → ${Number(tx.euro).toFixed(6)} €` : `${Number(tx.amount).toFixed(4)} SC`;
+          let amountLabel = '';
+          if(tx.type === 'cambio') amountLabel = `${Number(tx.amount).toFixed(4)} SC → ${Number(tx.euro).toFixed(6)} €`;
+          else amountLabel = `${Number(tx.amount).toFixed(4)} SC`;
+          // mostrar siempre "INGRESO" en la lista si es tipo ingreso
+          const typeLabel = tx.type === 'ingreso' ? 'INGRESO' : tx.type.toUpperCase();
           listHtml += `
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,0.04);">
               <div style="min-width:0;">
-                <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">${shortId}</div>
-                <div style="font-size:12px;color:var(--muted);margin-top:6px;">${new Date(tx.timestamp).toLocaleString('es-ES')} · ${tx.type}</div>
+                <div style="font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;">${shortId} · Ref: ${tx.ref}</div>
+                <div style="font-size:12px;color:var(--muted);margin-top:6px;">${new Date(tx.timestamp).toLocaleString('es-ES')} · ${typeLabel}</div>
               </div>
               <div style="font-weight:900;color:var(--accent);min-width:120px;text-align:right;">${amountLabel}</div>
             </div>`;
@@ -439,7 +497,7 @@
       if(closeBtn) closeBtn.addEventListener('click', () => closeModal(bd));
     }
 
-    // Pause / add sample
+    // ---------- Pause / add sample ----------
     document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
@@ -453,7 +511,7 @@
       pushNewMasterPoint(nextTime, nv);
     });
 
-    // Helper randomHex
+    // Helper randomHex (ya definida arriba, redeclarada por seguridad)
     function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
   </script>
 </body>
