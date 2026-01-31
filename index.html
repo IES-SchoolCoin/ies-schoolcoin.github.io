@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>SCHOOLCOIN</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{
+      --amarillo:#f7d94c;
+      --marron:#8b5a2b;
+      --marron-hover:#704721;
+      --card-bg: #fff;
+      --shadow: 0 10px 30px rgba(0,0,0,0.12);
+    }
+    *{box-sizing:border-box}
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      background-color: var(--amarillo);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 18px;
+      min-height:100vh;
+    }
+
+    /* Top bar */
+    .top-bar {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .settings {
+      width:36px;
+      height:36px;
+      border-radius:8px;
+      background:rgba(0,0,0,0.06);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+    }
+    .settings img{width:20px;height:20px}
+
+    /* Header centrado */
+    .header {
+      width: 100%;
+      max-width: 900px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    h1 {
+      font-size: 34px;
+      color: black;
+      margin: 0;
+      letter-spacing:1px;
+      text-align:center;
+    }
+    .coin-logo {
+      width:84px;
+      height:84px;
+      background-color: var(--card-bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 13px;
+      box-shadow: var(--shadow);
+    }
+    .coin-logo::before {
+      content: "🎓";
+      font-size: 22px;
+      margin-right:6px;
+    }
+
+    /* Valor */
+    .valor-actual {
+      font-size: 28px;
+      color: var(--marron);
+      font-weight: 700;
+      margin: 8px 0 12px 0;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .flecha { color: #2ea44f; font-size:18px; }
+
+    /* Canvas */
+    .chart-wrap{
+      width:100%;
+      max-width:900px;
+      background:transparent;
+      padding: 6px 0;
+    }
+    canvas{ width:100% !important; height:260px !important; }
+
+    /* Botones inferiores */
+    .botones {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 900px;
+      margin-top: 18px;
+      gap:10px;
+    }
+    .boton {
+      background-color: var(--marron);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 16px;
+      cursor: pointer;
+      flex: 1;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      transition: transform .12s ease, background .12s ease;
+    }
+    .boton:hover{ background:var(--marron-hover); transform: translateY(-3px); }
+
+    /* Modal base */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.45);
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      animation: fadeIn .18s ease;
+    }
+    @keyframes fadeIn { from {opacity:0} to {opacity:1} }
+
+    .modal-contenido {
+      width: 420px;
+      max-width: 96%;
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      transform: translateY(8px);
+      animation: pop .18s ease;
+    }
+    @keyframes pop { from {transform: translateY(12px) scale(.99)} to {transform: translateY(0) scale(1)} }
+
+    .modal-header {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:8px;
+    }
+    .modal-header h2{ margin:0; font-size:18px }
+    .close-btn {
+      background:transparent;
+      border:none;
+      font-size:20px;
+      cursor:pointer;
+    }
+
+    /* Form styles */
+    .modal-contenido label{ font-size:13px; display:block; margin-top:8px }
+    .modal-contenido input, .modal-contenido textarea, .modal-contenido select {
+      width:100%;
+      padding:10px;
+      margin-top:6px;
+      border:1px solid #e6e6e6;
+      border-radius:8px;
+      font-size:14px;
+      background:#fafafa;
+    }
+    .modal-actions{ display:flex; gap:8px; margin-top:12px }
+    .btn-primario{ background:var(--marron); color:#fff; border:none; padding:10px; border-radius:8px; cursor:pointer; flex:1 }
+    .btn-sec{ background:#eee; border:none; padding:10px; border-radius:8px; cursor:pointer; flex:1 }
+
+    /* Small helper card for lists */
+    .list-item {
+      display:flex;
+      justify-content:space-between;
+      padding:10px;
+      border-radius:8px;
+      background:#fbfbfb;
+      margin-top:8px;
+      border:1px solid #f0f0f0;
+    }
+
+    @media (max-width:520px){
+      h1{ font-size:24px }
+      .coin-logo{ width:64px;height:64px }
+      canvas{ height:200px !important }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="settings" id="btnSettings" title="Configuración">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/6/6c/Settings_icon.png" alt="settings">
+    </div>
+  </div>
+
+  <div class="header">
+    <div class="coin-logo">SCHOOLCOIN</div>
+    <h1 id="tituloSchoolcoin">SCHOOLCOIN</h1>
+  </div>
+
+  <div class="valor-actual">
+    <span id="valorTexto">0.19</span> € <span class="flecha">▲</span>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="grafica"></canvas>
+  </div>
+
+  <div class="botones">
+    <button class="boton" id="btnEnviar">Enviar</button>
+    <button class="boton" id="btnIngresos">Ingresos</button>
+    <button class="boton" id="btnGastos">Gastos</button>
+    <button class="boton" id="btnCuenta">Mi cuenta</button>
+  </div>
+
+  <!-- Modal Enviar -->
+  <div class="modal" id="modalEnviar">
+    <div class="modal-contenido">
+      <div class="modal-header">
+        <h2>Enviar SCHOOLCOIN</h2>
+        <button class="close-btn" data-close="modalEnviar">&times;</button>
+      </div>
+      <label>Cantidad (€)</label>
+      <input type="number" id="m_cantidad" step="0.01" placeholder="0.00">
+      <label>Destinatario</label>
+      <input type="text" id="m_dest" placeholder="Nombre">
+      <label>Número de cuenta</label>
+      <input type="text" id="m_cuenta" placeholder="ES00 0000 0000 0000 0000">
+      <label>Motivo</label>
+      <textarea id="m_motivo" rows="3" placeholder="Motivo del envío"></textarea>
+
+      <div class="modal-actions">
+        <button class="btn-sec" data-close="modalEnviar">Cancelar</button>
+        <button class="btn-primario" id="confirmarEnvio">Confirmar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Ingresos -->
+  <div class="modal" id="modalIngresos">
+    <div class="modal-contenido">
+      <div class="modal-header">
+        <h2>Ingresos recientes</h2>
+        <button class="close-btn" data-close="modalIngresos">&times;</button>
+      </div>
+      <div id="listaIngresos">
+        <!-- items dinámicos -->
+      </div>
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <input id="ing_valor" type="number" step="0.01" placeholder="Añadir ingreso (€)">
+        <button class="btn-primario" id="addIngreso">Añadir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Gastos -->
+  <div class="modal" id="modalGastos">
+    <div class="modal-contenido">
+      <div class="modal-header">
+        <h2>Gastos recientes</h2>
+        <button class="close-btn" data-close="modalGastos">&times;</button>
+      </div>
+      <div id="listaGastos"></div>
+      <div style="margin-top:12px; display:flex; gap:8px;">
+        <input id="gasto_valor" type="number" step="0.01" placeholder="Añadir gasto (€)">
+        <button class="btn-primario" id="addGasto">Añadir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Mi cuenta -->
+  <div class="modal" id="modalCuenta">
+    <div class="modal-contenido">
+      <div class="modal-header">
+        <h2>Mi cuenta</h2>
+        <button class="close-btn" data-close="modalCuenta">&times;</button>
+      </div>
+      <div style="display:flex; gap:12px; align-items:center;">
+        <div style="width:72px;height:72px;border-radius:12px;background:#f3f3f3;display:flex;align-items:center;justify-content:center;font-weight:700">M</div>
+        <div>
+          <div style="font-weight:700">Moisés</div>
+          <div style="color:#666;font-size:13px">Cuenta: ES00 0000 0000 0000</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <div class="list-item"><div>Saldo</div><div id="saldoCuenta">0.00 €</div></div>
+        <div class="list-item"><div>Correo</div><div>moises@example.com</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Settings -->
+  <div class="modal" id="modalSettings">
+    <div class="modal-contenido">
+      <div class="modal-header">
+        <h2>Configuración</h2>
+        <button class="close-btn" data-close="modalSettings">&times;</button>
+      </div>
+      <label>Tema</label>
+      <select id="temaSelect">
+        <option value="amarillo">Amarillo (por defecto)</option>
+        <option value="claro">Claro</option>
+        <option value="oscuro">Oscuro</option>
+      </select>
+      <label style="margin-top:8px">Velocidad de actualización</label>
+      <select id="velSelect">
+        <option value="3000">3s</option>
+        <option value="2000">2s</option>
+        <option value="1000">1s</option>
+      </select>
+      <div class="modal-actions">
+        <button class="btn-sec" data-close="modalSettings">Cerrar</button>
+        <button class="btn-primario" id="guardarSettings">Guardar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Gráfica (solo sube, sin líneas de fondo, L visible) ---
+    let valores = [0.19];
+    let etiquetas = ["Inicio"];
+    const ctx = document.getElementById('grafica').getContext('2d');
+    const valorTexto = document.getElementById('valorTexto');
+
+    const grafica = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: etiquetas,
+        datasets: [{
+          label: '',
+          data: valores,
+          borderColor: 'black',
+          borderWidth: 3,
+          tension: 0.4,
+          pointRadius: 0,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        animation: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { display: false },
+            border: { display: true, color: "black", width: 3 }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { display: false },
+            border: { display: true, color: "black", width: 3 },
+            beginAtZero: false
+          }
+        },
+        elements: { line: { capBezierPoints: true } }
+      }
+    });
+
+    // Intervalo configurable
+    let intervalo = 3000;
+    let timer = null;
+    function startAutoUpdate() {
+      if (timer) clearInterval(timer);
+      timer = setInterval(() => {
+        let ultimo = valores[valores.length - 1];
+        let cambio = (Math.random() * 0.04 + 0.01); // +0.01 .. +0.05
+        let nuevo = parseFloat((ultimo + cambio).toFixed(2));
+        valores.push(nuevo);
+        etiquetas.push("");
+        grafica.data.datasets[0].data = valores;
+        grafica.data.labels = etiquetas;
+        grafica.update();
+        valorTexto.textContent = nuevo.toFixed(2);
+        updateSaldo(nuevo);
+      }, intervalo);
+    }
+    startAutoUpdate();
+
+    // --- Modal helpers ---
+    function openModal(id){ document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id){ document.getElementById(id).style.display = 'none'; }
+
+    document.getElementById('btnEnviar').addEventListener('click', () => openModal('modalEnviar'));
+    document.getElementById('btnIngresos').addEventListener('click', () => openModal('modalIngresos'));
+    document.getElementById('btnGastos').addEventListener('click', () => openModal('modalGastos'));
+    document.getElementById('btnCuenta').addEventListener('click', () => openModal('modalCuenta'));
+    document.getElementById('btnSettings').addEventListener('click', () => openModal('modalSettings'));
+
+    // close buttons
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', () => closeModal(btn.getAttribute('data-close')));
+    });
+    window.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal')) e.target.style.display = 'none';
+    });
+
+    // --- Envío (simulación) ---
+    document.getElementById('confirmarEnvio').addEventListener('click', () => {
+      const c = parseFloat(document.getElementById('m_cantidad').value || 0);
+      if (c > 0) {
+        // efecto: añadir ingreso negativo (gasto) y pequeño impacto en valor
+        let ultimo = valores[valores.length - 1];
+        let nuevo = parseFloat((ultimo + 0.01).toFixed(2));
+        valores.push(nuevo); etiquetas.push("");
+        grafica.update();
+        valorTexto.textContent = nuevo.toFixed(2);
+        updateSaldo(nuevo);
+      }
+      closeModal('modalEnviar');
+      ['m_cantidad','m_dest','m_cuenta','m_motivo'].forEach(id => document.getElementById(id).value = '');
+    });
+
+    // --- Ingresos y Gastos: listas y añadir ---
+    const listaIngresos = document.getElementById('listaIngresos');
+    const listaGastos = document.getElementById('listaGastos');
+    let ingresos = [];
+    let gastos = [];
+    function renderList(container, items) {
+      container.innerHTML = '';
+      if (items.length === 0) {
+        container.innerHTML = '<div style="color:#777;font-size:14px">No hay registros</div>';
+        return;
+      }
+      items.slice().reverse().forEach(it => {
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.innerHTML = `<div>${it.label}</div><div>${it.valor.toFixed(2)} €</div>`;
+        container.appendChild(div);
+      });
+    }
+    document.getElementById('addIngreso').addEventListener('click', () => {
+      const v = parseFloat(document.getElementById('ing_valor').value || 0);
+      if (v > 0) {
+        ingresos.push({ label: 'Ingreso', valor: v });
+        renderList(listaIngresos, ingresos);
+        // efecto en gráfica: subir proporcionalmente
+        let ultimo = valores[valores.length - 1];
+        let nuevo = parseFloat((ultimo + Math.min(0.05, v/100)).toFixed(2));
+        valores.push(nuevo); etiquetas.push("");
+        grafica.update(); valorTexto.textContent = nuevo.toFixed(2);
+        updateSaldo(nuevo);
+        document.getElementById('ing_valor').value = '';
+      }
+    });
+    document.getElementById('addGasto').addEventListener('click', () => {
+      const v = parseFloat(document.getElementById('gasto_valor').value || 0);
+      if (v > 0) {
+        gastos.push({ label: 'Gasto', valor: v });
+        renderList(listaGastos, gastos);
+        // efecto en gráfica: pequeño aumento (mismo patrón)
+        let ultimo = valores[valores.length - 1];
+        let nuevo = parseFloat((ultimo + 0.01).toFixed(2));
+        valores.push(nuevo); etiquetas.push("");
+        grafica.update(); valorTexto.textContent = nuevo.toFixed(2);
+        updateSaldo(nuevo);
+        document.getElementById('gasto_valor').value = '';
+      }
+    });
+
+    // --- Mi cuenta: saldo dinámico ---
+    function updateSaldo(latest) {
+      // ejemplo simple: saldo = latest * 100
+      const saldo = (latest * 100).toFixed(2);
+      document.getElementById('saldoCuenta').textContent = `${saldo} €`;
+    }
+    updateSaldo(valores[valores.length - 1]);
+
+    // --- Settings ---
+    document.getElementById('guardarSettings').addEventListener('click', () => {
+      const tema = document.getElementById('temaSelect').value;
+      const vel = parseInt(document.getElementById('velSelect').value, 10);
+      // aplicar tema
+      if (tema === 'claro') document.body.style.backgroundColor = '#ffffff';
+      else if (tema === 'oscuro') document.body.style.backgroundColor = '#222';
+      else document.body.style.backgroundColor = 'var(--amarillo)';
+      // velocidad
+      intervalo = vel;
+      startAutoUpdate();
+      closeModal('modalSettings');
+    });
+
+    // Inicial render
+    renderList(listaIngresos, ingresos);
+    renderList(listaGastos, gastos);
+  </script>
+</body>
+</html>
