@@ -3,39 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Personalización avanzada</title>
+  <title>SCHOOLCOIN - App</title>
   <style>
+    /* ---------------- Variables base ---------------- */
     :root{
       --app-bg: #f7d54a;
       --chart-color: #0b8a3e;
-      --chart-fill: rgba(11,138,62,0.10);
+      --text: #111;
       --muted: #666;
       --card-bg: #fff;
       --danger: #c62828;
-      --radius: 12px;
       --shadow: 0 8px 28px rgba(0,0,0,0.12);
-      --text: #222;
       --font-family: Inter, Arial, sans-serif;
     }
 
-    /* Body style variants */
-    body[data-style="default"]{ }
-    body[data-style="minimal"]{
-      --shadow: none;
-      --card-bg: #fff;
-      --muted: #666;
-      --text: #111;
-      --font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-    body[data-style="modern"]{
-      --shadow: 0 12px 36px rgba(0,0,0,0.12);
-      --font-family: Inter, Arial, sans-serif;
+    /* ---------------- Forzar fondo a pantalla completa ---------------- */
+    html,body{
+      height:100%;
+      min-height:100vh;
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      background-repeat:no-repeat;
+      background-attachment:fixed;
+      transition:background 300ms ease, color 200ms ease;
+      color:var(--text);
+      font-family:var(--font-family);
+      -webkit-font-smoothing:antialiased;
     }
 
-    html,body{height:100%;margin:0;font-family:var(--font-family);background:var(--app-bg);color:var(--text);-webkit-font-smoothing:antialiased;transition:background 300ms ease;}
-    .contenedor{width:100%;max-width:980px;margin:0 auto;padding:18px;box-sizing:border-box;}
+    /* ---------------- Layout ---------------- */
+    .contenedor{width:100%;max-width:980px;margin:0 auto;padding:18px;box-sizing:border-box;min-height:calc(100vh - 48px);}
     .top-bar{background:#000;color:#fff;padding:12px;font-weight:800;text-align:center;border-radius:10px;position:relative;}
-    .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;}
+    .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;color:var(--text);}
     .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
     .col{flex:1;min-width:300px;}
     .chart-wrap{margin-top:14px;border-radius:12px;padding:6px;background:transparent;}
@@ -47,407 +47,37 @@
     .icon-btn{background:transparent;border:0;color:#fff;cursor:pointer;padding:6px;border-radius:8px;font-weight:700;}
     .icon-btn svg{width:20px;height:20px;vertical-align:middle;fill:#fff;opacity:0.95;}
 
-    /* Modal */
+    /* ---------------- Modal ---------------- */
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
     .modal{width:100%;max-width:720px;border-radius:14px;background:linear-gradient(180deg,var(--card-bg),#fbfbfb);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}
     .modal-header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(0,0,0,0.04);}
-    .modal-header h3{margin:0;font-size:16px;color:#111;}
-    .modal-body{padding:14px 16px;max-height:72vh;overflow:auto;box-sizing:border-box;}
-    .modal-body::-webkit-scrollbar{width:8px;}
-    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
-    .field label{font-weight:700;font-size:13px;color:#222;}
-    .field input[type="text"], .field input[type="number"], .field input[type="password"], .field select, .field textarea, .field input[type="color"]{
-      padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);font-size:14px;box-sizing:border-box;background:#fff;
-    }
-    .row-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;}
-    .btn-primary{background:var(--chart-color);color:#fff;border:0;padding:10px 12px;border-radius:10px;font-weight:800;cursor:pointer;}
-    .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:10px 12px;border-radius:10px;cursor:pointer;}
-    .muted{color:var(--muted);font-size:13px;}
-    .small-note{font-size:12px;color:#444;margin-top:6px;}
-    .preview-swatch{width:36px;height:36px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);display:inline-block;vertical-align:middle;margin-left:8px;}
-    .bg-option{display:inline-block;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);cursor:pointer;margin:6px;min-width:120px;text-align:center;font-size:13px;}
-    .bg-option.active{outline:3px solid rgba(0,0,0,0.06);transform:scale(1.02);}
-    .bg-sample{height:56px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);margin-top:8px;}
-    .login-backdrop{position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55));display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
-    .login-card{width:100%;max-width:420px;background:var(--card-bg);padding:18px;border-radius:14px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.06);}
-    .login-card h2{margin:0 0 8px 0;font-size:20px;}
-    @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:360px !important;} .botones{grid-template-columns:1fr 1fr;} }
-  </style>
-</head>
-<body data-style="default">
-  <div class="contenedor" id="appRoot" aria-hidden="true">
-    <div class="top-bar">
-      SCHOOLCOIN
-      <div class="top-actions">
-        <button id="settingsBtn" class="icon-btn" title="Configuración">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.6A3.4 3.4 0 1 0 12 15.4 3.4 3.4 0 0 0 12 8.6zm8.1 3.4c0-.6-.1-1.2-.2-1.8l2.1-1.6-2-3.5-2.5.6c-.5-.4-1-.7-1.6-1L14 1.5h-4l-.9 2.2c-.6.2-1.1.6-1.6 1L4.9 4.7 2.9 8.2l2.1 1.6c-.1.6-.2 1.2-.2 1.8s.1 1.2.2 1.8L2.9 15.8l2 3.5 2.5-.6c.5.4 1 .7 1.6 1L10 22.5h4l.9-2.2c.6-.2 1.1-.6 1.6-1l2.5.6 2-3.5-2.1-1.6c.1-.6.2-1.2.2-1.8z"/></svg>
-        </button>
-      </div>
-    </div>
-
-    <div class="header">IES-SchoolCoin</div>
-
-    <div class="row" style="align-items:center;">
-      <div style="flex:0 0 160px; text-align:center;">
-        <div style="width:84px;height:84px;margin:8px auto;"><img src="LOGO.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;"></div>
-        <div id="valorDisplay" style="font-weight:900;font-size:28px;margin-top:6px;text-align:center;">0.000 €</div>
-      </div>
-
-      <div class="col">
-        <div style="font-weight:700;margin-bottom:6px;">Gráfica</div>
-        <div class="chart-wrap"><canvas id="grafica"></canvas></div>
-      </div>
-    </div>
-
-    <div class="botones" style="margin-top:14px;">
-      <div class="boton" id="btnEnviar">Enviar</div>
-      <div class="boton" id="btnIngresos">Ingresos</div>
-      <div class="boton" id="btnCambiar">Cambiar</div>
-      <div class="boton" id="btnCuenta">Mi cuenta</div>
-    </div>
-
-    <div style="margin-top:12px;display:flex;gap:8px;">
-      <button class="control-btn" id="pauseBtn">Pausar actualizaciones</button>
-      <button class="control-btn" id="addSample">Añadir valor ahora</button>
-    </div>
-  </div>
-
-  <!-- Login overlay -->
-  <div id="loginOverlay" class="login-backdrop" role="dialog" aria-modal="true">
-    <div class="login-card" role="document">
-      <h2>Iniciar sesión</h2>
-      <div class="login-note">Introduce tu nombre, apellidos y contraseña para acceder a la app.</div>
-      <div class="field"><label>Nombre</label><input id="loginName" type="text" placeholder="Nombre"></div>
-      <div class="field"><label>Apellidos</label><input id="loginSurname" type="text" placeholder="Apellidos"></div>
-      <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Contraseña"></div>
-      <div id="loginError" class="error" style="display:none;">Rellena todos los campos para continuar.</div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-        <button id="loginBtn" class="btn-primary">Entrar</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-
-  <script>
-    /* ---------- Auth UI (same as before) ---------- */
-    const loginOverlay = document.getElementById('loginOverlay');
-    const appRoot = document.getElementById('appRoot');
-    const loginBtn = document.getElementById('loginBtn');
-    const loginError = document.getElementById('loginError');
-
-    function isLoggedIn(){ try { return sessionStorage.getItem('schoolcoin_user') !== null; } catch(e){ return false; } }
-    function showAppAfterLogin(){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); }
-    function saveSession(name, surname){ const user = { name: name.trim(), surname: surname.trim(), loggedAt: new Date().toISOString() }; try { sessionStorage.setItem('schoolcoin_user', JSON.stringify(user)); } catch(e){} }
-
-    if(isLoggedIn()){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); } else { loginOverlay.style.display = 'flex'; appRoot.setAttribute('aria-hidden','true'); }
-
-    loginBtn.addEventListener('click', () => {
-      const name = document.getElementById('loginName').value || '';
-      const surname = document.getElementById('loginSurname').value || '';
-      const pass = document.getElementById('loginPass').value || '';
-      if(!name.trim() || !surname.trim() || !pass.trim()){ loginError.style.display = 'block'; return; }
-      loginError.style.display = 'none';
-      saveSession(name, surname);
-      showAppAfterLogin();
-    });
-
-    /* ---------- Account code persisted ---------- */
-    function generateSpanishStyleAccountCode() { const prefix = 'IES'; let digits = ''; for (let i = 0; i < 8; i++) digits += Math.floor(Math.random() * 10); return prefix + digits; }
-    function getOrCreateAccountCode() { const key = 'schoolcoin_account_code'; try { const stored = localStorage.getItem(key); if (stored && /^IES\d{8}$/.test(stored)) return stored; const code = generateSpanishStyleAccountCode(); localStorage.setItem(key, code); return code; } catch (e) { return generateSpanishStyleAccountCode(); } }
-    const accountCode = getOrCreateAccountCode();
-
-    /* ---------- Preferences: chart color, background color/style ---------- */
-    const PREFS_KEY = 'schoolcoin_prefs_v2';
-    function getSavedPrefs(){ try { const raw = localStorage.getItem(PREFS_KEY); return raw ? JSON.parse(raw) : null; } catch(e){ return null; } }
-    function savePrefs(p){ try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch(e){} }
-    function applyPrefs(p){
-      if(!p) return;
-      // chart color
-      if(p.chartColor){
-        document.documentElement.style.setProperty('--chart-color', p.chartColor);
-        // update dataset color if chart exists
-        if(window.chartInstance && chartInstance.data && chartInstance.data.datasets && chartInstance.data.datasets[0]){
-          chartInstance.data.datasets[0].borderColor = p.chartColor;
-          // fill color: semi-transparent version
-          const fill = hexToRgba(p.chartColor, 0.10);
-          chartInstance.data.datasets[0].backgroundColor = fill;
-          chartInstance.update('none');
-        }
-      }
-      // background: either simple color or style object
-      if(p.bgStyle){
-        applyBackgroundStyle(p.bgStyle, p.bgColor || '');
-      } else if(p.bgColor){
-        document.documentElement.style.setProperty('--app-bg', p.bgColor);
-        document.body.style.background = p.bgColor;
-      }
-      // style variant
-      if(p.style) document.body.setAttribute('data-style', p.style);
-      // font
-      if(p.font === 'system') document.documentElement.style.setProperty('--font-family', 'system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial');
-      else document.documentElement.style.setProperty('--font-family', 'Inter, Arial, sans-serif');
-    }
-
-    function hexToRgba(hex, alpha){
-      if(!hex) return `rgba(11,138,62,${alpha})`;
-      const h = hex.replace('#','');
-      const bigint = parseInt(h.length===3 ? h.split('').map(c=>c+c).join('') : h, 16);
-      const r = (bigint >> 16) & 255;
-      const g = (bigint >> 8) & 255;
-      const b = bigint & 255;
-      return `rgba(${r},${g},${b},${alpha})`;
-    }
-
-    function applyBackgroundStyle(styleId, baseColor){
-      // styleId: 'solid', 'gradient-sun', 'radial-soft', 'diagonal-stripes', 'repeating-dots', 'noise-subtle'
-      const root = document.documentElement;
-      switch(styleId){
-        case 'solid':
-          document.body.style.background = baseColor || getComputedStyle(root).getPropertyValue('--app-bg');
-          break;
-        case 'gradient-sun':
-          document.body.style.background = `linear-gradient(180deg, ${baseColor || '#fff7d6'}, ${baseColor ? shadeColor(baseColor, -18) : '#f7d54a'})`;
-          break;
-        case 'radial-soft':
-          document.body.style.background = `radial-gradient(circle at 10% 20%, ${baseColor || '#fff'} 0%, ${baseColor ? shadeColor(baseColor, -10) : '#f7d54a'} 60%, ${baseColor ? shadeColor(baseColor, -25) : '#f0c93a'} 100%)`;
-          break;
-        case 'diagonal-stripes':
-          // subtle diagonal stripes using repeating-linear-gradient
-          document.body.style.background = `repeating-linear-gradient(135deg, ${baseColor || '#fff7d6'} 0 8px, ${baseColor ? shadeColor(baseColor, -6) : '#f7e7a0'} 8px 16px)`;
-          break;
-        case 'repeating-dots':
-          // CSS radial-gradient dots pattern
-          document.body.style.background = `radial-gradient(circle at 10px 10px, ${baseColor || '#fff'} 2px, transparent 3px), ${baseColor || '#fff'}`;
-          document.body.style.backgroundSize = '40px 40px';
-          break;
-        case 'noise-subtle':
-          // subtle noise via SVG data URI (lightweight)
-          const color = baseColor || '#fff7d6';
-          const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.8' numOctaves='1' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' fill='${color}'/><rect width='100%' height='100%' filter='url(#n)' opacity='0.03'/></svg>`);
-          document.body.style.background = `url("data:image/svg+xml;utf8,${svg}")`;
-          document.body.style.backgroundSize = 'cover';
-          break;
-        default:
-          document.body.style.background = baseColor || getComputedStyle(root).getPropertyValue('--app-bg');
-      }
-    }
-
-    // small helper to darken/lighten hex
-    function shadeColor(hex, percent){
-      if(!hex) return hex;
-      let h = hex.replace('#','');
-      if(h.length===3) h = h.split('').map(c=>c+c).join('');
-      const num = parseInt(h,16);
-      let r = (num >> 16) + percent;
-      let g = ((num >> 8) & 0x00FF) + percent;
-      let b = (num & 0x0000FF) + percent;
-      r = Math.max(Math.min(255, r), 0);
-      g = Math.max(Math.min(255, g), 0);
-      b = Math.max(Math.min(255, b), 0);
-      return '#' + (r<<16 | g<<8 | b).toString(16).padStart(6,'0');
-    }
-
-    /* ---------- Load saved prefs on start ---------- */
-    applyPrefs(getSavedPrefs());
-
-    /* ---------- Market simulation and chart ---------- */
-    const UPDATE_INTERVAL_MS = 5000;
-    const PRESET_POINTS = 600;
-    const MIN = 0.05, MAX = 0.50, BASE = 0.275, MAX_STEP_PER_TICK = 0.0009;
-
-    function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-    function formatDynamicDecimals(num){ if (!isFinite(num)) return String(num); const s = num.toFixed(8).replace(/0+$/,'').replace(/\.$/,''); const parts = s.split('.'); if(parts.length === 1) return parts[0]; const frac = parts[1]; if(frac.length <= 3) return parts[0] + '.' + frac.padEnd(3,'0'); return parts[0] + '.' + frac; }
-
-    function nextValue(prev){
-      const meanReversion = (BASE - prev) * 0.10;
-      const baseNoise = (Math.random() - 0.5) * 0.0022;
-      let candidate = prev + meanReversion + baseNoise;
-      if(Math.random() < 0.04){ const jumpPct = (Math.random() * 2 - 1) * 0.02; candidate = candidate * (1 + jumpPct); }
-      const delta = candidate - prev;
-      const limitedDelta = clamp(delta, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
-      const next = clamp(prev + limitedDelta, MIN, MAX);
-      return Number(next.toFixed(6));
-    }
-
-    function generateInitialSeries(){
-      const labels = []; const data = [];
-      const nowAligned = Math.floor(Date.now() / UPDATE_INTERVAL_MS) * UPDATE_INTERVAL_MS;
-      const start = nowAligned - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
-      let val = BASE + (Math.random() - 0.5) * 0.04;
-      for(let i=0;i<PRESET_POINTS;i++){ labels.push(new Date(start + i * UPDATE_INTERVAL_MS)); val = nextValue(val); data.push(Number(val.toFixed(6))); }
-      return {labels, data};
-    }
-
-    const initial = generateInitialSeries();
-    const masterLabels = initial.labels.slice();
-    const masterValues = initial.data.slice();
-    const TRANSACTIONS = [];
-
-    const ctx = document.getElementById('grafica').getContext('2d');
-    const chart = new Chart(ctx, {
-      type: 'line',
-      data: {
-        labels: masterLabels.slice(),
-        datasets: [{
-          label: 'SCHOOLCOIN',
-          data: masterValues.slice(),
-          borderColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e',
-          borderWidth: 1,
-          backgroundColor: hexToRgba(getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e', 0.10),
-          pointRadius: (ctx) => ctx.active ? 6 : 0,
-          pointHoverRadius: 6,
-          pointHitRadius: 12,
-          tension: 0.16,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: { duration: 0 },
-        interaction: { mode: 'nearest', intersect: false },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            enabled: true,
-            callbacks: {
-              label: function(c){
-                const v = Number(c.parsed.y);
-                const date = c.label instanceof Date ? new Date(c.label).toLocaleString('es-ES') : c.label;
-                return ` ${formatDynamicDecimals(v)} € — ${date}`;
-              }
-            }
-          }
-        },
-        scales: {
-          x: { type: 'time', time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } }, grid: { display: false }, ticks: { display: false } },
-          y: { beginAtZero: false, grid: { display: true, color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#333', callback: v => Number(Number(v).toFixed(2)) + ' €' } }
-        }
-      }
-    });
-    window.chartInstance = chart;
-
-    function adjustYAxisToPrice(currentPrice){
-      const span = Math.max(0.02, Math.abs(currentPrice) * 0.12);
-      const min = clamp(currentPrice - span, MIN, MAX);
-      const max = clamp(currentPrice + span, MIN, MAX);
-      const margin = (max - min) * 0.06;
-      chart.options.scales.y.min = clamp(min - margin, MIN, MAX);
-      chart.options.scales.y.max = clamp(max + margin, MIN, MAX);
-      chart.update('none');
-    }
-
-    const valorDisplay = document.getElementById('valorDisplay');
-    function updateMainDisplay(value){
-      valorDisplay.textContent = formatDynamicDecimals(value) + ' €';
-      const prev = chart.data.datasets[0].data.length > 1 ? chart.data.datasets[0].data[chart.data.datasets[0].data.length - 2] : value;
-      const diff = value - prev;
-      valorDisplay.style.color = diff > 0 ? getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e' : (diff < 0 ? 'var(--danger)' : 'var(--text)');
-      adjustYAxisToPrice(value);
-    }
-
-    function clearActiveSelection(){ try{ chart.setActiveElements([]); chart.tooltip.setActiveElements([], {x:0,y:0}); chart.update('none'); }catch(e){} }
-    function highlightPoint(index){
-      if(index == null) return;
-      clearActiveSelection();
-      const active = [{datasetIndex:0, index}];
-      chart.setActiveElements(active);
-      const x = chart.scales.x.getPixelForValue(chart.data.labels[index]);
-      const y = chart.scales.y.getPixelForValue(chart.data.datasets[0].data[index]);
-      chart.tooltip.setActiveElements(active, {x,y});
-      chart.update('none');
-      const val = chart.data.datasets[0].data[index];
-      valorDisplay.textContent = formatDynamicDecimals(Number(val)) + ' €';
-    }
-    window.highlightPoint = highlightPoint;
-
-    let paused = false;
-    let updateTimer = null;
-
-    function pushNewMasterPoint(nextDate, newMasterVal){
-      clearActiveSelection();
-      masterLabels.push(nextDate);
-      masterValues.push(newMasterVal);
-      if(masterLabels.length > PRESET_POINTS){ masterLabels.shift(); masterValues.shift(); }
-
-      const lastSmoothed = chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1];
-      const raw = newMasterVal + (Math.random() - 0.5) * 0.0008;
-      const alpha = 0.10;
-      let smoothed = lastSmoothed * (1 - alpha) + raw * alpha;
-
-      const delta = smoothed - lastSmoothed;
-      const limitedDelta = clamp(delta, -MAX_STEP_PER_TICK, MAX_STEP_PER_TICK);
-      smoothed = clamp(lastSmoothed + limitedDelta, MIN, MAX);
-
-      chart.data.labels.push(nextDate);
-      chart.data.datasets[0].data.push(Number(smoothed.toFixed(6)));
-      if(chart.data.labels.length > PRESET_POINTS){ chart.data.labels.shift(); chart.data.datasets[0].data.shift(); }
-      chart.update('none');
-
-      setTimeout(() => clearActiveSelection(), 20);
-      updateMainDisplay(Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]));
-    }
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - App</title>
-  <style>
-    :root{
-      --app-bg: #f7d54a;
-      --chart-color: #0b8a3e;
-      --muted: #666;
-      --card-bg: #fff;
-      --danger: #c62828;
-      --shadow: 0 8px 28px rgba(0,0,0,0.12);
-      --text: #222;
-      --font-family: Inter, Arial, sans-serif;
-    }
-    body[data-style="minimal"]{ --shadow:none; --font-family:system-ui, -apple-system, "Segoe UI", Roboto, Arial; }
-    body[data-style="modern"]{ --shadow:0 12px 36px rgba(0,0,0,0.12); }
-    html,body{height:100%;margin:0;font-family:var(--font-family);background:var(--app-bg);color:var(--text);-webkit-font-smoothing:antialiased;transition:background 300ms ease;}
-    .contenedor{width:100%;max-width:980px;margin:0 auto;padding:18px;box-sizing:border-box;}
-    .top-bar{background:#000;color:#fff;padding:12px;font-weight:800;text-align:center;border-radius:10px;position:relative;}
-    .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;}
-    .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
-    .col{flex:1;min-width:300px;}
-    .chart-wrap{margin-top:14px;border-radius:12px;padding:6px;background:transparent;}
-    canvas{width:100% !important;height:420px !important;display:block;border-radius:8px;background:transparent;}
-    .botones{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
-    .boton{background:var(--chart-color);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;box-shadow:var(--shadow);border:0;}
-    .control-btn{background:#fff;border:1px solid rgba(0,0,0,0.08);padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700;}
-    .top-actions{position:absolute;right:12px;top:8px;display:flex;gap:8px;align-items:center;}
-    .icon-btn{background:transparent;border:0;color:#fff;cursor:pointer;padding:6px;border-radius:8px;font-weight:700;}
-    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
-    .modal{width:100%;max-width:720px;border-radius:14px;background:linear-gradient(180deg,var(--card-bg),#fbfbfb);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}
-    .modal-header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(0,0,0,0.04);}
-    .modal-header h3{margin:0;font-size:16px;color:#111;}
+    .modal-header h3{margin:0;font-size:16px;color:var(--text);}
     .modal-body{padding:14px 16px;max-height:72vh;overflow:auto;box-sizing:border-box;}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
-    .field label{font-weight:700;font-size:13px;color:#222;}
+    .field label{font-weight:700;font-size:13px;color:var(--text);}
     .field input[type="text"], .field input[type="number"], .field input[type="password"], .field select, .field input[type="color"]{padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);font-size:14px;background:#fff;}
     .row-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;}
     .btn-primary{background:var(--chart-color);color:#fff;border:0;padding:10px 12px;border-radius:10px;font-weight:800;cursor:pointer;}
     .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:10px 12px;border-radius:10px;cursor:pointer;}
     .muted{color:var(--muted);font-size:13px;}
-    .small-note{font-size:12px;color:#444;margin-top:6px;}
+    .small-note{font-size:12px;color:var(--muted);margin-top:6px;}
     .bg-btn{padding:8px 10px;border-radius:8px;border:1px solid rgba(0,0,0,0.06);background:#fff;cursor:pointer;}
     .bg-btn[aria-pressed="true"]{outline:3px solid rgba(0,0,0,0.06);transform:scale(1.02);}
+
+    /* ---------------- Login ---------------- */
     .login-backdrop{position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55));display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
     .login-card{width:100%;max-width:420px;background:var(--card-bg);padding:18px;border-radius:14px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.06);}
+    .login-card h2{margin:0 0 8px 0;font-size:20px;color:var(--text);}
+
     @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:360px !important;} .botones{grid-template-columns:1fr 1fr;} }
   </style>
 </head>
-<body data-style="default">
+<body>
   <div class="contenedor" id="appRoot" aria-hidden="true">
     <div class="top-bar">
       SCHOOLCOIN
       <div class="top-actions">
-        <button id="settingsBtn" class="icon-btn" title="Configuración" aria-label="Configuración">
+        <button id="settingsBtn" class="icon-btn" title="Apariencia" aria-label="Apariencia">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.6A3.4 3.4 0 1 0 12 15.4 3.4 3.4 0 0 0 12 8.6zm8.1 3.4c0-.6-.1-1.2-.2-1.8l2.1-1.6-2-3.5-2.5.6c-.5-.4-1-.7-1.6-1L14 1.5h-4l-.9 2.2c-.6.2-1.1.6-1.6 1L4.9 4.7 2.9 8.2l2.1 1.6c-.1.6-.2 1.2-.2 1.8s.1 1.2.2 1.8L2.9 15.8l2 3.5 2.5-.6c.5.4 1 .7 1.6 1L10 22.5h4l.9-2.2c.6-.2 1.1-.6 1.6-1l2.5.6 2-3.5-2.1-1.6c.1-.6.2-1.2.2-1.8z"/></svg>
         </button>
       </div>
@@ -462,7 +92,7 @@
       </div>
 
       <div class="col">
-        <div style="font-weight:700;margin-bottom:6px;">Gráfica</div>
+        <div style="font-weight:700;margin-bottom:6px;color:var(--text);">Gráfica</div>
         <div class="chart-wrap"><canvas id="grafica"></canvas></div>
       </div>
     </div>
@@ -484,11 +114,11 @@
   <div id="loginOverlay" class="login-backdrop" role="dialog" aria-modal="true">
     <div class="login-card" role="document">
       <h2>Iniciar sesión</h2>
-      <div class="login-note">Introduce tu nombre, apellidos y contraseña para acceder a la app.</div>
+      <div class="login-note" style="color:var(--muted);">Introduce tu nombre, apellidos y contraseña para acceder a la app.</div>
       <div class="field"><label>Nombre</label><input id="loginName" type="text" placeholder="Nombre"></div>
       <div class="field"><label>Apellidos</label><input id="loginSurname" type="text" placeholder="Apellidos"></div>
       <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Contraseña"></div>
-      <div id="loginError" class="error" style="display:none;">Rellena todos los campos para continuar.</div>
+      <div id="loginError" class="error" style="display:none;color:var(--danger);">Rellena todos los campos para continuar.</div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
         <button id="loginBtn" class="btn-primary">Entrar</button>
       </div>
@@ -500,7 +130,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    /* ---------- Auth gate ---------- */
+    /* ---------------- Auth gate ---------------- */
     const loginOverlay = document.getElementById('loginOverlay');
     const appRoot = document.getElementById('appRoot');
     const loginBtn = document.getElementById('loginBtn');
@@ -522,12 +152,12 @@
       showAppAfterLogin();
     });
 
-    /* ---------- Account code ---------- */
+    /* ---------------- Account code ---------------- */
     function generateSpanishStyleAccountCode() { const prefix = 'IES'; let digits = ''; for (let i = 0; i < 8; i++) digits += Math.floor(Math.random() * 10); return prefix + digits; }
     function getOrCreateAccountCode() { const key = 'schoolcoin_account_code'; try { const stored = localStorage.getItem(key); if (stored && /^IES\d{8}$/.test(stored)) return stored; const code = generateSpanishStyleAccountCode(); localStorage.setItem(key, code); return code; } catch (e) { return generateSpanishStyleAccountCode(); } }
     const accountCode = getOrCreateAccountCode();
 
-    /* ---------- Modal helpers ---------- */
+    /* ---------------- Modal helpers ---------------- */
     function openModal(contentHtml){
       const bd = document.createElement('div');
       bd.className = 'modal-backdrop';
@@ -538,7 +168,7 @@
     }
     function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
-    /* ---------- Market simulation & chart ---------- */
+    /* ---------------- Market simulation & chart ---------------- */
     const UPDATE_INTERVAL_MS = 5000;
     const PRESET_POINTS = 600;
     const MIN = 0.05, MAX = 0.50, BASE = 0.275, MAX_STEP_PER_TICK = 0.0009;
@@ -691,7 +321,7 @@
     scheduleNextUpdate();
     updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
 
-    /* ---------- Transactions (botones funcionales) ---------- */
+    /* ---------------- Transactions (botones funcionales) ---------------- */
     function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
     document.getElementById('btnEnviar').addEventListener('click', () => {
@@ -727,7 +357,7 @@
           <div class="field"><label>Origen</label><input id="i_from" type="text" placeholder="Usuario o fuente"></div>
           <div class="field"><label>Cantidad (SC)</label><input id="i_amt" type="number" step="0.01" placeholder="10.00"></div>
           <div class="field"><label>Código de verificación del centro</label><input id="i_code" type="password" placeholder="Introduce el código (oculto)"></div>
-          <div id="i_error" class="error" style="display:none;">Código incorrecto</div>
+          <div id="i_error" class="error" style="display:none;color:var(--danger);">Código incorrecto</div>
           <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
           <div class="row-actions"><button class="btn-ghost" id="i_cancel">Cancelar</button><button class="btn-primary" id="i_ok">Confirmar</button></div>
         </div>`;
@@ -799,154 +429,103 @@
       bd.querySelector('#closeAccount').addEventListener('click', () => closeModal(bd));
     });
 
-    /* ---------- Personalización (botón Configuración) ---------- */
-    const PREFS_KEY = 'schoolcoin_prefs_v3';
-    function getSavedPrefs(){ try { const raw = localStorage.getItem(PREFS_KEY); return raw ? JSON.parse(raw) : null; } catch(e){ return null; } }
-    function savePrefs(p){ try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch(e){} }
-    function clampHex(hex){ return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hex) ? hex : '#0b8a3e'; }
-    function hexToRgba(hex, alpha){ if(!hex) return `rgba(11,138,62,${alpha})`; const h = hex.replace('#',''); const full = h.length === 3 ? h.split('').map(c=>c+c).join('') : h; const bigint = parseInt(full, 16); const r = (bigint >> 16) & 255; const g = (bigint >> 8) & 255; const b = bigint & 255; return `rgba(${r},${g},${b},${alpha})`; }
-    function shadeColor(hex, amount){ if(!hex) return hex; let h = hex.replace('#',''); if(h.length===3) h = h.split('').map(c=>c+c).join(''); const num = parseInt(h,16); let r = (num >> 16) + amount; let g = ((num >> 8) & 0x00FF) + amount; let b = (num & 0x0000FF) + amount; r = Math.max(Math.min(255, r), 0); g = Math.max(Math.min(255, g), 0); b = Math.max(Math.min(255, b), 0); return '#' + (r<<16 | g<<8 | b).toString(16).padStart(6,'0'); }
+    /* ---------------- Apariencia: presets estéticos ---------------- */
+    const PRESETS = [
+      { id: 'sunny', name: 'Sunny Warm', bgPrimary: '#FFF7D6', bgSecondary: '#F7D54A', chart: '#0b8a3e' },
+      { id: 'ocean', name: 'Ocean Breeze', bgPrimary: '#E6F7FF', bgSecondary: '#6EC1E4', chart: '#0a6fa0' },
+      { id: 'lavender', name: 'Lavender', bgPrimary: '#F3E8FF', bgSecondary: '#CFA3FF', chart: '#6b3fa0' },
+      { id: 'mint', name: 'Mint', bgPrimary: '#E9FFF4', bgSecondary: '#7FE3B2', chart: '#0a8a5a' },
+      { id: 'slate', name: 'Slate', bgPrimary: '#F4F6F8', bgSecondary: '#C8D3DD', chart: '#2b4a5a' },
+      { id: 'midnight', name: 'Midnight', bgPrimary: '#0f1724', bgSecondary: '#1f2a44', chart: '#7fb3ff' }
+    ];
 
-    function applyBackgroundStyle(styleId, primary, secondary){
-      primary = clampHex(primary || '#f7d54a');
-      secondary = clampHex(secondary || shadeColor(primary, -18));
-      switch(styleId){
-        case 'solid': document.body.style.background = primary; document.body.style.backgroundSize = ''; break;
-        case 'gradient': document.body.style.background = `linear-gradient(180deg, ${primary} 0%, ${secondary} 100%)`; document.body.style.backgroundSize = ''; break;
-        case 'radial': document.body.style.background = `radial-gradient(circle at 10% 20%, ${primary} 0%, ${secondary} 70%)`; document.body.style.backgroundSize = ''; break;
-        case 'stripes': document.body.style.background = `repeating-linear-gradient(135deg, ${primary} 0 10px, ${secondary} 10px 20px)`; document.body.style.backgroundSize = ''; break;
-        case 'dots': document.body.style.background = `radial-gradient(circle, ${secondary} 2px, transparent 3px), ${primary}`; document.body.style.backgroundSize = '24px 24px'; break;
-        case 'noise': const svg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='1' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' fill='${primary}'/><rect width='100%' height='100%' filter='url(#n)' opacity='0.03'/></svg>`); document.body.style.background = `url("data:image/svg+xml;utf8,${svg}")`; document.body.style.backgroundSize = 'cover'; break;
-        default: document.body.style.background = primary;
-      }
+    function hexToRgb(hex) {
+      const h = hex.replace('#','');
+      const full = h.length === 3 ? h.split('').map(c=>c+c).join('') : h;
+      const num = parseInt(full, 16);
+      return { r: (num >> 16) & 255, g: (num >> 8) & 255, b: num & 255 };
+    }
+    function luminanceFromHex(hex) {
+      const { r, g, b } = hexToRgb(hex);
+      const srgb = [r,g,b].map(v => v/255).map(c => c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4));
+      return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+    }
+    function pickTextColorForBackground(primaryHex, secondaryHex) {
+      const lum = (luminanceFromHex(primaryHex) + luminanceFromHex(secondaryHex)) / 2;
+      return lum < 0.45 ? { text: '#ffffff', muted: 'rgba(255,255,255,0.8)' } : { text: '#0b0b0b', muted: '#444444' };
+    }
+    function hexToRgba(hex, alpha) {
+      const h = hex.replace('#','');
+      const full = h.length === 3 ? h.split('').map(c=>c+c).join('') : h;
+      const num = parseInt(full, 16);
+      const r = (num >> 16) & 255;
+      const g = (num >> 8) & 255;
+      const b = num & 255;
+      return `rgba(${r},${g},${b},${alpha})`;
     }
 
-    function applyPrefs(p){
-      if(!p) return;
-      if(p.chartColor){
-        const c = clampHex(p.chartColor);
-        document.documentElement.style.setProperty('--chart-color', c);
-        if(window.chartInstance && chartInstance.data && chartInstance.data.datasets && chartInstance.data.datasets[0]){
-          chartInstance.data.datasets[0].borderColor = c;
-          chartInstance.data.datasets[0].backgroundColor = hexToRgba(c, 0.10);
-          chartInstance.update('none');
-        }
+    function applyPreset(preset) {
+      const p = preset.bgPrimary;
+      const s = preset.bgSecondary;
+      document.documentElement.style.setProperty('--app-bg', p);
+      document.body.style.background = `linear-gradient(180deg, ${p} 0%, ${s} 100%)`;
+      document.documentElement.style.setProperty('--chart-color', preset.chart);
+      const colors = pickTextColorForBackground(p, s);
+      document.documentElement.style.setProperty('--text', colors.text);
+      document.documentElement.style.setProperty('--muted', colors.muted);
+      if (window.chartInstance && chartInstance.data && chartInstance.data.datasets && chartInstance.data.datasets[0]) {
+        chartInstance.data.datasets[0].borderColor = preset.chart;
+        chartInstance.data.datasets[0].backgroundColor = hexToRgba(preset.chart, 0.10);
+        chartInstance.update('none');
       }
-      applyBackgroundStyle(p.bgStyle || 'gradient', p.bgPrimary || '#f7d54a', p.bgSecondary || shadeColor(p.bgPrimary || '#f7d54a', -18));
-      if(p.style) document.body.setAttribute('data-style', p.style);
-      if(p.font === 'system') document.documentElement.style.setProperty('--font-family', 'system-ui, -apple-system, "Segoe UI", Roboto, Arial'); else document.documentElement.style.setProperty('--font-family', 'Inter, Arial, sans-serif');
+      // update visible text color immediately
+      document.querySelectorAll('.header, .small-note, .muted, .field label').forEach(el => {
+        el.style.color = colors.text === '#ffffff' ? colors.text : 'var(--text)';
+      });
     }
 
-    function openSettingsModalSimple(){
-      const prefs = getSavedPrefs() || { chartColor: getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e', bgPrimary: '#f7d54a', bgSecondary: shadeColor('#f7d54a', -18), bgStyle: 'gradient', style: document.body.getAttribute('data-style') || 'default', font: 'inter' };
-      const html = `
-        <div class="modal-header"><h3>Personalización</h3></div>
-        <div class="modal-body" style="display:grid;grid-template-columns:1fr 220px;gap:12px;">
-          <div>
-            <div style="font-weight:800;margin-bottom:8px;">Colores</div>
-            <div class="field"><label>Color de la gráfica</label><input id="s_chartColor" type="color" value="${prefs.chartColor}"></div>
-            <div style="font-weight:800;margin-top:10px;margin-bottom:8px;">Fondo (primario / secundario)</div>
-            <div class="field" style="display:flex;gap:8px;align-items:center;">
-              <div style="flex:1;"><label>Primario</label><input id="s_bgPrimary" type="color" value="${prefs.bgPrimary}"></div>
-              <div style="flex:1;"><label>Secundario</label><input id="s_bgSecondary" type="color" value="${prefs.bgSecondary}"></div>
-            </div>
-            <div style="font-weight:800;margin-top:10px;margin-bottom:8px;">Estilo de fondo</div>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;">
-              <button class="bg-btn" data-id="solid">Sólido</button>
-              <button class="bg-btn" data-id="gradient">Degradado</button>
-              <button class="bg-btn" data-id="radial">Radial</button>
-              <button class="bg-btn" data-id="stripes">Rayas</button>
-              <button class="bg-btn" data-id="dots">Puntos</button>
-              <button class="bg-btn" data-id="noise">Ruido</button>
-            </div>
-            <div style="font-weight:800;margin-top:12px;margin-bottom:8px;">Apariencia</div>
-            <div class="field"><label>Estilo</label><select id="s_style"><option value="default">Por defecto</option><option value="minimal">Minimalista</option><option value="modern">Moderno</option></select></div>
-            <div class="field"><label>Tipografía</label><select id="s_font"><option value="inter">Inter / Sans</option><option value="system">Sistema</option></select></div>
-            <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-              <button class="btn-ghost" id="s_cancel">Cancelar</button>
-              <button class="btn-primary" id="s_save">Guardar</button>
-            </div>
-          </div>
-          <div style="border-left:1px solid rgba(0,0,0,0.04);padding-left:12px;">
-            <div style="font-weight:800;margin-bottom:8px;">Previsualización</div>
-            <div id="previewBox" style="border-radius:10px;padding:12px;background:#fff;box-shadow:0 6px 18px rgba(0,0,0,0.04);min-height:220px;display:flex;flex-direction:column;justify-content:center;align-items:center;">
-              <div id="previewTitle" style="font-weight:900;margin-bottom:8px;">SCHOOLCOIN</div>
-              <div id="previewChart" style="width:160px;height:80px;border-radius:8px;background:linear-gradient(90deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02));display:flex;align-items:center;justify-content:center;color:#333;font-weight:700;">Gráfica</div>
-              <div style="margin-top:10px;color:var(--muted);font-size:13px;text-align:center;">Fondo y colores aplicados en la página</div>
-            </div>
-          </div>
-        </div>
-      `;
+    const PRESET_KEY = 'schoolcoin_preset_choice';
+    function savePresetChoice(id) { try { localStorage.setItem(PRESET_KEY, id); } catch(e){} }
+    function loadPresetChoice() { try { const id = localStorage.getItem(PRESET_KEY); return PRESETS.find(p => p.id === id) || PRESETS[0]; } catch(e) { return PRESETS[0]; } }
+
+    function openPresetModal() {
+      const current = loadPresetChoice();
+      let html = `<div class="modal-header"><h3>Apariencia</h3></div><div class="modal-body"><div style="display:flex;gap:12px;flex-wrap:wrap;">`;
+      PRESETS.forEach(p => {
+        const textColor = pickTextColorForBackground(p.bgPrimary,p.bgSecondary).text;
+        html += `
+          <button class="preset-card" data-id="${p.id}" style="flex:1 1 200px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);padding:12px;background:linear-gradient(180deg, ${p.bgPrimary}, ${p.bgSecondary});cursor:pointer;">
+            <div style="font-weight:800;margin-bottom:8px;color:${textColor};">${p.name}</div>
+            <div style="height:36px;border-radius:6px;background:${p.chart};"></div>
+          </button>`;
+      });
+      html += `</div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;"><button class="btn-ghost" id="presetCancel">Cancelar</button><button class="btn-primary" id="presetSave">Guardar</button></div></div>`;
+
       const bd = openModal(html);
-
-      const chartColorEl = bd.querySelector('#s_chartColor');
-      const bgPrimaryEl = bd.querySelector('#s_bgPrimary');
-      const bgSecondaryEl = bd.querySelector('#s_bgSecondary');
-      const styleSelect = bd.querySelector('#s_style');
-      const fontSelect = bd.querySelector('#s_font');
-      const saveBtn = bd.querySelector('#s_save');
-      const cancelBtn = bd.querySelector('#s_cancel');
-      const previewBox = bd.querySelector('#previewBox');
-      const bgBtns = bd.querySelectorAll('.bg-btn');
-
-      let activeBg = prefs.bgStyle || 'gradient';
-      chartColorEl.value = prefs.chartColor;
-      bgPrimaryEl.value = prefs.bgPrimary;
-      bgSecondaryEl.value = prefs.bgSecondary;
-      styleSelect.value = prefs.style || 'default';
-      fontSelect.value = prefs.font || 'inter';
-      bgBtns.forEach(b => { if(b.dataset.id === activeBg) b.setAttribute('aria-pressed','true'); else b.setAttribute('aria-pressed','false'); });
-
-      function updatePreview(){
-        const c = chartColorEl.value;
-        const p = bgPrimaryEl.value;
-        const s = bgSecondaryEl.value;
-        const previewChart = bd.querySelector('#previewChart');
-        previewChart.style.background = hexToRgba(c, 0.12);
-        previewChart.style.border = `2px solid ${c}`;
-        let sampleBg = '';
-        switch(activeBg){
-          case 'solid': sampleBg = p; break;
-          case 'gradient': sampleBg = `linear-gradient(180deg, ${p}, ${s})`; break;
-          case 'radial': sampleBg = `radial-gradient(circle at 10% 20%, ${p}, ${s})`; break;
-          case 'stripes': sampleBg = `repeating-linear-gradient(135deg, ${p} 0 10px, ${s} 10px 20px)`; break;
-          case 'dots': sampleBg = `radial-gradient(circle, ${s} 2px, transparent 3px), ${p}`; break;
-          case 'noise': sampleBg = p; break;
-          default: sampleBg = p;
-        }
-        previewBox.style.background = sampleBg;
-      }
-      updatePreview();
-
-      chartColorEl.addEventListener('input', updatePreview);
-      bgPrimaryEl.addEventListener('input', () => { if(!bd._secondaryEdited) bgSecondaryEl.value = shadeColor(bgPrimaryEl.value, -18); updatePreview(); });
-      bgSecondaryEl.addEventListener('input', () => { bd._secondaryEdited = true; updatePreview(); });
-
-      bgBtns.forEach(b => {
-        b.addEventListener('click', () => {
-          bgBtns.forEach(x => x.setAttribute('aria-pressed','false'));
-          b.setAttribute('aria-pressed','true');
-          activeBg = b.dataset.id;
-          updatePreview();
+      bd.querySelectorAll('.preset-card').forEach(btn => {
+        if (btn.dataset.id === current.id) btn.style.outline = '3px solid rgba(0,0,0,0.06)';
+        btn.addEventListener('click', () => {
+          bd.querySelectorAll('.preset-card').forEach(x => x.style.outline = '');
+          btn.style.outline = '3px solid rgba(0,0,0,0.06)';
+          bd._selected = PRESETS.find(p => p.id === btn.dataset.id);
+          applyPreset(bd._selected);
         });
       });
 
-      saveBtn.addEventListener('click', () => {
-        const newPrefs = { chartColor: chartColorEl.value, bgPrimary: bgPrimaryEl.value, bgSecondary: bgSecondaryEl.value, bgStyle: activeBg, style: styleSelect.value, font: fontSelect.value };
-        savePrefs(newPrefs);
-        applyPrefs(newPrefs);
+      bd._selected = current;
+      bd.querySelector('#presetCancel').addEventListener('click', () => closeModal(bd));
+      bd.querySelector('#presetSave').addEventListener('click', () => {
+        if (bd._selected) { savePresetChoice(bd._selected.id); applyPreset(bd._selected); }
         closeModal(bd);
       });
-
-      cancelBtn.addEventListener('click', () => closeModal(bd));
     }
 
     const settingsBtn = document.getElementById('settingsBtn');
-    if(settingsBtn) settingsBtn.addEventListener('click', openSettingsModalSimple);
+    if (settingsBtn) settingsBtn.addEventListener('click', openPresetModal);
 
-    (function(){ const p = getSavedPrefs(); if(p) applyPrefs(p); else applyBackgroundStyle('gradient', '#f7d54a', shadeColor('#f7d54a', -18)); })();
+    (function(){ const p = loadPresetChoice(); applyPreset(p); })();
 
-    /* ---------- Pause / add sample ---------- */
+    /* ---------------- Pause / add sample ---------------- */
     document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
@@ -960,7 +539,7 @@
       pushNewMasterPoint(nextTime, nv);
     });
 
-    /* Observe style changes to update chart color live */
+    /* Observe chart color var changes to update dataset */
     const observer = new MutationObserver(() => {
       const accent = getComputedStyle(document.documentElement).getPropertyValue('--chart-color').trim() || '#0b8a3e';
       chart.data.datasets[0].borderColor = accent;
