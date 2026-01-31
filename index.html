@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>SCHOOLCOIN - Historial grande con timestamps</title>
+  <title>SCHOOLCOIN - Corregido</title>
 
   <style>
     :root{
@@ -12,38 +12,22 @@
       --btn: #8b5e3c;
       --text: #222;
     }
-
     html,body{height:100%; margin:0; font-family:Inter, Arial, sans-serif; background:var(--bg); color:var(--text);}
-    .contenedor{
-      width:100%;
-      max-width:420px;
-      margin:0 auto;
-      padding:16px;
-      box-sizing:border-box;
-    }
-
+    .contenedor{width:100%; max-width:420px; margin:0 auto; padding:16px; box-sizing:border-box;}
     .top-bar{background:var(--top); color:#fff; padding:10px; font-weight:700; text-align:center; border-radius:8px;}
     .header{margin-top:14px; font-size:22px; font-weight:800; text-align:center;}
     .coin-logo{width:96px; height:96px; margin:14px auto;}
     .coin-logo img{width:100%; height:100%; object-fit:contain; display:block;}
-
     .valor-actual{font-size:30px; font-weight:800; margin-top:8px;}
     .meta-line{display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:6px; font-size:13px; color:#333;}
-
     .chart-wrap{width:100%; margin-top:14px; background:transparent; border-radius:12px; padding:6px 6px 2px 6px;}
     canvas{width:100% !important; height:320px !important; display:block;}
-
     .botones{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;}
     .boton{background:var(--btn); color:#fff; padding:12px; border-radius:10px; font-weight:700; text-align:center; cursor:pointer; user-select:none;}
-
     .info-box{margin-top:12px; background:rgba(0,0,0,0.06); padding:10px; border-radius:8px; font-size:13px;}
     .controls{display:flex; gap:8px; margin-top:10px; justify-content:center;}
     .control-btn{background:#fff; border:1px solid #ccc; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:600;}
-
-    @media (max-width:400px){
-      .botones{grid-template-columns:1fr;}
-      canvas{height:260px !important;}
-    }
+    @media (max-width:400px){ .botones{grid-template-columns:1fr;} canvas{height:260px !important;} }
   </style>
 </head>
 <body>
@@ -51,9 +35,7 @@
     <div class="top-bar">SCHOOLCOIN</div>
     <div class="header">IES-SchoolCoin</div>
 
-    <div class="coin-logo">
-      <img src="LOGO.png" alt="Logo SCHOOLCOIN">
-    </div>
+    <div class="coin-logo"><img src="LOGO.png" alt="Logo SCHOOLCOIN"></div>
 
     <div class="valor-actual" id="valorActual">0.00 €</div>
     <div class="meta-line">
@@ -61,9 +43,7 @@
       <div id="timestamp">—</div>
     </div>
 
-    <div class="chart-wrap">
-      <canvas id="grafica"></canvas>
-    </div>
+    <div class="chart-wrap"><canvas id="grafica"></canvas></div>
 
     <div class="botones">
       <div class="boton" id="btnEnviar">Enviar</div>
@@ -77,9 +57,7 @@
       <button class="control-btn" id="addSample">Añadir valor ahora</button>
     </div>
 
-    <div class="info-box" id="infoBox">
-      Toca o haz clic en un punto para ver su fecha, hora y valor.
-    </div>
+    <div class="info-box" id="infoBox">Toca o haz clic en un punto para ver su fecha, hora y valor.</div>
   </div>
 
   <!-- Chart.js + adaptador de fechas -->
@@ -88,73 +66,62 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    // ---------- CONFIGURACIÓN ----------
-    // Intervalo en ms entre puntos futuros (mantén igual en todos los dispositivos)
-    const UPDATE_INTERVAL_MS = 5000; // 5 segundos (muestra segundos en timestamp)
-    // "Un mogollón" de puntos: ajusta según rendimiento. 1200 es razonable.
-    const PRESET_POINTS = 1200;
+    // CONFIG
+    const UPDATE_INTERVAL_MS = 5000;
+    const PRESET_POINTS = 1200; // muchos puntos
     const BASE = 0.175;
     const MIN = 0.15;
     const MAX = 0.20;
 
-    // ---------- UTILIDADES ----------
-    function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
-    function formatMoney(v){ return Number(v).toFixed(2) + ' €'; }
-    function formatDate(d){
-      return d.toLocaleString('es-ES', {year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit'});
-    }
+    // UTIL
+    function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
+    function formatMoney(v){return Number(v).toFixed(2)+' €';}
+    function formatDate(d){return d.toLocaleString('es-ES',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});}
 
-    // Random walk con mean reversion
     function nextValue(prev){
       const meanReversion = (BASE - prev) * 0.08;
       const noise = (Math.random() - 0.5) * 0.006;
       let v = prev + meanReversion + noise;
-      v = clamp(v, MIN, MAX);
-      return Number(v.toFixed(4));
+      return Number(clamp(v,MIN,MAX).toFixed(4));
     }
 
-    // ---------- GENERAR MUCHOS VALORES DETERMINÍSTICOS ----------
-    // Alineamos "now" al múltiplo del intervalo para que todos los clientes calculen las mismas etiquetas
+    // GENERAR MUCHOS VALORES CON TIMESTAMPS EN SEGUNDOS (determinista)
     function generateInitialSeries(){
       const labels = [];
       const data = [];
       const nowAligned = Math.floor(Date.now() / UPDATE_INTERVAL_MS) * UPDATE_INTERVAL_MS;
       const start = nowAligned - (PRESET_POINTS - 1) * UPDATE_INTERVAL_MS;
-      // semilla aleatoria pequeña para variación entre cargas, pero timestamps serán iguales
       let val = BASE + (Math.random() - 0.5) * 0.01;
       for(let i=0;i<PRESET_POINTS;i++){
-        const t = new Date(start + i * UPDATE_INTERVAL_MS);
-        labels.push(t);
+        labels.push(new Date(start + i * UPDATE_INTERVAL_MS));
         val = nextValue(val);
-        data.push(Number(val.toFixed(4)));
+        data.push(val);
       }
-      return {labels, data};
+      return {labels,data};
     }
 
-    // ---------- INICIALIZACIÓN ----------
     const initial = generateInitialSeries();
     const labels = initial.labels.slice();
     const values = initial.data.slice();
 
-    // ---------- ELEMENTOS UI ----------
+    // UI refs
     const valorActualEl = document.getElementById('valorActual');
     const timestampEl = document.getElementById('timestamp');
     const trendTextEl = document.getElementById('trendText');
     const infoBox = document.getElementById('infoBox');
 
-    function updateMainDisplay(value, date){
+    function updateMainDisplay(value,date){
       valorActualEl.textContent = formatMoney(value);
       timestampEl.textContent = formatDate(date);
-      const prev = values.length > 1 ? values[values.length - 2] : value;
+      const prev = values.length>1 ? values[values.length-2] : value;
       const diff = value - prev;
-      const arrow = diff > 0 ? '▲' : (diff < 0 ? '▼' : '—');
-      const pct = prev ? ((diff / prev) * 100).toFixed(2) + '%' : '';
+      const arrow = diff>0 ? '▲' : (diff<0 ? '▼' : '—');
+      const pct = prev ? ((diff/prev)*100).toFixed(2)+'%' : '';
       trendTextEl.textContent = arrow + ' ' + pct;
     }
 
-    // ---------- CREAR GRÁFICA ----------
+    // CHART: usamos pointRadius scriptable para que solo se muestre cuando el punto esté activo
     const ctx = document.getElementById('grafica').getContext('2d');
-
     const chart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -164,9 +131,10 @@
           data: values,
           borderColor: '#0b8a3e',
           backgroundColor: 'rgba(11,138,62,0.12)',
-          pointRadius: 0,           // puntos invisibles por defecto
-          pointHoverRadius: 6,      // se muestran al hover
-          pointHitRadius: 12,       // área de interacción amplia
+          // scriptable: muestra punto solo si está activo (hover/selected)
+          pointRadius: (ctx) => ctx.active ? 6 : 0,
+          pointHoverRadius: 6,
+          pointHitRadius: 12,
           tension: 0.25,
           fill: true
         }]
@@ -174,18 +142,18 @@
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        interaction: {
-          mode: 'nearest',
-          intersect: false
-        },
+        animation: { duration: 200 },
+        interaction: { mode: 'nearest', intersect: false },
         plugins: {
           legend: { display: false },
           tooltip: {
             enabled: true,
+            // evitar que tooltip quede "pegado" por external handlers
+            external: null,
             callbacks: {
-              label: function(context){
-                const v = Number(context.parsed.y).toFixed(4);
-                const date = context.label instanceof Date ? formatDate(context.label) : context.label;
+              label: function(ctx){
+                const v = Number(ctx.parsed.y).toFixed(4);
+                const date = ctx.label instanceof Date ? formatDate(ctx.label) : ctx.label;
                 return ` ${v} € — ${date}`;
               }
             }
@@ -194,10 +162,7 @@
         scales: {
           x: {
             type: 'time',
-            time: {
-              unit: 'second',
-              displayFormats: { second: 'HH:mm:ss' }
-            },
+            time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } },
             grid: { display: false },
             ticks: { color: '#333', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
           },
@@ -206,67 +171,78 @@
             suggestedMin: MIN - 0.01,
             suggestedMax: MAX + 0.01,
             grid: { display: false },
-            ticks: {
-              callback: function(val){ return Number(val).toFixed(2) + ' €'; },
-              color: '#333'
-            }
+            ticks: { callback: v => Number(v).toFixed(2)+' €', color: '#333' }
           }
         },
-        onHover: (evt, elements) => {
-          // Al salir del canvas, limpiar selección para evitar puntos "pegados"
-          // Chart.js maneja tooltip/punto al hover; no forzamos aquí.
-        },
-        onClick: (evt) => {
-          // preferimos intersección; si no, el más cercano
-          const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
-          if(pts.length) {
-            highlightPoint(pts[0].index);
-            return;
-          }
-          const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
-          if(pts2.length) highlightPoint(pts2[0].index);
+        // limpiar selección cuando se actualiza para evitar puntos "pegados"
+        plugins: {
+          ...this?.plugins,
         }
       }
     });
 
-    // Limpiar selección activa (evita que queden muchos puntos visibles)
+    // función para limpiar selección activa y tooltip
     function clearActiveSelection(){
-      chart.setActiveElements([]);
-      chart.tooltip.setActiveElements([], {x:0,y:0});
-      chart.update('none');
+      try{
+        chart.setActiveElements([]);
+        chart.tooltip.setActiveElements([], {x:0,y:0});
+        chart.update('none');
+      }catch(e){ /* no bloquear si falla */ }
     }
 
-    // Resaltar punto seleccionado (permanece visible hasta que se seleccione otro o se salga)
+    // resaltar punto (permanece hasta que se limpie o se seleccione otro)
     function highlightPoint(index){
       if(index == null) return;
-      // limpiar primero
       clearActiveSelection();
-      const active = [{datasetIndex: 0, index}];
+      const active = [{datasetIndex:0, index}];
       chart.setActiveElements(active);
       const x = chart.scales.x.getPixelForValue(chart.data.labels[index]);
       const y = chart.scales.y.getPixelForValue(chart.data.datasets[0].data[index]);
-      chart.tooltip.setActiveElements(active, {x, y});
+      chart.tooltip.setActiveElements(active, {x,y});
       chart.update('none');
-
       const val = chart.data.datasets[0].data[index];
       const lab = chart.data.labels[index];
       infoBox.textContent = `Punto: ${Number(val).toFixed(4)} € — ${formatDate(new Date(lab))}`;
     }
 
-    // Al mover el ratón fuera del canvas, limpiar selección
+    // limpiar al salir del canvas (evita puntos visibles sin interacción)
     const canvasEl = document.getElementById('grafica');
-    canvasEl.addEventListener('mouseleave', () => {
-      clearActiveSelection();
+    canvasEl.addEventListener('mouseleave', () => clearActiveSelection());
+
+    // soporte táctil: usar touchend para seleccionar punto cercano
+    canvasEl.addEventListener('touchend', function(e){
+      if(e.changedTouches && e.changedTouches.length){
+        const t = e.changedTouches[0];
+        const simulated = {clientX: t.clientX, clientY: t.clientY};
+        const pts = chart.getElementsAtEventForMode(simulated, 'nearest', {intersect: true}, true);
+        if(pts.length) highlightPoint(pts[0].index);
+        else {
+          const pts2 = chart.getElementsAtEventForMode(simulated, 'nearest', {intersect: false}, true);
+          if(pts2.length) highlightPoint(pts2[0].index);
+        }
+      }
+    }, {passive:true});
+
+    // click en escritorio
+    canvasEl.addEventListener('click', function(evt){
+      const pts = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+      if(pts.length) highlightPoint(pts[0].index);
+      else {
+        const pts2 = chart.getElementsAtEventForMode(evt, 'nearest', {intersect: false}, true);
+        if(pts2.length) highlightPoint(pts2[0].index);
+      }
     });
 
-    // Inicializar display con último punto
-    updateMainDisplay(values[values.length - 1], new Date(labels[labels.length - 1]));
+    // actualizar display inicial
+    updateMainDisplay(values[values.length-1], new Date(labels[labels.length-1]));
 
-    // ---------- ACTUALIZACIONES DETERMINISTAS ----------
+    // ACTUALIZACIONES deterministas (siguiente timestamp = última etiqueta + intervalo)
     let paused = false;
     let updateTimer = null;
 
     function pushNewPoint(nextDate, newVal){
+      // limpiar selección antes de cambiar datos para evitar inconsistencias
+      clearActiveSelection();
       chart.data.labels.push(nextDate);
       chart.data.datasets[0].data.push(newVal);
       if(chart.data.labels.length > PRESET_POINTS){
@@ -284,11 +260,10 @@
       if(updateTimer) clearInterval(updateTimer);
       updateTimer = setInterval(() => {
         if(paused) return;
-        // calcular siguiente timestamp a partir de la última etiqueta (determinista)
-        const lastLabel = chart.data.labels[chart.data.labels.length - 1];
+        const lastLabel = chart.data.labels[chart.data.labels.length-1];
         const lastTime = (lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime();
         const nextTime = new Date(lastTime + UPDATE_INTERVAL_MS);
-        const prev = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
+        const prev = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length-1]);
         const nv = nextValue(prev);
         pushNewPoint(nextTime, nv);
       }, UPDATE_INTERVAL_MS);
@@ -297,40 +272,22 @@
     scheduleNextUpdate();
 
     // controles
-    const pauseBtn = document.getElementById('pauseBtn');
-    pauseBtn.addEventListener('click', () => {
+    document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
-      pauseBtn.textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
+      document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
     });
 
     document.getElementById('addSample').addEventListener('click', () => {
-      const lastLabel = chart.data.labels[chart.data.labels.length - 1];
+      const lastLabel = chart.data.labels[chart.data.labels.length-1];
       const lastTime = (lastLabel instanceof Date) ? lastLabel.getTime() : new Date(lastLabel).getTime();
       const nextTime = new Date(lastTime + UPDATE_INTERVAL_MS);
-      const prev = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
+      const prev = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length-1]);
       const nv = nextValue(prev);
       pushNewPoint(nextTime, nv);
     });
 
-    // soporte táctil: tocar resalta punto cercano (usamos touchend para evitar conflictos)
-    canvasEl.addEventListener('touchend', function(e){
-      // evitar que el navegador interprete como scroll si es un toque corto
-      if(e.changedTouches && e.changedTouches.length){
-        const touch = e.changedTouches[0];
-        const simulatedEvent = {clientX: touch.clientX, clientY: touch.clientY};
-        const pts = chart.getElementsAtEventForMode(simulatedEvent, 'nearest', {intersect: true}, true);
-        if(pts.length) highlightPoint(pts[0].index);
-        else {
-          const pts2 = chart.getElementsAtEventForMode(simulatedEvent, 'nearest', {intersect: false}, true);
-          if(pts2.length) highlightPoint(pts2[0].index);
-        }
-      }
-    }, {passive: true});
-
     // Forzar render inicial
-    window.addEventListener('load', () => {
-      setTimeout(() => chart.resize(), 100);
-    });
+    window.addEventListener('load', () => setTimeout(()=>chart.resize(),100));
   </script>
 </body>
 </html>
