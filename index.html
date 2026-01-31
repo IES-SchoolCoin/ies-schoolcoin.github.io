@@ -35,6 +35,8 @@
     /* ---------------- Layout ---------------- */
     .contenedor{width:100%;max-width:980px;margin:0 auto;padding:18px;box-sizing:border-box;min-height:calc(100vh - 48px);}
     .top-bar{background:#000;color:#fff;padding:12px;font-weight:800;text-align:center;border-radius:10px;position:relative;}
+    .top-left-actions{position:absolute;left:12px;top:8px;display:flex;gap:8px;align-items:center;}
+    .top-right-actions{position:absolute;right:12px;top:8px;display:flex;gap:8px;align-items:center;}
     .header{margin-top:14px;font-size:22px;font-weight:800;text-align:center;color:var(--text);}
     .row{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
     .col{flex:1;min-width:300px;}
@@ -43,19 +45,21 @@
     .botones{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px;}
     .boton{background:var(--chart-color);color:#fff;padding:12px;border-radius:10px;font-weight:700;text-align:center;cursor:pointer;user-select:none;box-shadow:var(--shadow);border:0;}
     .control-btn{background:#fff;border:1px solid rgba(0,0,0,0.08);padding:8px 10px;border-radius:8px;cursor:pointer;font-weight:700;}
-    .top-actions{position:absolute;right:12px;top:8px;display:flex;gap:8px;align-items:center;}
     .icon-btn{background:transparent;border:0;color:#fff;cursor:pointer;padding:6px;border-radius:8px;font-weight:700;}
     .icon-btn svg{width:20px;height:20px;vertical-align:middle;fill:#fff;opacity:0.95;}
 
     /* ---------------- Modal ---------------- */
     .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.45);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
-    .modal{width:100%;max-width:720px;border-radius:14px;background:linear-gradient(180deg,var(--card-bg),#fbfbfb);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}
+    .modal{width:100%;max-width:820px;border-radius:14px;background:linear-gradient(180deg,var(--card-bg),#fbfbfb);box-shadow:var(--shadow);overflow:hidden;border:1px solid rgba(0,0,0,0.06);}
     .modal-header{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(0,0,0,0.04);}
     .modal-header h3{margin:0;font-size:16px;color:var(--text);}
     .modal-body{padding:14px 16px;max-height:72vh;overflow:auto;box-sizing:border-box;}
+    .modal-body::-webkit-scrollbar{width:8px;}
     .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px;}
     .field label{font-weight:700;font-size:13px;color:var(--text);}
-    .field input[type="text"], .field input[type="number"], .field input[type="password"], .field select, .field input[type="color"]{padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);font-size:14px;background:#fff;}
+    .field input[type="text"], .field input[type="number"], .field input[type="password"], .field select, .field input[type="color"], .field input[type="email"], .field textarea{
+      padding:10px;border-radius:10px;border:1px solid rgba(0,0,0,0.08);font-size:14px;background:#fff;box-sizing:border-box;
+    }
     .row-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:8px;}
     .btn-primary{background:var(--chart-color);color:#fff;border:0;padding:10px 12px;border-radius:10px;font-weight:800;cursor:pointer;}
     .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:10px 12px;border-radius:10px;cursor:pointer;}
@@ -66,17 +70,37 @@
 
     /* ---------------- Login ---------------- */
     .login-backdrop{position:fixed;inset:0;background:linear-gradient(rgba(0,0,0,0.55),rgba(0,0,0,0.55));display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;}
-    .login-card{width:100%;max-width:420px;background:var(--card-bg);padding:18px;border-radius:14px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.06);}
+    .login-card{width:100%;max-width:520px;background:var(--card-bg);padding:18px;border-radius:14px;box-shadow:var(--shadow);border:1px solid rgba(0,0,0,0.06);}
     .login-card h2{margin:0 0 8px 0;font-size:20px;color:var(--text);}
+    .login-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px;}
 
-    @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:360px !important;} .botones{grid-template-columns:1fr 1fr;} }
+    /* ---------------- Loading overlay for account creation ---------------- */
+    .full-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:11000;flex-direction:column;color:#fff;}
+    .spinner{
+      width:120px;height:120px;border-radius:50%;border:12px solid rgba(255,255,255,0.12);border-top-color:rgba(255,255,255,0.95);
+      animation:spin 1s linear infinite;margin-bottom:18px;
+    }
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    /* ---------------- Info content styling ---------------- */
+    .info-content h4{margin:8px 0 6px 0;color:var(--text);}
+    .info-content p{margin:6px 0;color:var(--muted);line-height:1.45;}
+    .info-section{margin-bottom:12px;padding-bottom:8px;border-bottom:1px dashed rgba(0,0,0,0.04);}
+
+    @media (max-width:900px){ .contenedor{max-width:420px;} canvas{height:360px !important;} .botones{grid-template-columns:1fr 1fr;} .login-card{max-width:92vw;} .modal{max-width:92vw;} }
   </style>
 </head>
 <body>
   <div class="contenedor" id="appRoot" aria-hidden="true">
     <div class="top-bar">
       SCHOOLCOIN
-      <div class="top-actions">
+      <div class="top-left-actions">
+        <!-- Question/info icon top-left -->
+        <button id="infoBtn" class="icon-btn" title="Información" aria-label="Información">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 9h2V7h-2v2zm0 8h2v-6h-2v6zM12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2z"/></svg>
+        </button>
+      </div>
+      <div class="top-right-actions">
         <button id="settingsBtn" class="icon-btn" title="Apariencia" aria-label="Apariencia">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8.6A3.4 3.4 0 1 0 12 15.4 3.4 3.4 0 0 0 12 8.6zm8.1 3.4c0-.6-.1-1.2-.2-1.8l2.1-1.6-2-3.5-2.5.6c-.5-.4-1-.7-1.6-1L14 1.5h-4l-.9 2.2c-.6.2-1.1.6-1.6 1L4.9 4.7 2.9 8.2l2.1 1.6c-.1.6-.2 1.2-.2 1.8s.1 1.2.2 1.8L2.9 15.8l2 3.5 2.5-.6c.5.4 1 .7 1.6 1L10 22.5h4l.9-2.2c.6-.2 1.1-.6 1.6-1l2.5.6 2-3.5-2.1-1.6c.1-.6.2-1.2.2-1.8z"/></svg>
         </button>
@@ -110,19 +134,53 @@
     </div>
   </div>
 
-  <!-- Login overlay -->
+  <!-- Login overlay with Create account option -->
   <div id="loginOverlay" class="login-backdrop" role="dialog" aria-modal="true">
     <div class="login-card" role="document">
       <h2>Iniciar sesión</h2>
       <div class="login-note" style="color:var(--muted);">Introduce tu nombre, apellidos y contraseña para acceder a la app.</div>
-      <div class="field"><label>Nombre</label><input id="loginName" type="text" placeholder="Nombre"></div>
-      <div class="field"><label>Apellidos</label><input id="loginSurname" type="text" placeholder="Apellidos"></div>
-      <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Contraseña"></div>
-      <div id="loginError" class="error" style="display:none;color:var(--danger);">Rellena todos los campos para continuar.</div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
-        <button id="loginBtn" class="btn-primary">Entrar</button>
+
+      <div id="loginForm">
+        <div class="field"><label>Nombre</label><input id="loginName" type="text" placeholder="Nombre"></div>
+        <div class="field"><label>Apellidos</label><input id="loginSurname" type="text" placeholder="Apellidos"></div>
+        <div class="field"><label>Contraseña</label><input id="loginPass" type="password" placeholder="Contraseña"></div>
+        <div id="loginError" class="error" style="display:none;color:var(--danger);">Rellena todos los campos para continuar.</div>
+        <div class="login-actions">
+          <button id="showCreateBtn" class="btn-ghost">Crear cuenta</button>
+          <button id="loginBtn" class="btn-primary">Entrar</button>
+        </div>
+      </div>
+
+      <!-- Create account form (hidden by default) -->
+      <div id="createForm" style="display:none;margin-top:12px;">
+        <h3 style="margin:0 0 8px 0;color:var(--text);">Crear cuenta</h3>
+        <div class="field"><label>Nombre</label><input id="c_name" type="text" placeholder="Nombre"></div>
+        <div class="field"><label>Apellidos</label><input id="c_surname" type="text" placeholder="Apellidos"></div>
+        <div class="field"><label>Correo electrónico</label><input id="c_email" type="email" placeholder="tu@ejemplo.com"></div>
+        <div class="field"><label>Contraseña</label><input id="c_pass" type="password" placeholder="Contraseña"></div>
+        <div class="field"><label>Confirmar contraseña</label><input id="c_pass2" type="password" placeholder="Repite la contraseña"></div>
+        <div class="field"><label>Fecha de nacimiento</label><input id="c_dob" type="date"></div>
+        <div class="field"><label>Curso / Clase</label><input id="c_class" type="text" placeholder="Ej: 4º ESO A"></div>
+        <div class="field"><label>ID de estudiante</label><input id="c_studentid" type="text" placeholder="ID escolar"></div>
+        <div class="field"><label>Teléfono</label><input id="c_phone" type="text" placeholder="Teléfono"></div>
+        <div class="field"><label>Contacto de padre/madre/tutor</label><input id="c_parent" type="text" placeholder="Nombre y teléfono"></div>
+        <div class="field"><label>Dirección</label><input id="c_address" type="text" placeholder="Dirección"></div>
+        <div class="field"><label>Observaciones / Alergias</label><textarea id="c_notes" rows="2" placeholder="Alergias, necesidades..."></textarea></div>
+        <div class="field"><label>Acepto las normas y condiciones</label><select id="c_terms"><option value="">Selecciona...</option><option value="yes">Sí, acepto</option></select></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+          <button id="cancelCreate" class="btn-ghost">Cancelar</button>
+          <button id="submitCreate" class="btn-primary">Crear cuenta</button>
+        </div>
+        <div id="createError" class="error" style="display:none;color:var(--danger);margin-top:8px;"></div>
       </div>
     </div>
+  </div>
+
+  <!-- Full-screen loader (hidden by default) -->
+  <div id="fullLoader" class="full-loader" style="display:none;">
+    <div class="spinner" role="status" aria-hidden="true"></div>
+    <div style="font-size:20px;font-weight:800;margin-bottom:8px;">Creando tu cuenta...</div>
+    <div style="font-size:14px;opacity:0.9;">Un momento, estamos preparando todo para ti</div>
   </div>
 
   <!-- Chart.js -->
@@ -130,15 +188,24 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 
   <script>
-    /* ---------------- Auth gate ---------------- */
+    /**************************************************************************
+     * Basic auth UI + create account flow with loader
+     **************************************************************************/
     const loginOverlay = document.getElementById('loginOverlay');
     const appRoot = document.getElementById('appRoot');
     const loginBtn = document.getElementById('loginBtn');
     const loginError = document.getElementById('loginError');
+    const showCreateBtn = document.getElementById('showCreateBtn');
+    const createForm = document.getElementById('createForm');
+    const loginForm = document.getElementById('loginForm');
+    const cancelCreate = document.getElementById('cancelCreate');
+    const submitCreate = document.getElementById('submitCreate');
+    const fullLoader = document.getElementById('fullLoader');
+    const createError = document.getElementById('createError');
 
     function isLoggedIn(){ try { return sessionStorage.getItem('schoolcoin_user') !== null; } catch(e){ return false; } }
     function showAppAfterLogin(){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); }
-    function saveSession(name, surname){ const user = { name: name.trim(), surname: surname.trim(), loggedAt: new Date().toISOString() }; try { sessionStorage.setItem('schoolcoin_user', JSON.stringify(user)); } catch(e){} }
+    function saveSession(user){ try { sessionStorage.setItem('schoolcoin_user', JSON.stringify(user)); } catch(e){} }
 
     if(isLoggedIn()){ loginOverlay.style.display = 'none'; appRoot.setAttribute('aria-hidden','false'); } else { loginOverlay.style.display = 'flex'; appRoot.setAttribute('aria-hidden','true'); }
 
@@ -148,16 +215,77 @@
       const pass = document.getElementById('loginPass').value || '';
       if(!name.trim() || !surname.trim() || !pass.trim()){ loginError.style.display = 'block'; return; }
       loginError.style.display = 'none';
-      saveSession(name, surname);
+      saveSession({ name: name.trim(), surname: surname.trim(), loggedAt: new Date().toISOString() });
       showAppAfterLogin();
     });
 
-    /* ---------------- Account code ---------------- */
+    showCreateBtn.addEventListener('click', () => {
+      loginForm.style.display = 'none';
+      createForm.style.display = 'block';
+      createError.style.display = 'none';
+    });
+    cancelCreate.addEventListener('click', () => {
+      createForm.style.display = 'none';
+      loginForm.style.display = 'block';
+    });
+
+    submitCreate.addEventListener('click', () => {
+      createError.style.display = 'none';
+      const data = {
+        name: document.getElementById('c_name').value || '',
+        surname: document.getElementById('c_surname').value || '',
+        email: document.getElementById('c_email').value || '',
+        pass: document.getElementById('c_pass').value || '',
+        pass2: document.getElementById('c_pass2').value || '',
+        dob: document.getElementById('c_dob').value || '',
+        class: document.getElementById('c_class').value || '',
+        studentid: document.getElementById('c_studentid').value || '',
+        phone: document.getElementById('c_phone').value || '',
+        parent: document.getElementById('c_parent').value || '',
+        address: document.getElementById('c_address').value || '',
+        notes: document.getElementById('c_notes').value || '',
+        terms: document.getElementById('c_terms').value || ''
+      };
+      // Basic validation
+      if(!data.name || !data.surname || !data.email || !data.pass || !data.pass2 || data.pass !== data.pass2 || data.terms !== 'yes'){
+        createError.style.display = 'block';
+        createError.textContent = 'Rellena todos los campos obligatorios, confirma la contraseña y acepta las condiciones.';
+        return;
+      }
+      // Show full loader for 10s then welcome
+      fullLoader.style.display = 'flex';
+      // Simulate account creation delay (10s)
+      setTimeout(() => {
+        fullLoader.style.display = 'none';
+        // Save user session and close login overlay
+        saveSession({ name: data.name.trim(), surname: data.surname.trim(), email: data.email.trim(), createdAt: new Date().toISOString() });
+        // Show a small welcome modal
+        const welcomeHtml = `
+          <div class="modal-header"><h3>¡Cuenta creada!</h3></div>
+          <div class="modal-body" style="text-align:center;">
+            <div style="font-weight:900;font-size:20px;margin-bottom:8px;">¡Disfruta la app!</div>
+            <div class="muted" style="margin-bottom:12px;">Tu cuenta ha sido creada correctamente. Ya puedes empezar a usar SchoolCoin.</div>
+            <div class="row-actions"><button class="btn-primary" id="welcomeOk">Comenzar</button></div>
+          </div>`;
+        const bd = openModal(welcomeHtml);
+        bd.querySelector('#welcomeOk').addEventListener('click', () => {
+          closeModal(bd);
+          loginOverlay.style.display = 'none';
+          appRoot.setAttribute('aria-hidden','false');
+        });
+      }, 10000);
+    });
+
+    /**************************************************************************
+     * Account code (IES + 8 dígitos)
+     **************************************************************************/
     function generateSpanishStyleAccountCode() { const prefix = 'IES'; let digits = ''; for (let i = 0; i < 8; i++) digits += Math.floor(Math.random() * 10); return prefix + digits; }
     function getOrCreateAccountCode() { const key = 'schoolcoin_account_code'; try { const stored = localStorage.getItem(key); if (stored && /^IES\d{8}$/.test(stored)) return stored; const code = generateSpanishStyleAccountCode(); localStorage.setItem(key, code); return code; } catch (e) { return generateSpanishStyleAccountCode(); } }
     const accountCode = getOrCreateAccountCode();
 
-    /* ---------------- Modal helpers ---------------- */
+    /**************************************************************************
+     * Modal helpers
+     **************************************************************************/
     function openModal(contentHtml){
       const bd = document.createElement('div');
       bd.className = 'modal-backdrop';
@@ -168,7 +296,9 @@
     }
     function closeModal(bd){ if(bd && bd.remove) bd.remove(); }
 
-    /* ---------------- Market simulation & chart ---------------- */
+    /**************************************************************************
+     * Market simulation & chart (kept from previous implementation)
+     **************************************************************************/
     const UPDATE_INTERVAL_MS = 5000;
     const PRESET_POINTS = 600;
     const MIN = 0.05, MAX = 0.50, BASE = 0.275, MAX_STEP_PER_TICK = 0.0009;
@@ -321,7 +451,9 @@
     scheduleNextUpdate();
     updateMainDisplay(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
 
-    /* ---------------- Transactions (botones funcionales) ---------------- */
+    /**************************************************************************
+     * Transactions (botones funcionales)
+     **************************************************************************/
     function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
     document.getElementById('btnEnviar').addEventListener('click', () => {
@@ -429,7 +561,9 @@
       bd.querySelector('#closeAccount').addEventListener('click', () => closeModal(bd));
     });
 
-    /* ---------------- Apariencia: presets estéticos ---------------- */
+    /**************************************************************************
+     * Appearance presets & full-page background
+     **************************************************************************/
     const PRESETS = [
       { id: 'sunny', name: 'Sunny Warm', bgPrimary: '#FFF7D6', bgSecondary: '#F7D54A', chart: '#0b8a3e' },
       { id: 'ocean', name: 'Ocean Breeze', bgPrimary: '#E6F7FF', bgSecondary: '#6EC1E4', chart: '#0a6fa0' },
@@ -468,8 +602,9 @@
       const p = preset.bgPrimary;
       const s = preset.bgSecondary;
       document.documentElement.style.setProperty('--app-bg', p);
-      document.body.style.background = `linear-gradient(180deg, ${p} 0%, ${s} 100%)`;
+      // full-page gradient background
       document.documentElement.style.setProperty('--chart-color', preset.chart);
+      document.body.style.background = `linear-gradient(180deg, ${p} 0%, ${s} 100%)`;
       const colors = pickTextColorForBackground(p, s);
       document.documentElement.style.setProperty('--text', colors.text);
       document.documentElement.style.setProperty('--muted', colors.muted);
@@ -478,7 +613,7 @@
         chartInstance.data.datasets[0].backgroundColor = hexToRgba(preset.chart, 0.10);
         chartInstance.update('none');
       }
-      // update visible text color immediately
+      // update some UI text colors
       document.querySelectorAll('.header, .small-note, .muted, .field label').forEach(el => {
         el.style.color = colors.text === '#ffffff' ? colors.text : 'var(--text)';
       });
@@ -525,7 +660,64 @@
 
     (function(){ const p = loadPresetChoice(); applyPreset(p); })();
 
-    /* ---------------- Pause / add sample ---------------- */
+    /**************************************************************************
+     * Info modal (question mark) - includes the full developed description
+     **************************************************************************/
+    const infoBtn = document.getElementById('infoBtn');
+    infoBtn.addEventListener('click', () => {
+      const content = `
+        <div class="modal-header"><h3>Información sobre SchoolCoin</h3></div>
+        <div class="modal-body info-content">
+          <div class="info-section">
+            <h4>Descripción y utilidad</h4>
+            <p>SchoolCoin es una criptomoneda diseñada específicamente para ser utilizada dentro del entorno escolar. Su propósito es incentivar la participación activa de los alumnos en actividades académicas y sociales, premiando el esfuerzo y las buenas acciones dentro del instituto. Con SchoolCoin, los estudiantes podrán acceder a descuentos en la cafetería, participar en sorteos de premios, obtener material educativo o canjearla por puntos extras en sus evaluaciones.</p>
+          </div>
+
+          <div class="info-section">
+            <h4>Objetivo principal</h4>
+            <p>El objetivo de SchoolCoin es mejorar el ambiente escolar a través de un sistema de recompensas que motive a los estudiantes a involucrarse más en sus estudios y actividades. Al integrar la criptomoneda en la vida cotidiana del instituto, buscamos familiarizar a los jóvenes con el mundo de las finanzas digitales de manera divertida y educativa.</p>
+          </div>
+
+          <div class="info-section">
+            <h4>Instrumentos de marketing y difusión</h4>
+            <p><strong>Campaña de lanzamiento:</strong> carteles informativos, presentaciones en clase y actividades interactivas.</p>
+            <p><strong>Premios iniciales:</strong> los primeros 100 estudiantes registrados recibirán 100 SC como incentivo.</p>
+            <p><strong>Gamificación:</strong> retos y competencias entre cursos para ganar SchoolCoins.</p>
+            <p><strong>Embajadores:</strong> estudiantes clave que promuevan SchoolCoin entre sus compañeros.</p>
+          </div>
+
+          <div class="info-section">
+            <h4>Cómo conseguir SchoolCoin y por qué comprarla</h4>
+            <p><strong>Obtener SC:</strong> participación en actividades académicas, esfuerzos en eventos extraescolares, sorteos y retos, o compra en la tienda virtual del instituto.</p>
+            <p><strong>Por qué usarla:</strong> ventajas exclusivas como descuentos en cafetería, sorteos de material escolar y posibilidad de canjear por puntos extra en evaluaciones.</p>
+            <p>La app permite ver saldo, ofertas diarias y el historial de movimientos.</p>
+          </div>
+
+          <div class="info-section">
+            <h4>Valor monetario y propuesta de valor</h4>
+            <p>El valor base se ha fijado en <strong>1 SC = 0,10 €</strong>. Este valor es simbólico y establecido por el centro educativo, no por mercados externos.</p>
+            <p><strong>Ejemplos:</strong> 10 SC = 1 €; 50 SC = 5 €; 100 SC = 10 €.</p>
+            <p><strong>Razones:</strong> sencillez, accesibilidad y compatibilidad con recompensas escolares.</p>
+            <p><strong>Precios sugeridos:</strong> bocadillo con descuento 20–30 SC; pack material 100–300 SC; puntos extra según normativa.</p>
+          </div>
+
+          <div class="info-section">
+            <h4>Recomendaciones de implementación</h4>
+            <p>Normativa clara, seguridad y transparencia en transacciones, piloto controlado, formación para alumnos y personal, medición de impacto (KPIs) y comunicación continua.</p>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+            <button class="btn-primary" id="closeInfo">Cerrar</button>
+          </div>
+        </div>
+      `;
+      const bd = openModal(content);
+      bd.querySelector('#closeInfo').addEventListener('click', () => closeModal(bd));
+    });
+
+    /**************************************************************************
+     * Pause / add sample
+     **************************************************************************/
     document.getElementById('pauseBtn').addEventListener('click', () => {
       paused = !paused;
       document.getElementById('pauseBtn').textContent = paused ? 'Reanudar actualizaciones' : 'Pausar actualizaciones';
