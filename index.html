@@ -34,9 +34,6 @@
       height:100%;
       min-height:100vh;
     }
-    html {
-      height:100%;
-    }
     body {
       min-height:100vh;
     }
@@ -98,6 +95,77 @@
     .info-content p{margin:6px 0;color:var(--muted);line-height:1.45;}
     .info-section{margin-bottom:12px;padding-bottom:8px;border-bottom:1px dashed rgba(0,0,0,0.04);}
 
+    /* Estilos para el historial de transacciones */
+    .transaction-item {
+      border: 1px solid rgba(0,0,0,0.08);
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+    }
+    .transaction-header {
+      padding: 12px;
+      background: rgba(0,0,0,0.02);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .transaction-content {
+      padding: 0 12px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+    }
+    .transaction-content.expanded {
+      padding: 12px;
+      max-height: 200px;
+    }
+    .transaction-type {
+      font-weight: 800;
+      font-size: 14px;
+    }
+    .transaction-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .transaction-amount {
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    /* Estilos para el saldo */
+    .balance-card {
+      background: linear-gradient(135deg, var(--chart-color), #0a7a3a);
+      color: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .balance-label {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-bottom: 8px;
+    }
+    .balance-amount {
+      font-size: 32px;
+      font-weight: 900;
+    }
+
+    /* Estilos para errores de saldo */
+    .balance-error {
+      color: var(--danger);
+      font-size: 13px;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    .btn-disabled {
+      background: #ccc !important;
+      cursor: not-allowed !important;
+      box-shadow: none !important;
+    }
+
     @media (max-width:900px){ .contenedor{max-width:420px;} .botones{grid-template-columns:1fr 1fr;} .login-card{max-width:92vw;} .modal{max-width:92vw;} }
   </style>
 <base target="_blank">
@@ -129,7 +197,7 @@
     <div class="row" style="align-items:center;">
       <div style="flex:1; text-align:center; display:flex; flex-direction:column; align-items:center; justify-content:center;">
         <div style="width:84px;height:84px;margin:8px auto;"><img src="LOGO.png" alt="Logo" style="width:100%;height:100%;object-fit:contain;"></div>
-        <div id="valorDisplay" style="font-weight:900;font-size:28px;margin-top:6px;text-align:center;">0.000 €</div>
+        <div id="valorDisplay" style="font-weight:900;font-size:28px;margin-top:6px;text-align:center;">0.0000 €</div>
       </div>
 
       <div class="col">
@@ -388,7 +456,10 @@
     const MIN = 0.05, MAX = 0.50, BASE = 0.175, MAX_STEP_PER_TICK = 0.0009;
 
     function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
-    function formatDynamicDecimals(num){ if (!isFinite(num)) return String(num); const s = num.toFixed(8).replace(/0+$/,'').replace(/\.$/,''); const parts = s.split('.'); if(parts.length === 1) return parts[0]; const frac = parts[1]; if(frac.length <= 3) return parts[0] + '.' + frac.padEnd(3,'0'); return parts[0] + '.' + frac; }
+    function formatDynamicDecimals(num){ 
+      // Siempre mostrar 4 decimales
+      return Number(num).toFixed(4);
+    }
 
     function nextValue(prev){
       const meanReversion = (BASE - prev) * 0.10;
@@ -453,7 +524,7 @@
         },
         scales: {
           x: { type: 'time', time: { unit: 'second', displayFormats: { second: 'HH:mm:ss' } }, grid: { display: false }, ticks: { display: false } },
-          y: { beginAtZero: false, grid: { display: true, color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#333', callback: v => Number(Number(v).toFixed(2)) + ' €' } }
+          y: { beginAtZero: false, grid: { display: true, color: 'rgba(0,0,0,0.04)' }, ticks: { color: '#333', callback: v => Number(Number(v).toFixed(4)) + ' €' } }
         }
       }
     });
@@ -538,20 +609,68 @@
     /* ---------------- Transactions (botones funcionales) ---------------- */
     function randomHex(len=8){ const chars='0123456789abcdef'; let s=''; for(let i=0;i<len;i++) s+=chars[Math.floor(Math.random()*chars.length)]; return s; }
 
+    // Función para calcular el saldo actual
+    function getCurrentBalance() {
+      let balance = 0;
+      TRANSACTIONS.forEach(tx => {
+        if (tx.type === 'ingreso') {
+          balance += tx.amount;
+        } else if (tx.type === 'envio' || tx.type === 'cambio') {
+          balance -= tx.amount;
+        }
+      });
+      return balance;
+    }
+
     document.getElementById('btnEnviar').addEventListener('click', () => {
+      const currentBalance = getCurrentBalance();
       const html = `
         <div class="modal-header"><h3>Enviar SchoolCoins</h3></div>
         <div class="modal-body">
+          <div style="background:rgba(0,0,0,0.05);padding:10px;border-radius:8px;margin-bottom:12px;font-size:13px;">
+            <strong>Saldo disponible:</strong> ${currentBalance.toFixed(4)} SC
+          </div>
           <div class="field"><label>Destinatario</label><input id="m_dest" type="text" placeholder="Dirección o usuario"></div>
-          <div class="field"><label>Cantidad (SC)</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01"></div>
+          <div class="field"><label>Cantidad (SC)</label><input id="m_amt" type="number" step="0.0001" placeholder="0.01" max="${currentBalance}"></div>
+          <div id="m_balance_error" class="balance-error" style="display:none;">No tienes suficientes SchoolCoins para esta transacción.</div>
           <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
-          <div class="row-actions"><button class="btn-ghost" id="m_cancel">Cancelar</button><button class="btn-primary" id="m_send">Enviar</button></div>
+          <div class="row-actions">
+            <button class="btn-ghost" id="m_cancel">Cancelar</button>
+            <button class="btn-primary" id="m_send">Enviar</button>
+          </div>
         </div>`;
       const bd = openModal(html);
+      const amtInput = bd.querySelector('#m_amt');
+      const sendBtn = bd.querySelector('#m_send');
+      const balanceError = bd.querySelector('#m_balance_error');
+
+      // Validar en tiempo real
+      function validateAmount() {
+        const amt = parseFloat(amtInput.value) || 0;
+        if (amt > currentBalance) {
+          balanceError.style.display = 'block';
+          sendBtn.classList.add('btn-disabled');
+          sendBtn.disabled = true;
+        } else {
+          balanceError.style.display = 'none';
+          sendBtn.classList.remove('btn-disabled');
+          sendBtn.disabled = false;
+        }
+      }
+
+      amtInput.addEventListener('input', validateAmount);
+      validateAmount(); // Validar inicialmente
+
       bd.querySelector('#m_cancel').addEventListener('click', () => closeModal(bd));
-      bd.querySelector('#m_send').addEventListener('click', () => {
+      sendBtn.addEventListener('click', () => {
         const dest = bd.querySelector('#m_dest').value || 'desconocido';
-        const amt = parseFloat(bd.querySelector('#m_amt').value) || 0;
+        const amt = parseFloat(amtInput.value) || 0;
+        
+        if (amt > currentBalance) {
+          balanceError.style.display = 'block';
+          return;
+        }
+
         const lastIndex = masterLabels.length - 1;
         TRANSACTIONS.push({ txid: randomHex(16), ref: accountCode, type:'envio', from:'you', to:dest, amount: Number(amt.toFixed(4)), timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex });
         const prev = masterValues[masterValues.length - 1];
@@ -597,43 +716,152 @@
     });
 
     document.getElementById('btnCambiar').addEventListener('click', () => {
+      const currentBalance = getCurrentBalance();
       const currentPrice = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
       const html = `
         <div class="modal-header"><h3>Cambiar SchoolCoins a €</h3></div>
         <div class="modal-body">
-          <div class="field"><label>Cantidad (SC)</label><input id="c_amt" type="number" step="0.0001" placeholder="10.00"></div>
+          <div style="background:rgba(0,0,0,0.05);padding:10px;border-radius:8px;margin-bottom:12px;font-size:13px;">
+            <strong>Saldo disponible:</strong> ${currentBalance.toFixed(4)} SC
+          </div>
+          <div class="field"><label>Cantidad (SC)</label><input id="c_amt" type="number" step="0.0001" placeholder="10.00" max="${currentBalance}"></div>
           <div class="field"><label>Precio por SC</label><div style="padding:10px;border-radius:10px;background:#fff;border:1px solid rgba(0,0,0,0.06);font-weight:800;">${formatDynamicDecimals(currentPrice)} €</div><div class="small-note">Equivalencia se calculará al confirmar y se guardará en la transacción.</div></div>
+          <div class="field"><label>Código de cambio</label><input id="c_code" type="password" placeholder="Introduce el código de cambio"></div>
+          <div id="c_balance_error" class="balance-error" style="display:none;">No tienes suficientes SchoolCoins para esta transacción.</div>
+          <div id="c_code_error" class="error" style="display:none;color:var(--danger);">Código de cambio incorrecto</div>
           <div class="small-note">Referencia de cuenta: <strong>${accountCode}</strong></div>
           <div class="row-actions"><button class="btn-ghost" id="c_cancel">Cancelar</button><button class="btn-primary" id="c_ok">Cambiar</button></div>
         </div>`;
       const bd = openModal(html);
       const input = bd.querySelector('#c_amt');
-      bd.querySelector('#c_cancel').addEventListener('click', () => closeModal(bd));
-      bd.querySelector('#c_ok').addEventListener('click', () => {
+      const changeBtn = bd.querySelector('#c_ok');
+      const balanceError = bd.querySelector('#c_balance_error');
+      const codeError = bd.querySelector('#c_code_error');
+      const CHANGE_CODE = 'IESJRCOIN';
+
+      // Validar en tiempo real
+      function validateAmount() {
         const amt = parseFloat(input.value) || 0;
-        if(amt <= 0){ input.focus(); return; }
+        if (amt > currentBalance) {
+          balanceError.style.display = 'block';
+          changeBtn.classList.add('btn-disabled');
+          changeBtn.disabled = true;
+        } else {
+          balanceError.style.display = 'none';
+          changeBtn.classList.remove('btn-disabled');
+          changeBtn.disabled = false;
+        }
+      }
+
+      input.addEventListener('input', validateAmount);
+      validateAmount(); // Validar inicialmente
+
+      bd.querySelector('#c_cancel').addEventListener('click', () => closeModal(bd));
+      changeBtn.addEventListener('click', () => {
+        const amt = parseFloat(input.value) || 0;
+        const code = bd.querySelector('#c_code').value || '';
+        
+        if (amt > currentBalance) {
+          balanceError.style.display = 'block';
+          return;
+        }
+        
+        if(code !== CHANGE_CODE){ 
+          codeError.style.display = 'block'; 
+          return; 
+        }
+        
+        balanceError.style.display = 'none';
+        codeError.style.display = 'none';
+        
         const lastIndex = masterLabels.length - 1;
         const priceNow = Number(chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1]);
-        const euros = Number((amt * priceNow).toFixed(6));
+        const euros = Number((amt * priceNow).toFixed(4));
         TRANSACTIONS.push({ txid: randomHex(16), ref: accountCode, type:'cambio', from:'you', to:'exchange', amount: Number(amt.toFixed(4)), euro: euros, price_at: priceNow, timestamp: new Date(masterLabels[lastIndex]).toISOString(), index: lastIndex });
         const prev = masterValues[masterValues.length - 1];
         const nv = clamp(prev + (Math.random()-0.5) * 0.0008, MIN, MAX);
         const nextTime = new Date(((masterLabels[lastIndex] instanceof Date) ? masterLabels[lastIndex].getTime() : new Date(masterLabels[lastIndex]).getTime()) + UPDATE_INTERVAL_MS);
         pushNewMasterPoint(nextTime, Number(nv.toFixed(6)));
-        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Cambio realizado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">${amt.toFixed(4)} SC → ${euros.toFixed(6)} €</div><div class="muted">Precio usado: ${formatDynamicDecimals(priceNow)} €</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="c_done">Aceptar</button></div></div>`;
+        bd.querySelector('.modal').innerHTML = `<div class="modal-header"><h3>Cambio realizado</h3></div><div class="modal-body"><div class="confirm-card"><div style="font-weight:800;margin-bottom:6px;">${amt.toFixed(4)} SC → ${euros.toFixed(4)} €</div><div class="muted">Precio usado: ${formatDynamicDecimals(priceNow)} €</div><div style="margin-top:8px;">Referencia: <strong>${accountCode}</strong></div></div><div class="row-actions" style="margin-top:12px;"><button class="btn-primary" id="c_done">Aceptar</button></div></div>`;
         bd.querySelector('#c_done').addEventListener('click', () => closeModal(bd));
       });
     });
 
     document.getElementById('btnCuenta').addEventListener('click', () => {
+      // Calcular saldo total
+      let totalBalance = getCurrentBalance();
+      
+      // Ordenar transacciones por fecha (más recientes primero)
+      const sortedTransactions = [...TRANSACTIONS].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+      
+      let transactionsHtml = '';
+      if (sortedTransactions.length === 0) {
+        transactionsHtml = '<div style="text-align:center; color:var(--muted); padding:20px;">No hay transacciones registradas</div>';
+      } else {
+        sortedTransactions.forEach(tx => {
+          const date = new Date(tx.timestamp).toLocaleString('es-ES');
+          let typeText = '';
+          let amountText = '';
+          
+          switch(tx.type) {
+            case 'envio':
+              typeText = 'Enviado';
+              amountText = `-${tx.amount.toFixed(4)} SC`;
+              break;
+            case 'ingreso':
+              typeText = 'Ingreso';
+              amountText = `+${tx.amount.toFixed(4)} SC`;
+              break;
+            case 'cambio':
+              typeText = 'Cambio a €';
+              amountText = `-${tx.amount.toFixed(4)} SC → ${tx.euro.toFixed(4)} €`;
+              break;
+          }
+          
+          transactionsHtml += `
+            <div class="transaction-item">
+              <div class="transaction-header" onclick="this.nextElementSibling.classList.toggle('expanded')">
+                <div>
+                  <div class="transaction-type">${typeText}</div>
+                  <div class="transaction-date">${date}</div>
+                </div>
+                <div class="transaction-amount">${amountText}</div>
+              </div>
+              <div class="transaction-content">
+                <div style="color:var(--muted); font-size:13px;">
+                  <div><strong>Referencia:</strong> ${tx.ref}</div>
+                  <div><strong>TXID:</strong> ${tx.txid}</div>
+                  ${tx.from && tx.from !== 'you' ? `<div><strong>De:</strong> ${tx.from}</div>` : ''}
+                  ${tx.to && tx.to !== 'you' ? `<div><strong>A:</strong> ${tx.to}</div>` : ''}
+                  ${tx.price_at ? `<div><strong>Precio SC:</strong> ${tx.price_at.toFixed(4)} €</div>` : ''}
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+      
       const modalHtml = `
         <div class="modal-header"><h3>Mi cuenta</h3></div>
         <div class="modal-body" style="text-align:center;">
+          <div class="balance-card">
+            <div class="balance-label">Saldo actual</div>
+            <div class="balance-amount">${totalBalance.toFixed(4)} SC</div>
+          </div>
+          
           <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Código de cuenta</div>
           <div style="display:inline-block;background:#fff;padding:12px 16px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);font-weight:900;font-size:18px;">
             ${accountCode}
           </div>
           <div style="margin-top:12px;color:var(--muted);font-size:13px;">Guarda este código para recibir ingresos.</div>
+          
+          <div style="margin-top:20px; text-align:left;">
+            <h4 style="margin-bottom:12px;">Historial de transacciones</h4>
+            <div style="max-height:300px; overflow-y:auto;">
+              ${transactionsHtml}
+            </div>
+          </div>
+          
           <div style="display:flex;justify-content:center;margin-top:16px;">
             <button class="btn-primary" id="closeAccount">Cerrar</button>
           </div>
@@ -645,12 +873,11 @@
 
     /* ---------------- Appearance presets & full-page background ---------------- */
     const PRESETS = [
-      { id: 'sunny', name: 'Sunny Warm', bgPrimary: '#FFF7D6', bgSecondary: '#F7D54A', chart: '#0b8a3e' },
-      { id: 'ocean', name: 'Ocean Breeze', bgPrimary: '#E6F7FF', bgSecondary: '#6EC1E4', chart: '#0a6fa0' },
-      { id: 'lavender', name: 'Lavender', bgPrimary: '#F3E8FF', bgSecondary: '#CFA3FF', chart: '#6b3fa0' },
-      { id: 'mint', name: 'Mint', bgPrimary: '#E9FFF4', bgSecondary: '#7FE3B2', chart: '#0a8a5a' },
-      { id: 'slate', name: 'Slate', bgPrimary: '#F4F6F8', bgSecondary: '#C8D3DD', chart: '#2b4a5a' },
-      { id: 'midnight', name: 'Midnight', bgPrimary: '#0f1724', bgSecondary: '#1f2a44', chart: '#7fb3ff' }
+      { id: 'sunny', name: 'Sol Cálido', bgPrimary: '#FFF7D6', bgSecondary: '#F7D54A', chart: '#0b8a3e' },
+      { id: 'ocean', name: 'Brisa Marina', bgPrimary: '#E6F7FF', bgSecondary: '#6EC1E4', chart: '#0a6fa0' },
+      { id: 'lavender', name: 'Lavanda', bgPrimary: '#F3E8FF', bgSecondary: '#CFA3FF', chart: '#6b3fa0' },
+      { id: 'mint', name: 'Menta', bgPrimary: '#E9FFF4', bgSecondary: '#7FE3B2', chart: '#0a8a5a' },
+      { id: 'slate', name: 'Pizarra', bgPrimary: '#F4F6F8', bgSecondary: '#C8D3DD', chart: '#2b4a5a' }
     ];
 
     function hexToRgb(hex) {
@@ -888,7 +1115,7 @@
       bd.querySelector('#closeInfo').addEventListener('click', () => closeModal(bd));
     });
 
-    /* ---------------- Pause / add sample ---------------- */
+    /* ---------------- Pause / add sample ---------------- -->
     
     
 
